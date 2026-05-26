@@ -10,6 +10,7 @@ import {
   Settings2,
   ExternalLink,
   Waves,
+  GitCompare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,8 @@ const NAV = [
     group: "Asosiy",
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard, hint: "Dataset va statistika" },
-      { href: "/voice-lab", label: "Voice Lab", icon: Sparkles, hint: "Versiyalarni A/B sinash" },
+      { href: "/voice-lab", label: "Voice Lab", icon: Sparkles, hint: "Yangi matn sinash" },
+      { href: "/compare", label: "Solishtirish", icon: GitCompare, hint: "Tayyor namunalar A/B" },
       { href: "/status", label: "Training holati", icon: Activity, hint: "GPU progress, loss" },
     ],
   },

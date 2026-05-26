@@ -34,6 +34,7 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 VOICES_DIR = PROJECT_ROOT / "tts-server" / "voices"
+SAMPLES_DIR = VOICES_DIR / "samples"
 DEFAULT_REFERENCE = VOICES_DIR / "main" / "reference.wav"
 CHECKPOINTS_DIR = PROJECT_ROOT / "tts-server" / "training" / "checkpoints" / "xtts_v2_uzbek"
 XTTS_CACHE = Path.home() / "AppData" / "Local" / "tts" / "tts_models--multilingual--multi-dataset--xtts_v2"
@@ -43,7 +44,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "tts-server"))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, Field
 
 from server.text_normalizer import normalize_uzbek_to_turkish_phonetic
@@ -317,6 +318,70 @@ def list_checkpoints():
             for it in items
         ],
     }
+
+
+@app.get("/samples")
+def list_samples():
+    """Pre-generated sample audio'lar (offline tayyorlangan) ro'yxati.
+
+    Struktura: tts-server/voices/samples/<checkpoint_id>/<sentence_id>.wav
+    Har papkada `_metadata.json` bor — qachon yaratilgan, qaysi matn.
+    """
+    import json
+    if not SAMPLES_DIR.exists():
+        return {"checkpoints": [], "sentences": []}
+
+    # Sentences ro'yxati (test_sentences.json'dan)
+    sentences_path = PROJECT_ROOT / "tts-server" / "training" / "scripts" / "test_sentences.json"
+    sentences = []
+    if sentences_path.exists():
+        try:
+            sentences = json.loads(sentences_path.read_text(encoding="utf-8"))["sentences"]
+        except Exception:
+            sentences = []
+
+    checkpoints = []
+    for sub in sorted(SAMPLES_DIR.iterdir()):
+        if not sub.is_dir():
+            continue
+        meta_path = sub / "_metadata.json"
+        meta = {}
+        if meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            except Exception:
+                meta = {}
+        wavs = sorted(sub.glob("*.wav"))
+        samples = []
+        for w in wavs:
+            samples.append({
+                "sentence_id": w.stem,
+                "url": f"/samples/audio/{sub.name}/{w.stem}",
+                "size_kb": round(w.stat().st_size / 1024, 1),
+            })
+        checkpoints.append({
+            "id": sub.name,
+            "generated_at": meta.get("generated_at"),
+            "checkpoint_path": meta.get("checkpoint_path"),
+            "samples": samples,
+        })
+    # Eng yangisi tepada
+    checkpoints.sort(key=lambda x: x.get("generated_at") or "", reverse=True)
+    return {"checkpoints": checkpoints, "sentences": sentences}
+
+
+@app.get("/samples/audio/{checkpoint_id}/{sentence_id}")
+def get_sample_audio(checkpoint_id: str, sentence_id: str):
+    """Pre-generated sample WAV'ni serve qilish."""
+    # Xavfsizlik — path traversal'dan himoyalanish
+    if "/" in checkpoint_id or "\\" in checkpoint_id or ".." in checkpoint_id:
+        raise HTTPException(400, "Yaroqsiz checkpoint_id")
+    if "/" in sentence_id or "\\" in sentence_id or ".." in sentence_id:
+        raise HTTPException(400, "Yaroqsiz sentence_id")
+    wav_path = SAMPLES_DIR / checkpoint_id / f"{sentence_id}.wav"
+    if not wav_path.exists():
+        raise HTTPException(404, "Sample topilmadi")
+    return FileResponse(str(wav_path), media_type="audio/wav")
 
 
 @app.get("/training/status")

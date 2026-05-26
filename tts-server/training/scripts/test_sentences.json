@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "description": "TTS sample comparison — har bir checkpoint shu jumlalar bilan ovozlanadi",
+  "sentences": [
+    {
+      "id": "01_mix_full",
+      "category": "mixed",
+      "text": "Oʻzbekiston xalqi qishloq xoʻjaligida gʻalla yetishtiradi",
+      "focus": "x+gʻ+q+oʻ — eng murakkab"
+    },
+    {
+      "id": "02_x_heavy",
+      "category": "x",
+      "text": "Xato qildim, lekin xulosalar chiqardim va xayolimda saqladim",
+      "focus": "x — kuchli akustika"
+    },
+    {
+      "id": "03_gh_heavy",
+      "category": "gh",
+      "text": "Bogʻimdagi gʻunchalar gʻalati ochildi, yigʻin gʻoyat foydali boʻldi",
+      "focus": "gʻ — kuchli akustika"
+    },
+    {
+      "id": "04_q_heavy",
+      "category": "q",
+      "text": "Qaynoq qovurilgan qovun va qulupnay, qiziqarli qoʻshiqlar",
+      "focus": "q — kuchli akustika"
+    },
+    {
+      "id": "05_oh_heavy",
+      "category": "oh",
+      "text": "Oʻgʻil oʻyinda oʻrtoqlari bilan oʻzini koʻrsatdi, oʻzbekcha gapirdi",
+      "focus": "oʻ — kuchli akustika"
+    },
+    {
+      "id": "06_toshkent",
+      "category": "mixed",
+      "text": "Toshkent shahri qishin yozin xilma-xil va goʻzal, qadimiy va zamonaviy",
+      "focus": "shahar nomi + mix"
+    },
+    {
+      "id": "07_maqol",
+      "category": "natural",
+      "text": "Yaxshi qoʻshni — aziz qarindosh, deyiladi xalqimizda",
+      "focus": "tabiiy nutq"
+    },
+    {
+      "id": "08_simple",
+      "category": "natural",
+      "text": "Salom, mening ismim Ahmad va men dasturchiman",
+      "focus": "oddiy gap, taqqoslash uchun"
+    },
+    {
+      "id": "09_long",
+      "category": "long",
+      "text": "Bahor keldi, daraxtlar yashnab, qushlar sayrashga tushdi, qalbimizda umid oʻchog'i yondi",
+      "focus": "uzunroq jumla"
+    },
+    {
+      "id": "10_tech",
+      "category": "tech",
+      "text": "Sun'iy intellekt va mashina o'qitish texnologiyalari kelajakni o'zgartiradi",
+      "focus": "texnik leksika"
+    }
+  ]
+}
