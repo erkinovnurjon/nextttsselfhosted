@@ -135,6 +135,40 @@ Natijalar `tts-server/output/` papkasiga saqlanadi.
 
 ---
 
+## Live training status
+
+📊 **[STATUS.md](./STATUS.md)** — har 10 daqiqada avtomatik yangilanadi.
+
+Uy noutbukidan training jarayonini kuzatish:
+```bash
+# GitHub'da: github.com/erkinovnurjon/nextttsselfhosted/blob/main/STATUS.md
+# Yoki repo'ni clone qilib local'da watch qilish:
+git clone https://github.com/erkinovnurjon/nextttsselfhosted.git
+cd nextttsselfhosted
+# Har 1 daqiqada o'qish (Mac/Linux):
+watch -n 60 'git pull && cat STATUS.md'
+```
+
+Asosiy PC'da auto-publisher ishga tushirish:
+```powershell
+cd C:\Projects\nexttts
+.\tts-server\.venv\Scripts\python.exe tts-server\training\scripts\publish_status.py --loop --interval 600
+```
+
+---
+
+## Voice Lab — versiyalarni A/B sinash
+
+`/voice-lab` sahifasi har xil fine-tuned checkpoint'larni bir xil matn bilan
+solishtirib eshitish imkonini beradi.
+
+- Sidebar'dan checkpoint tanlash
+- Test preset matnlar (x/gʻ/q/oʻ fokuslangan)
+- Parametr sliderlar (temperature, top-k, top-p, repetition penalty, speed)
+- Sintez tarixi (har bir natija download qilish mumkin)
+
+---
+
 ## Roadmap
 
 - [x] **1-bosqich:** Dataset to'plash UI (Next.js)
@@ -142,9 +176,10 @@ Natijalar `tts-server/output/` papkasiga saqlanadi.
 - [x] **3-bosqich:** Coqui XTTS v2 setup + voice cloning
 - [x] **4-bosqich:** FastAPI inference server
 - [x] **5-bosqich:** Frontend ↔ Backend integratsiya
-- [ ] **6-bosqich:** XTTS v2 fine-tuning (O'zbek tilida) — 200+ yozuv kerak
-- [ ] **7-bosqich:** Auth + foydalanuvchi/kredit tizimi
-- [ ] **8-bosqich:** Production deploy (Docker + GPU server)
+- [x] **6-bosqich:** XTTS v2 fine-tuning (O'zbek tilida) — v1-v4
+- [x] **7-bosqich:** Multi-checkpoint Voice Lab + auto status publish
+- [ ] **8-bosqich:** Auth + foydalanuvchi/kredit tizimi
+- [ ] **9-bosqich:** Production deploy (Docker + GPU server)
 
 ---
 
