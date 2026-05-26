@@ -1,6 +1,6 @@
 # NextTTS — Training Status
 
-_Avtomatik yangilandi: **2026-05-27 01:09:10**_
+_Avtomatik yangilandi: **2026-05-27 01:10:58**_
 
 > Bu fayl `publish_status.py` tomonidan har 10 daqiqada GitHub'ga push qilinadi.
 > Uy noutbukdan jarayonni shu yerda kuzatish mumkin.
@@ -26,11 +26,11 @@ _Avtomatik yangilandi: **2026-05-27 01:09:10**_
 
 | Yo'l | Hajm | O'zgarish |
 |---|---|---|
+| `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-27-2026_12+18AM-8b2a8ee\best_model.pth` | 5.61 GB | 2026-05-27 01:10:57 |
 | `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-26-2026_11+25PM-05727d1\best_model.pth` | 5.61 GB | 2026-05-27 00:17:54 |
 | `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-26-2026_09+53PM-0000000\best_model.pth` | 5.61 GB | 2026-05-26 23:24:29 |
 | `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-26-2026_05+36PM-0000000\best_model.pth` | 5.61 GB | 2026-05-26 19:55:50 |
 | `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-26-2026_05+09PM-0000000\best_model.pth` | 5.61 GB | 2026-05-26 17:27:44 |
-| `tts-server\training\checkpoints\xtts_v2_uzbek\xtts_v2_uzbek-May-26-2026_04+06PM-0000000\best_model.pth` | 5.61 GB | 2026-05-26 16:40:11 |
 
 ## Training log (so'nggi 25 qator)
 
