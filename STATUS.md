@@ -1,6 +1,6 @@
 # NextTTS — Training Status
 
-_Avtomatik yangilandi: **2026-05-27 02:09:38**_
+_Avtomatik yangilandi: **2026-05-27 02:10:12**_
 
 > Bu fayl `publish_status.py` tomonidan har 10 daqiqada GitHub'ga push qilinadi.
 > Uy noutbukdan jarayonni shu yerda kuzatish mumkin.
@@ -21,6 +21,16 @@ _Avtomatik yangilandi: **2026-05-27 02:09:38**_
 | `loss_mel_ce` (instant) | 2.593 | mel cross-entropy |
 | `loss_mel_ce` (running avg) | **3.074** | mel running avg |
 | `eval avg_loss_mel_ce` | **3.074** | eval split (v3 = 3.16) |
+
+## Eval natijalari — barcha round'lar
+
+| Round | Eval mel_ce | Yaxshilanish |
+|---|---|---|
+| v3 (baseline) | 3.160 | — |
+| **v4** | **3.074** | -0.086 |
+| **v5** | **3.060** | -0.015 |
+| **v6** | **3.054** | -0.006 |
+| **v7** | **3.051** | -0.003 |
 
 ## Eng so'nggi checkpoint'lar
 
