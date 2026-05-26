@@ -125,8 +125,10 @@ def render_status() -> str:
     md.append("")
     md.append("| Bosqich | Holat |")
     md.append("|---|---|")
-    md.append(f"| Ekstraktsiya | {'✅ TUGADI' if extract_done else '⏳ ishlamoqda yoki yo\\'q'} |")
-    md.append(f"| Training | {'🟢 ISHLAMOQDA' if train_running else '⚫ to\\'xtagan / tugagan'} |")
+    ext_label = "✅ TUGADI" if extract_done else "⏳ ishlamoqda yoki yo'q"
+    train_label = "🟢 ISHLAMOQDA" if train_running else "⚫ to'xtagan / tugagan"
+    md.append(f"| Ekstraktsiya | {ext_label} |")
+    md.append(f"| Training | {train_label} |")
     if progress_pct is not None:
         md.append(f"| Epoch progress | **{progress_pct}%** (step {t['step']:,}/{t['step_max']:,}) |")
     if t["last_time"]:
