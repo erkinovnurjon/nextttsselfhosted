@@ -1,6 +1,6 @@
 # NextTTS — Training Status
 
-_Avtomatik yangilandi: **2026-05-26 23:08:15**_
+_Avtomatik yangilandi: **2026-05-26 23:08:35**_
 
 > Bu fayl `publish_status.py` tomonidan har 10 daqiqada GitHub'ga push qilinadi.
 > Uy noutbukdan jarayonni shu yerda kuzatish mumkin.
@@ -11,22 +11,22 @@ _Avtomatik yangilandi: **2026-05-26 23:08:15**_
 |---|---|
 | Ekstraktsiya | ✅ TUGADI |
 | Training | 🟢 ISHLAMOQDA |
-| Epoch progress | **69.5%** (step 8,250/11,864) |
-| So'nggi step vaqti | 2026-05-26 23:08:13 |
+| Epoch progress | **70.0%** (step 8,300/11,864) |
+| So'nggi step vaqti | 2026-05-26 23:08:26 |
 
 ## Loss
 
 | Metric | Qiymat | Eslatma |
 |---|---|---|
-| `loss` (instant) | 0.0528 | so'nggi batch |
+| `loss` (instant) | 0.0797 | so'nggi batch |
 | `loss` (running avg) | **0.0764** | train avg |
-| `loss_mel_ce` (instant) | 2.171 | mel cross-entropy |
+| `loss_mel_ce` (instant) | 3.308 | mel cross-entropy |
 | `loss_mel_ce` (running avg) | **3.169** | mel running avg |
 
 ## Progress bar
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 69.5%
+[████████████████████████████░░░░░░░░░░░░] 70.0%
 ```
 
 ## Eng so'nggi checkpoint'lar
@@ -40,15 +40,6 @@ _Avtomatik yangilandi: **2026-05-26 23:08:15**_
 ## Training log (so'nggi 25 qator)
 
 ```
-     | > current_lr: 2e-06  (2.000000000000027e-06)
-     | > loss_text_ce: 0.04195080325007439  (0.04090208149075144)
-     | > loss_mel_ce: 3.3338818550109863  (3.169555074963832)
-     | > loss: 0.08037696778774261  (0.07643945752865877)
-     | > step_time: 0.202  (0.34809891373101903)
-     | > loader_time: 0.005  (0.005914684629147781)
-
-
-[1m   --> TIME: 2026-05-26 23:08:00 -- STEP: 8200/11864 -- GLOBAL_STEP: 8200[0m
      | > current_lr: 2e-06  (2.000000000000018e-06)
      | > loss_text_ce: 0.041504405438899994  (0.040900741195442486)
      | > loss_mel_ce: 2.942060947418213  (3.169186578073152)
@@ -64,6 +55,15 @@ _Avtomatik yangilandi: **2026-05-26 23:08:15**_
      | > loss: 0.052827734500169754  (0.07643315950600484)
      | > step_time: 0.132  (0.3460024412328545)
      | > loader_time: 0.004  (0.005886263789552642)
+
+
+[1m   --> TIME: 2026-05-26 23:08:26 -- STEP: 8300/11864 -- GLOBAL_STEP: 8300[0m
+     | > current_lr: 2e-06  (2e-06)
+     | > loss_text_ce: 0.037329718470573425  (0.040895501298897255)
+     | > loss_mel_ce: 3.3082849979400635  (3.1689920400855045)
+     | > loss: 0.07965749502182007  (0.07642589526475371)
+     | > step_time: 0.154  (0.3449545948763927)
+     | > loader_time: 0.004  (0.005874168671757352)
 
 ```
 
