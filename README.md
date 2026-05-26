@@ -157,15 +157,36 @@ cd C:\Projects\nexttts
 
 ---
 
-## Voice Lab — versiyalarni A/B sinash
+## Voice Lab va Solishtirish
 
-`/voice-lab` sahifasi har xil fine-tuned checkpoint'larni bir xil matn bilan
-solishtirib eshitish imkonini beradi.
-
+`/voice-lab` — **yangi matn** kiritib istalgan checkpoint bilan sinash:
 - Sidebar'dan checkpoint tanlash
 - Test preset matnlar (x/gʻ/q/oʻ fokuslangan)
 - Parametr sliderlar (temperature, top-k, top-p, repetition penalty, speed)
 - Sintez tarixi (har bir natija download qilish mumkin)
+
+`/compare` — **tayyor namunalar** har xil versiyalar bilan yonma-yon eshitish:
+- 10 ta fokuslangan jumla har bir checkpoint uchun avtomatik ovozlangan
+- Jumla tanlanganda barcha versiyalar bir vaqtda audio sifatida ko'rinadi
+- Versiyalarni yashirib qo'yish (faqat 2-3 ta solishtirish) mumkin
+
+## Autonomous training — overnight
+
+Foydalanuvchi uzoq vaqtga ketganida PC kechasi avtomatik bir necha
+fine-tuning bosqichidan o'tadi:
+
+```powershell
+# v5 → v6 → v7 ketma-ket, har bosqichdan keyin sample audios
+.\tts-server\.venv\Scripts\python.exe tts-server\training\scripts\long_run_orchestrator.py
+```
+
+Bosqichlar:
+- **v5**: lr=2e-6, 1 epoch (continue convergence)
+- **v6**: lr=1e-6, 1 epoch (finer adjustment)
+- **v7**: lr=5e-7, 1 epoch (super-fine tuning)
+
+Har round'dan keyin `generate_samples.py` orqali test sentence'lar ovozlanadi va
+STATUS.md GitHub'ga push qilinadi.
 
 ---
 
