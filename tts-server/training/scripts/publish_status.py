@@ -98,12 +98,32 @@ def latest_checkpoints() -> list[dict]:
     return items[:5]
 
 
+def all_round_logs() -> dict[str, Path]:
+    """train_log.txt va train_log_vN.txt fayllarini topish."""
+    data_dir = TRAIN_LOG.parent
+    rounds = {}
+    if TRAIN_LOG.exists():
+        rounds["v4"] = TRAIN_LOG
+    for p in sorted(data_dir.glob("train_log_v*.txt")):
+        # train_log_v5.txt → v5
+        name = p.stem.replace("train_log_", "")
+        rounds[name] = p
+    return rounds
+
+
 def render_status() -> str:
     train_lines = tail_lines(TRAIN_LOG, 80)
     extend_lines = tail_lines(EXTEND_LOG, 20)
     pipeline_lines = tail_lines(PIPELINE_LOG, 30)
     t = parse_training(train_lines)
     cps = latest_checkpoints()
+
+    # Har bir round uchun eval natijasi
+    rounds = all_round_logs()
+    round_evals = {}
+    for name, log_path in rounds.items():
+        info = parse_training(tail_lines(log_path, 300))
+        round_evals[name] = info
 
     progress_pct = (
         round(100 * t["step"] / t["step_max"], 1)
@@ -161,6 +181,24 @@ def render_status() -> str:
         md.append("```")
         md.append(f"[{bar}] {progress_pct}%")
         md.append("```")
+        md.append("")
+
+    # Multi-round eval summary
+    if len(round_evals) > 1:
+        md.append("## Eval natijalari — barcha round'lar")
+        md.append("")
+        md.append("| Round | Eval mel_ce | Yaxshilanish |")
+        md.append("|---|---|---|")
+        prev_eval = 3.16  # v3 baseline
+        md.append(f"| v3 (baseline) | {prev_eval:.3f} | — |")
+        for name in ["v4", "v5", "v6", "v7"]:
+            info = round_evals.get(name)
+            if not info or info["eval"] is None:
+                continue
+            ev = info["eval"]
+            delta = ev - prev_eval
+            md.append(f"| **{name}** | **{ev:.3f}** | {delta:+.3f} |")
+            prev_eval = ev
         md.append("")
 
     if cps:
