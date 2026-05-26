@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: 255 255 255;
+    --bg-subtle: 249 250 251;
+    --bg-muted: 243 244 246;
+    --fg: 17 24 39;
+    --fg-muted: 75 85 99;
+    --fg-subtle: 156 163 175;
+    --border: 229 231 235;
+    --accent: 79 70 229;
+    --accent-fg: 255 255 255;
+    --success: 22 163 74;
+    --danger: 220 38 38;
+    --warning: 217 119 6;
+  }
+
+  .dark {
+    --bg: 9 9 11;
+    --bg-subtle: 24 24 27;
+    --bg-muted: 39 39 42;
+    --fg: 244 244 245;
+    --fg-muted: 161 161 170;
+    --fg-subtle: 113 113 122;
+    --border: 39 39 42;
+    --accent: 129 140 248;
+    --accent-fg: 9 9 11;
+    --success: 34 197 94;
+    --danger: 239 68 68;
+    --warning: 245 158 11;
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-bg text-fg antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
+  *::selection {
+    background: rgb(var(--accent) / 0.3);
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}

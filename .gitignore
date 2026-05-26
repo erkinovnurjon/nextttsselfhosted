@@ -1,0 +1,72 @@
+# ============================================================
+# Node / Next.js
+# ============================================================
+node_modules/
+.next/
+out/
+build/
+dist/
+.vercel
+.tsbuildinfo
+next-env.d.ts
+
+# ============================================================
+# Python / venv / cache
+# ============================================================
+tts-server/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# ============================================================
+# Environment files
+# ============================================================
+.env
+.env.local
+.env*.local
+
+# ============================================================
+# Editor / OS / Logs
+# ============================================================
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.claude/
+
+# ============================================================
+# DATASET — user recordings stay local (small audio)
+# Comment out if you want to sync via Git LFS
+# ============================================================
+dataset/wavs/*.wav
+dataset/raw/
+# sentences.json — kichik strukturli ma'lumotlar, repo bilan birga turishi mumkin
+# (audio yo'llari ko'rinmaydi laptop'da chunki wavs/ excluded)
+
+# ============================================================
+# TRAINING — too large for GitHub (use HuggingFace Hub instead)
+# ============================================================
+# ISSAI dataset (~9.5 GB tar + extracted)
+tts-server/training/data/ISSAI_USC.tar.gz
+tts-server/training/data/issai_raw/
+tts-server/training/data/processed_wavs/
+tts-server/training/data/cv_wavs/
+tts-server/training/data/.cache/
+tts-server/training/data/metadata.csv
+tts-server/training/data/metadata.csv.bak
+tts-server/training/data/*.txt
+
+# Fine-tuned model checkpoints (5.6 GB each)
+tts-server/training/checkpoints/
+
+# ============================================================
+# GENERATED OUTPUTS — synthesized audio not for git
+# ============================================================
+tts-server/output/
+
+# ============================================================
+# Voice references — keep model voice profile local
+# (small but contains user audio)
+# ============================================================
+tts-server/voices/*/reference.wav

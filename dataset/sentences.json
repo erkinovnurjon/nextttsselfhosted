@@ -1,0 +1,3002 @@
+[
+  {
+    "id": "001",
+    "text": "Assalomu alaykum, mening ismim Ahmad.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:23:24.246Z",
+    "audioPath": "dataset/wavs/001.wav",
+    "duration": 5.94,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "002",
+    "text": "Bugun havo juda issiq va quyoshli.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:23:54.732Z",
+    "audioPath": "dataset/wavs/002.wav",
+    "duration": 3.6,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "003",
+    "text": "Men har kuni ertalab soat oltida turaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:24:06.974Z",
+    "audioPath": "dataset/wavs/003.wav",
+    "duration": 4.32,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "004",
+    "text": "Toshkent — O'zbekistonning poytaxti hisoblanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:24:18.096Z",
+    "audioPath": "dataset/wavs/004.wav",
+    "duration": 4.2,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "005",
+    "text": "Kitob o'qish insonning eng yaxshi mashg'ulotidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:24:29.446Z",
+    "audioPath": "dataset/wavs/005.wav",
+    "duration": 4.2,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "006",
+    "text": "Bizning maktabimiz shahar markazida joylashgan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:36:14.240Z",
+    "audioPath": "dataset/wavs/006.wav",
+    "duration": 4.08,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "007",
+    "text": "Onam menga mazali osh pishirib berdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:36:35.592Z",
+    "audioPath": "dataset/wavs/007.wav",
+    "duration": 3.96,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "008",
+    "text": "Bahor faslida tabiat uyg'onadi va gullar ochiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:36:45.461Z",
+    "audioPath": "dataset/wavs/008.wav",
+    "duration": 4.38,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "009",
+    "text": "Dadam ishdan kechqurun soat yettida qaytadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:36:53.792Z",
+    "audioPath": "dataset/wavs/009.wav",
+    "duration": 3.84,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "010",
+    "text": "Talabalar imtihonga jiddiy tayyorgarlik ko'rmoqdalar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:03.257Z",
+    "audioPath": "dataset/wavs/010.wav",
+    "duration": 4.08,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "011",
+    "text": "Bu kitob menga juda yoqdi, uni sizga ham tavsiya qilaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:13.510Z",
+    "audioPath": "dataset/wavs/011.wav",
+    "duration": 4.8,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "012",
+    "text": "Samarqand qadimiy va go'zal shaharlardan biridir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:22.155Z",
+    "audioPath": "dataset/wavs/012.wav",
+    "duration": 4.44,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "013",
+    "text": "Internet hozirgi kunda eng muhim aloqa vositasi bo'lib qoldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:31.686Z",
+    "audioPath": "dataset/wavs/013.wav",
+    "duration": 5.28,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "014",
+    "text": "Universitetga kirish uchun yaxshi tayyorlanish zarur.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:39.589Z",
+    "audioPath": "dataset/wavs/014.wav",
+    "duration": 3.84,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "015",
+    "text": "Sport bilan shug'ullanish sog'liq uchun foydali.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:37:57.322Z",
+    "audioPath": "dataset/wavs/015.wav",
+    "duration": 3.66,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "016",
+    "text": "Bizning mamlakatimiz mustaqillikning oltinchi avlodini tarbiyalamoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:05.746Z",
+    "audioPath": "dataset/wavs/016.wav",
+    "duration": 5.16,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "017",
+    "text": "Ona tilim — milliy g'ururim va boyligimdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:14.644Z",
+    "audioPath": "dataset/wavs/017.wav",
+    "duration": 4.08,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "018",
+    "text": "Yangi avtomobilim juda tez va qulay ekan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:22.597Z",
+    "audioPath": "dataset/wavs/018.wav",
+    "duration": 4.08,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "019",
+    "text": "Do'stim bilan birga kinoteatrga bordik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:30.195Z",
+    "audioPath": "dataset/wavs/019.wav",
+    "duration": 3,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "020",
+    "text": "Bola o'z onasini juda yaxshi ko'radi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:37.553Z",
+    "audioPath": "dataset/wavs/020.wav",
+    "duration": 3.06,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "021",
+    "text": "Daryo qirg'og'ida o'tirib, suvning shovqinini tingladik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:45.025Z",
+    "audioPath": "dataset/wavs/021.wav",
+    "duration": 3.96,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "022",
+    "text": "Tog'lar ortidan quyosh asta-sekin ko'tarila boshladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:38:52.983Z",
+    "audioPath": "dataset/wavs/022.wav",
+    "duration": 4.02,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "023",
+    "text": "Ushbu loyiha kompaniyamiz uchun strategik ahamiyatga ega.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:39:05.616Z",
+    "audioPath": "dataset/wavs/023.wav",
+    "duration": 3.78,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "024",
+    "text": "Tibbiyot xodimlari kechayu kunduz mehnat qiladilar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:39:14.860Z",
+    "audioPath": "dataset/wavs/024.wav",
+    "duration": 3.72,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "025",
+    "text": "O'qituvchi darsni juda qiziqarli tushuntirdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": "2026-05-25T20:39:21.909Z",
+    "audioPath": "dataset/wavs/025.wav",
+    "duration": 3,
+    "sampleRate": 22050,
+    "notes": null
+  },
+  {
+    "id": "026",
+    "text": "Mening tug'ilgan kunim o'n beshinchi mayda nishonlanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "027",
+    "text": "Soat to'qqizu o'n besh daqiqada uchrashuvga boring.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "028",
+    "text": "Ikki ming yigirma oltinchi yil tez orada tugaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "029",
+    "text": "Bir kilogramm guruch uch yarim ming so'm turadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "030",
+    "text": "Yetmish foiz talabalar imtihondan muvaffaqiyatli o'tdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "031",
+    "text": "Yangiliklarni har kuni ertalab tinglashga harakat qilaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "032",
+    "text": "Buxoroning me'moriy obidalari butun dunyoga mashhurdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "033",
+    "text": "Ovqatdan keyin albatta choy ichish kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "034",
+    "text": "Bog'imizda olma, nok va o'rik daraxtlari o'sadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "035",
+    "text": "Ushbu kitobni o'qib chiqsangiz, juda ko'p ma'lumotga ega bo'lasiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "036",
+    "text": "Yo'l-yo'lakay do'konga kirib non sotib oldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "037",
+    "text": "Qor yog'a boshlaganda ko'chalarda bolalar quvonib qoldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "038",
+    "text": "Yozda ta'tilga toqqa chiqishni rejalashtiryapmiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "039",
+    "text": "Kompyuter texnologiyalari hayotimizni o'zgartirdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "040",
+    "text": "Sevimli kitobim \"O'tkan kunlar\" romanidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "041",
+    "text": "Avtobus bekatigacha besh daqiqalik piyoda yo'l.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "042",
+    "text": "Mening singlim oltinchi sinfda o'qiydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "043",
+    "text": "Buvim ertaklar aytib berishni juda yaxshi ko'radi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "044",
+    "text": "Quyosh botgach, osmonda yulduzlar yarqirab ko'rinadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "045",
+    "text": "Mehnat insonni go'zal qiladi, deyishadi dono kishilar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "046",
+    "text": "Ko'chada bolalar qiyqirib o'ynashayotgan edi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "047",
+    "text": "Bu yil hosil avvalgi yillarga qaraganda mo'l bo'ldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "048",
+    "text": "Universitetda yangi laboratoriya ochildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "049",
+    "text": "Bibliotekadan beshta kitob olib keldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "050",
+    "text": "O'zbek xalqi mehmondo'stligi bilan mashhurdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "051",
+    "text": "Choyxonada do'stlar bilan suhbatlashib o'tirdik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "052",
+    "text": "Pахta dalasida ishlovchilar quyosh tig'ida mehnat qilmoqdalar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "053",
+    "text": "Yangi telefon modelining narxi juda qimmat ekan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "054",
+    "text": "Maktabimizda matematika olimpiadasi o'tkazildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "055",
+    "text": "Tarix darsida buyuk ajdodlarimiz haqida o'rgandik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "056",
+    "text": "Internet orqali butun dunyo bilan bog'lanish mumkin.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "057",
+    "text": "Bolaligimda ko'p marta qishloqqa borardim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "058",
+    "text": "Issiq nondan ko'tarilgan hid butun uyni qopladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "059",
+    "text": "Yomg'irdan keyin osmonda kamalak paydo bo'ldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "060",
+    "text": "Bog'bonimiz har kuni daraxtlarni sug'oradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "061",
+    "text": "Yangi kasalxona shahar chetida qurilmoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "062",
+    "text": "Stadionda futbol o'yini ikki yarim soat davom etdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "063",
+    "text": "Qish faslida qor ko'p yog'sa, hosil yaxshi bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "064",
+    "text": "Onajonim pishirgan somsa eng mazali taom hisoblanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "065",
+    "text": "Bolalar bog'chasida tarbiyachilar mehribon va g'amxo'r.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "066",
+    "text": "Kompyuter o'yinlariga ortiqcha berilib ketmaslik kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "067",
+    "text": "Yoshlikda olingan bilim toshga bitilgan naqshdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "068",
+    "text": "Vatanga muhabbat har bir insonning burchidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "069",
+    "text": "Ekologik muammolar bugungi kunning eng dolzarb masalalaridan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "070",
+    "text": "Bahorda dalalarda yangi ekinlar ekiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "071",
+    "text": "Yog'ingarchilik mavsumida zonalar ko'chki xavfi ostida bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "072",
+    "text": "Kuchli shamol daraxtlarning shoxlarini sindirib tashladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "073",
+    "text": "Quyon o'rmonda yashirinib, ovchidan qutuldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "074",
+    "text": "Asalarilar gulzorda kunbo'yi mehnat qilishadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "075",
+    "text": "Yangi telefon sotib olish uchun yarim yil pul yig'dim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "076",
+    "text": "Doʻkonda non, sut va meva-sabzavotlar bor edi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "077",
+    "text": "Janubiy viloyatlarda yoz oylari issiqlik qattiq bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "078",
+    "text": "Shifokor bemorga dori va parhez tavsiya qildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "079",
+    "text": "Yangi yil bayrami arafasida ko'chalar chiroqlar bilan bezatildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "080",
+    "text": "Birgalikda ishlasak, har qanday qiyinchilikni yengamiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "081",
+    "text": "Tabiatni asrash — kelajak avlod oldidagi burchimiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "082",
+    "text": "Bola o'zining birinchi qadamini bir yoshda tashladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "083",
+    "text": "Eng yaxshi ustozim — bu mening otam.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "084",
+    "text": "Kechki ovqatdan keyin oilamiz bilan film tomosha qildik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "085",
+    "text": "Avtomobilimning yoqilg'isi tugab qolibdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "086",
+    "text": "Yangiliklarda iqtisodiy o'zgarishlar haqida gapirildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "087",
+    "text": "Maktabning bosh direktori darsga keldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "088",
+    "text": "Universitet talabalari amaliyot uchun kompaniyaga jo'natildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "089",
+    "text": "Ushbu masalani hal qilish uchun ko'p vaqt kerak bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "090",
+    "text": "Bog'imizdagi gullar har xil rangda — qizil, sariq va oq.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "091",
+    "text": "Choy stakanini ehtiyotkorlik bilan ushlang, juda issiq.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "092",
+    "text": "Yangi telefon dasturi avvalgisidan ko'ra ko'proq imkoniyat beradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "093",
+    "text": "Sayohatga otlanishdan oldin yo'l xaritasini ko'rib chiqing.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "094",
+    "text": "Toshkent metrosi har kuni millionlab yo'lovchilarni tashiydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "095",
+    "text": "Yangi loyiha boshlash uchun yetarli mablag' yig'ildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "096",
+    "text": "Bizning jamoamiz musobaqada birinchi o'rinni egalladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "097",
+    "text": "Ko'l yuzasida sokin to'lqinlar quyoshda yarqiradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "098",
+    "text": "O'qish — eng yaxshi sarmoyadir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "099",
+    "text": "Maktab maydonchasida o'quvchilar saf tortib turishar edi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "100",
+    "text": "Yangi avtomobil sotib olganimda hammasi xursand bo'lishdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "101",
+    "text": "Nima uchun kechikding? Soat necha bo'ldi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "102",
+    "text": "Qachongacha shu yerda kutib turamiz?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "103",
+    "text": "Sen ham men bilan birga kelasanmi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "104",
+    "text": "Bu kitobni qayerdan sotib oldingiz?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "105",
+    "text": "Ertaga uchrashuvga necha kishi keladi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "106",
+    "text": "Voy! Bu juda chiroyli ko'rinarkan-ku!",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "107",
+    "text": "Qoyil, sen haqiqatan ham aqlli ekansan!",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "108",
+    "text": "Eh, qani edi bolalik davrlari qaytsa!",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "109",
+    "text": "Ofarin, sen a'lo baho olibsan!",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "110",
+    "text": "Iye, qayerda yashirinib o'tiribsiz?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "111",
+    "text": "Iltimos, eshikni asta yopib qo'ying.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "112",
+    "text": "Marhamat, ichkariga kiravering.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "113",
+    "text": "Kechirasiz, men kechikib keldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "114",
+    "text": "Rahmat sizga, juda yordam qildingiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "115",
+    "text": "Salomat bo'ling, omadingiz baland bo'lsin.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "116",
+    "text": "O'g'irlik, yolg'on va xiyonat — eng yomon illatlar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "117",
+    "text": "Halollik, mehnatsevarlik va saxiylik insonni ulug'laydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "118",
+    "text": "Sabr-toqat har qanday muvaffaqiyatning kalitidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "119",
+    "text": "Do'stlik — bu eng katta boylik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "120",
+    "text": "Bilim — kuch, bilimsizlik — ojizlikdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "121",
+    "text": "Birinchi, ikkinchi, uchinchi o'rinlar mukofotlandi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "122",
+    "text": "To'rt yuz yetmish besh ming so'm tashkil etadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "123",
+    "text": "Soat o'n bir yu o'ttiz besh daqiqada keling.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "124",
+    "text": "Ming to'qqiz yuz to'qson birinchi yilda mustaqillik e'lon qilindi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "125",
+    "text": "Yigirma birinchi asr texnologiyalar asri.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "126",
+    "text": "Olti ming sakkiz yuz uchta talaba imtihon topshirdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "127",
+    "text": "Mening yoshim yigirma ikkida.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "128",
+    "text": "Bir, ikki, uch, to'rt, besh, olti, yetti, sakkiz, to'qqiz, o'n.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "129",
+    "text": "Yarim soat ichida vazifani bajarib bo'ldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "130",
+    "text": "Choragagacha vaqt qoldi, tezroq harakat qiling.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "131",
+    "text": "Microsoft, Google va Apple — yirik IT kompaniyalar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "132",
+    "text": "FaceBook, Telegram va Instagram juda mashhur.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "133",
+    "text": "Android va iOS — eng keng tarqalgan operatsion tizimlar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "134",
+    "text": "Wi-Fi paroli sizga oldindan yuborilgan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "135",
+    "text": "USB qurilmangizni kompyuterga ulang.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "136",
+    "text": "Email manzilingizni qaytadan kiriting.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "137",
+    "text": "Sayt ochilishi uchun bir necha soniya kuting.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "138",
+    "text": "Yangi versiya dasturni yuklab oling.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "139",
+    "text": "Akkauntingizga kirish uchun parolingizni tasdiqlang.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "140",
+    "text": "Sun'iy intellekt sohasi tez rivojlanmoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "141",
+    "text": "Buxoro, Samarqand, Xiva — qadimiy shaharlarimiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "142",
+    "text": "Amir Temur jahon tarixiga buyuk sarkarda bo'lib kirgan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "143",
+    "text": "Alisher Navoiy — o'zbek adabiyotining buyuk vakili.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "144",
+    "text": "Cho'lpon, Qodiriy va Fitratlar millat g'ururidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "145",
+    "text": "Anvar, Sevara, Dilnoza ismli o'quvchilar a'lochi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "146",
+    "text": "O'zbekiston, Qozog'iston va Qirg'iziston qo'shni davlatlar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "147",
+    "text": "Sayyora yer — Quyosh tizimidagi uchinchi sayyora.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "148",
+    "text": "Atlantika va Tinch okeanlari Yerning yarmidan ko'pini egallaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "149",
+    "text": "Pomir tog'lari \"dunyo tomi\" deb ham ataladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "150",
+    "text": "Amu Daryo va Sirdaryo — Markaziy Osiyoning eng katta daryolari.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "151",
+    "text": "Ertalab soat sakkizda darsim bor edi, lekin men kechikib qoldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "152",
+    "text": "Agar yaxshilab tayyorgarlik ko'rsam, imtihondan a'lo baho olardim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "153",
+    "text": "Kelajakda men buyuk olim bo'lib, jamiyatga foyda keltiraman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "154",
+    "text": "Garchi yo'l uzoq bo'lsa-da, biz manzilga belgilangan vaqtda yetib bordik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "155",
+    "text": "Onam aytgan barcha o'gitlarni hayotim davomida amal qilishga harakat qilaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "156",
+    "text": "Yomg'ir yog'ishiga qaramay, biz rejalashtirilgan ekskursiyaga bordik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "157",
+    "text": "Bu loyiha muvaffaqiyatli yakunlangan taqdirda, kompaniya katta foyda ko'radi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "158",
+    "text": "Insonning eng katta boyligi — bu sog'lig'i va vaqtidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "159",
+    "text": "Texnologiya rivojlangani sayin, kasblar ham o'zgarib bormoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "160",
+    "text": "Yangi tug'ilgan chaqaloqning birinchi tabassumi onaning qalbini erit­adi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "161",
+    "text": "Mushuk derazadan tashqariga qarab o'tiribdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "162",
+    "text": "Itlar sodiq do'st hisoblanadi insonning.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "163",
+    "text": "Bog'da turli xil sabzavotlar yetishtiramiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "164",
+    "text": "Qishloq xo'jaligi mamlakatimizning asosiy tarmoqlaridan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "165",
+    "text": "O'qituvchining mehnati hech qachon zoye ketmaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "166",
+    "text": "Maktabni a'lo baholar bilan tugatdim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "167",
+    "text": "Universitetga kirishni juda xohlardim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "168",
+    "text": "Ilm olish — har bir musulmonga farzdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "169",
+    "text": "Dunyoda eng go'zal narsa — bu hayotning o'zi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "170",
+    "text": "Vaqtni behuda sarflamang, u qaytib kelmaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "171",
+    "text": "Sog'lom tanada — sog'lom aql.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "172",
+    "text": "Mehnatsiz rohat yo'q, deyishadi xalqimiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "173",
+    "text": "Yolg'on aytish — eng katta gunohlardan biridir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "174",
+    "text": "Ota-onaga hurmat — eng oliy fazilatlardan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "175",
+    "text": "Mehmonni \"tor\" deb aytmaslik kerak, deyishadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "176",
+    "text": "Yangi yilda hamma orzular ushaladi degan umiddamiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "177",
+    "text": "Bayram tabriklari uchun do'konga bordik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "178",
+    "text": "Ramazon oyida ro'za tutiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "179",
+    "text": "Hayit kunlari qarindosh-urug'larnikiga boramiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "180",
+    "text": "Navro'z bayramida sumalak pishiriladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "181",
+    "text": "Kichik ukam mendan besh yosh kichik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "182",
+    "text": "Akam ish bilan band, kelolmadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "183",
+    "text": "Opam universitetda dars beradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "184",
+    "text": "Bobom urush qatnashchisi edi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "185",
+    "text": "Buvim ertaklarni juda chiroyli aytib beradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "186",
+    "text": "Amakim viloyatga ko'chib ketdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "187",
+    "text": "Xolam shifokorlikda ishlaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "188",
+    "text": "Tog'am rahmatli sportchi bo'lgan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "189",
+    "text": "Yangi qo'shnimiz juda xushmuomala kishi ekan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "190",
+    "text": "Hovlidagi olma daraxti hosil tugmoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "191",
+    "text": "Yog'in oz yog'ganligi sababli, ekinlar yaxshi rivojlanmadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "192",
+    "text": "Yo'lda ketayotib, eski tanishimni uchratib qoldim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "193",
+    "text": "Konsert juda qiziqarli o'tdi, hamma rohatlanib qaytdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "194",
+    "text": "Yangi ochilgan restoran ovqatlari juda mazali ekan.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "195",
+    "text": "Tarvuz, qovun va uzum — yozning eng sevimli mevalari.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "196",
+    "text": "Sabzi, kartoshka, piyoz har bir taomning asosiy tarkibi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "197",
+    "text": "Suvni isrof qilmang, u — hayot manbaidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "198",
+    "text": "Chiqindilarni alohida joyga tashlash kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "199",
+    "text": "Tabiatni muhofaza qilish — har bir insonning vazifasidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "200",
+    "text": "Ko'chalarda gul ekib, atrofni go'zallashtirish kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "201",
+    "text": "Ertalab nonushta qilmasdan ishga ketsangiz, sog'lig'ingizga zarar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "202",
+    "text": "Sport zalida muntazam mashq qilish foydali.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "203",
+    "text": "Suzish — eng komplekt sportlardan biri hisoblanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "204",
+    "text": "Velosipedda yurish jismoniy sog'liq uchun a'lo.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "205",
+    "text": "Yugurish — eng oson va arzon sport turidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "206",
+    "text": "Kompyuterdan uzoq vaqt foydalanish ko'zga zarar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "207",
+    "text": "Telefonga ortiq qaramaslik kerak, tabiatga chiqing.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "208",
+    "text": "Kitob o'qish miyani yoshartiradi va xayoljonni rivojlantiradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "209",
+    "text": "Tanish-bilishlar bilan suhbat kayfiyatni ko'taradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "210",
+    "text": "Yoshlikda olingan bilim umrbod xizmat qiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "211",
+    "text": "Bu yerdan markaziy bekatga qanday borish mumkin?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "212",
+    "text": "Ushbu manzilga taksi chaqirib bera olasizmi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "213",
+    "text": "Eng yaqin oziq-ovqat do'koni qayerda joylashgan?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "214",
+    "text": "Shu yerda bir necha minutga to'xtab turing.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "215",
+    "text": "Yo'lni ko'rsatib yuborolmaysizmi, iltimos?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "216",
+    "text": "Avtobusda bir bilet necha so'm turadi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "217",
+    "text": "Aeroport markazga necha kilometr uzoqlikda?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "218",
+    "text": "Kechki ovqat soat nechada beriladi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "219",
+    "text": "Mehmonxonada bo'sh xona bormi?",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "220",
+    "text": "Pasportingizni ko'rsatishingiz so'raladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "221",
+    "text": "Yangi loyiha bo'yicha hisobot tayyorlash kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "222",
+    "text": "Hamkasblarim bilan birga qiziqarli loyihada ishlayapmiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "223",
+    "text": "Mijozlarning fikr-mulohazalarini hisobga olish muhim.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "224",
+    "text": "Yig'ilishda kelgusi reja muhokama qilindi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "225",
+    "text": "Direktor xodimlarga maxsus topshiriq berdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "226",
+    "text": "Bukgalter oylik hisobotni tayyorlab bo'ldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "227",
+    "text": "Marketing bo'limi yangi reklama kampaniyasini boshladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "228",
+    "text": "Mahsulot sifati har doim birinchi o'rinda turishi kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "229",
+    "text": "Mijoz har doim haq, degan tamoyilga amal qilamiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "230",
+    "text": "Tadbirkorlikda risk va imkoniyat birga keladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "231",
+    "text": "Birinchi sentyabr — Bilim kuni.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "232",
+    "text": "Sakkizinchi mart — xotin-qizlar bayrami.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "233",
+    "text": "Yigirma birinchi mart — Navro'z bayrami.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "234",
+    "text": "Mustaqillik kuni — birinchi sentyabrda nishonlanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "235",
+    "text": "Konstitutsiya kuni — sakkizinchi dekabrda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "236",
+    "text": "Dushanba kunidan boshlab yangi dars jadvali kuchga kiradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "237",
+    "text": "Seshanbada to'garagimiz bo'lib o'tadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "238",
+    "text": "Chorshanba — haftaning o'rtasi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "239",
+    "text": "Payshanba kuni ota-onalar yig'ilishi bor.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "240",
+    "text": "Juma — eng kutilgan kun, dam olish kunining boshlanishi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "241",
+    "text": "Shanba va yakshanba kunlari oilam bilan vaqt o'tkazaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "242",
+    "text": "Yanvar oyi qishning eng sovuq oyidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "243",
+    "text": "Fevralda qor ko'p yog'di bu yil.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "244",
+    "text": "Mart oyida tabiat uyg'ona boshlaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "245",
+    "text": "Aprelda bog'larda gullar ochiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "246",
+    "text": "May oyida talabalar imtihonga tayyorgarlik ko'radi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "247",
+    "text": "Iyun, iyul, avgust — yoz oylari.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "248",
+    "text": "Sentyabrda yangi o'quv yili boshlanadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "249",
+    "text": "Oktyabr — kuzning o'rtasi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "250",
+    "text": "Noyabr va dekabrda qish kelishini his qilamiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "251",
+    "text": "Yaxshi ovqatlanish — sog'lik garovidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "252",
+    "text": "Sabzavotlar va mevalar har kuni iste'mol qilinishi kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "253",
+    "text": "Yog'li va shirin taomlarni cheklash tavsiya etiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "254",
+    "text": "Suv kuniga kamida ikki litr ichilishi kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "255",
+    "text": "Vitaminlarga boy ovqatlar ko'proq iste'mol qilinsin.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "256",
+    "text": "Tunda kech ovqat yeyish me'daga zarar yetkazadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "257",
+    "text": "Tabiiy mahsulotlar fast-fooddan ko'ra foydaliroq.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "258",
+    "text": "Choy va kofe me'yorida ichilsa, foydali bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "259",
+    "text": "Asal — tabiiy va shifobaxsh mahsulot.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "260",
+    "text": "Shirinliklarni bolalarga ortiq berish tishlarga zarar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "261",
+    "text": "Talaba universitetni a'lo baholar bilan tugatdi va ishga joylashdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "262",
+    "text": "O'qituvchi shogirdiga juda mehribon va g'amxo'r munosabatda bo'ladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "263",
+    "text": "Mehnat o'zining samarasini albatta beradi, faqat sabr kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "264",
+    "text": "Bahor oyida dalalarga chiqib, ekin ekamiz va tabiatdan zavqlanamiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "265",
+    "text": "Yangi ochilgan kutubxonada ming-minglab kitoblar bor.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "266",
+    "text": "Konferensiyaga turli mamlakatlardan mehmonlar tashrif buyurdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "267",
+    "text": "Olimlar yangi kashfiyot qildilar, bu butun dunyoga ma'lum bo'ldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "268",
+    "text": "Tibbiyot rivojlangani sayin, ko'p kasalliklarning davosi topilmoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "269",
+    "text": "Texnologiyalar bilan bir qatorda etika va axloq ham rivojlanishi kerak.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "270",
+    "text": "Yoshlar mamlakat kelajagini ta'minlovchi asosiy kuchdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "271",
+    "text": "Bunday yaxshi xabarni eshitib, hamma quvonib ketdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "272",
+    "text": "Yangiliklar tarqalishi bilan, butun mahalla bayram qildi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "273",
+    "text": "Maktab direktori o'quvchilarga muvaffaqiyat tilab nutq so'zladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "274",
+    "text": "Ota-onalar farzandlarining yutuqlaridan g'ururlanadilar.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "275",
+    "text": "Har bir muvaffaqiyat ortida katta mehnat va sabr yotadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "276",
+    "text": "O'tgan yili biz Italiya va Frantsiyaga sayohat qildik.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "277",
+    "text": "Yangi yilning birinchi kuni qor yog'di va hamma quvonib qoldi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "278",
+    "text": "Tug'ilgan kunimga do'stlarim juda chiroyli sovg'a olib kelishdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "279",
+    "text": "To'y marosimi kechgacha davom etdi, mehmonlar rozi bo'lishdi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "280",
+    "text": "Bayram dasturxoni dasturxon to'la noz-ne'matlardan iborat edi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "281",
+    "text": "O'rgatuvchi video darslarni yuklab olib, mustaqil o'rganaman.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "282",
+    "text": "Onlayn kurslar zamonaviy ta'lim olishning eng qulay yo'lidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "283",
+    "text": "YouTube kanalida foydali ma'lumotlar juda ko'p.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "284",
+    "text": "Ingliz tilini o'rganish karyerangizga katta yordam beradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "285",
+    "text": "Dasturlash tili o'rganish kelajakka sarmoyadir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "286",
+    "text": "Sun'iy intellekt insoniyat hayotini tubdan o'zgartirmoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "287",
+    "text": "Mobil ilovalar har birimizning hayotimizda muhim o'rin tutadi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "288",
+    "text": "Internet orqali ish topish hozirgi davrda oson.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "289",
+    "text": "Freelance ishlash erkinlik va yaxshi daromad keltiradi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "290",
+    "text": "Onlayn doʻkonlar bozorda yetakchi mavqega ega bo'lib bormoqda.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "291",
+    "text": "Yodda tuting, har bir kun — bu yangi imkoniyat.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "292",
+    "text": "Hech qachon kech emas, yangi narsa o'rganishni boshlash uchun.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "293",
+    "text": "Maqsadingiz aniq bo'lsa, yo'l albatta topiladi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "294",
+    "text": "Mehnatkash inson hech qachon ochlikda qolmaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "295",
+    "text": "Birinchi qadamni qo'ymasdan, sayohat boshlanmaydi.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "296",
+    "text": "Xato qilishdan qo'rqmang, ulardan saboq oling.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "297",
+    "text": "Mug'ambirlik va g'ayratlik — muvaffaqiyat kalitidir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "298",
+    "text": "Har bir tongni minnatdorchilik bilan kutib oling.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "299",
+    "text": "Eng katta dushman — bu sizning o'z qo'rquvingiz.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  },
+  {
+    "id": "300",
+    "text": "Bugun qilgan harakatingiz — ertangi muvaffaqiyatingizdir.",
+    "createdAt": "2026-05-25T20:16:35.327Z",
+    "recordedAt": null,
+    "audioPath": null,
+    "duration": null,
+    "sampleRate": null,
+    "notes": null
+  }
+]
