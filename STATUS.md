@@ -1,6 +1,6 @@
 # NextTTS — Training Status
 
-_Avtomatik yangilandi: **2026-05-29 01:17:36**_
+_Avtomatik yangilandi: **2026-05-29 01:27:38**_
 
 > Bu fayl `publish_status.py` tomonidan har 10 daqiqada GitHub'ga push qilinadi.
 > Uy noutbukdan jarayonni shu yerda kuzatish mumkin.
