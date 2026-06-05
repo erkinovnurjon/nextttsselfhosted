@@ -81,3 +81,6 @@ tts-server/output/
 # ============================================================
 tts-server/voices/
 tts-server/voices/*/reference.wav
+
+# HF fine-tune repo (alohida git-repo, deploy'ga shart emas)
+tts-server/training/finetune-hf-vits/
