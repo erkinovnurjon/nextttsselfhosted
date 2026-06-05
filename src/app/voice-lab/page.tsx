@@ -68,6 +68,17 @@ const TEST_PRESETS = [
   { label: "Texnik", text: "Aniqlik nol butun mingdan bir darajasida" },
 ];
 
+// MMS — Meta'ning tug'ma o'zbek modeli. Ovoz cloning yo'q, lekin q/x/oʻ/gʻ to'g'ri.
+// Backend'da alohida /synthesize/mms endpoint, parametr sliderlari unga ta'sir qilmaydi.
+const MMS_CHECKPOINT: Checkpoint = {
+  id: "mms",
+  name: "MMS — tug'ma o'zbek (ayol ovozi, klonsiz)",
+  size_gb: 0.14,
+  mtime: 0,
+  kind: "best",
+  active: false,
+};
+
 export default function VoiceLabPage() {
   const [text, setText] = useState(TEST_PRESETS[0].text);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -93,9 +104,10 @@ export default function VoiceLabPage() {
       const res = await fetch("/api/checkpoints");
       if (!res.ok) throw new Error("Checkpoint'lar olinmadi");
       const data: CheckpointsResponse = await res.json();
-      setCheckpoints(data.items);
-      if (!selectedId && data.items.length > 0) {
-        setSelectedId(data.active ?? data.items[0].id);
+      // MMS'ni ro'yxat tepasiga qo'shamiz — XTTS bilan yonma-yon sinash uchun
+      setCheckpoints([MMS_CHECKPOINT, ...data.items]);
+      if (!selectedId) {
+        setSelectedId(data.active ?? data.items[0]?.id ?? MMS_CHECKPOINT.id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nomalum xato");
@@ -327,11 +339,15 @@ export default function VoiceLabPage() {
               <div className="text-fg-muted break-all">
                 {selectedCheckpoint.name}
               </div>
+              {selectedCheckpoint.mtime > 0 && (
+                <div className="text-fg-subtle">
+                  {new Date(selectedCheckpoint.mtime * 1000).toLocaleString("uz")}
+                </div>
+              )}
               <div className="text-fg-subtle">
-                {new Date(selectedCheckpoint.mtime * 1000).toLocaleString("uz")}
-              </div>
-              <div className="text-fg-subtle">
-                Kichik switch (~10-20s) faqat birinchi sintezda boʻladi.
+                {selectedCheckpoint.id === "mms"
+                  ? "Meta MMS · tug'ma o'zbek talaffuz · ovoz cloning yo'q · birinchi sintez ~25s (model yuklanadi)."
+                  : "Kichik switch (~10-20s) faqat birinchi sintezda boʻladi."}
               </div>
             </div>
           )}

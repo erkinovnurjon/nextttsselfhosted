@@ -42,13 +42,14 @@ XTTS_CACHE = Path.home() / "AppData" / "Local" / "tts" / "tts_models--multilingu
 # Make scripts importable
 sys.path.insert(0, str(PROJECT_ROOT / "tts-server"))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, Field
 
 from server.text_normalizer import normalize_uzbek_to_turkish_phonetic
 from server.linguistic_normalizer import normalize_uzbek_text
+from server import mms_engine
 
 # Singleton model state.
 # `loaded_checkpoint` — hozir RAM/VRAM'da turgan fine-tuned model uchun cache:
@@ -207,12 +208,22 @@ SUPPORTED_LANGS = {
 
 
 def load_model():
-    """Modelni yuklash: agar fine-tuned checkpoint bo'lsa, uni; aks holda base model."""
+    """Modelni yuklash: agar fine-tuned checkpoint bo'lsa, uni; aks holda base model.
+
+    NEXTTTS_MMS_ONLY=1 bo'lsa — XTTS yuklanmaydi (yengil rejim, faqat MMS engine).
+    Bu training GPU'ni band qilganda MMS'ni CPU'da sinash uchun ishlatiladi.
+    """
     t0 = time.time()
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     state["device"] = device
+
+    if os.environ.get("NEXTTTS_MMS_ONLY", "").strip() in ("1", "true", "True"):
+        state["model_kind"] = "mms-only"
+        state["model_load_time"] = time.time() - t0
+        print("⚡ MMS-only rejim — XTTS yuklanmadi (yengil). Faqat /synthesize/mms ishlaydi.")
+        return
 
     ft_path = find_latest_finetuned_checkpoint()
     if ft_path:
@@ -279,10 +290,12 @@ class BuildReferenceRequest(BaseModel):
 def health():
     import torch
     loaded = state["loaded_checkpoint"]
+    mms_only = state["model_kind"] == "mms-only"
     info = {
         "status": "ok",
-        "model_loaded": state["tts"] is not None or loaded is not None,
+        "model_loaded": mms_only or state["tts"] is not None or loaded is not None,
         "model_kind": state["model_kind"],
+        "mms": mms_engine.info(),
         "checkpoint": str(loaded["path"]) if loaded else None,
         "checkpoint_id": loaded["id"] if loaded else None,
         "device": state["device"],
@@ -600,6 +613,81 @@ def synthesize(req: SynthesizeRequest):
             os.unlink(tmp_path)
         except OSError:
             pass
+
+
+class MMSSynthesizeRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+    voice: Optional[str] = Field(default=None, description="base | erkak | ayol")
+    normalize: bool = Field(
+        default=True,
+        description="O'zbek linguistik normalizatsiya (sonlar, qisqartmalar)",
+    )
+    speaking_rate: Optional[float] = Field(
+        default=None, ge=0.3, le=1.5,
+        description="PAST = sekinroq (0.5 ~ tabiiy). Bo'sh — server default.",
+    )
+    noise_scale_duration: Optional[float] = Field(
+        default=None, ge=0.0, le=1.0,
+        description="PAST = barqarorroq ritm. Bo'sh — server default.",
+    )
+
+
+@app.post("/synthesize/mms")
+def synthesize_mms(req: MMSSynthesizeRequest):
+    """Meta MMS bilan sintez — tug'ma o'zbek, ovoz cloning yo'q, fonetik to'liq.
+
+    XTTS'dan farqi: reference voice kerak emas, bitta fikslangan ovoz, lekin
+    q/x/oʻ/gʻ to'g'ri talaffuz qilinadi. Lotin matn ichida kirillga o'giriladi.
+    """
+    import io as _io
+    import soundfile as sf
+    from server import mms_engine
+
+    text = req.text
+    if req.normalize:
+        text = normalize_uzbek_text(text)
+
+    t0 = time.time()
+    try:
+        wav, sr, cyr = mms_engine.synthesize(
+            text,
+            voice=req.voice,
+            speaking_rate=req.speaking_rate,
+            noise_scale_duration=req.noise_scale_duration,
+        )
+    except Exception as e:
+        raise HTTPException(500, f"MMS sintez xatosi: {e}")
+    elapsed = time.time() - t0
+
+    buf = _io.BytesIO()
+    sf.write(buf, wav, sr, format="WAV", subtype="PCM_16")
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="audio/wav",
+        headers={
+            "X-Synthesis-Time-Sec": f"{elapsed:.3f}",
+            "X-Model-Kind": "mms-vits",
+            "X-Engine": "mms",
+            "X-Original-Text": urllib.parse.quote(req.text[:200]),
+            "X-Normalized-Text": urllib.parse.quote(cyr[:200]),
+            "Content-Disposition": 'inline; filename="mms.wav"',
+        },
+    )
+
+
+@app.post("/transcribe")
+async def transcribe(request: Request):
+    """Ovozli kiritish — WAV baytlardan o'zbek matnini qaytaradi (Whisper)."""
+    audio = await request.body()
+    if not audio:
+        raise HTTPException(400, "Audio bo'sh")
+    try:
+        from server import whisper_engine
+        text = whisper_engine.transcribe(audio)
+    except Exception as e:
+        raise HTTPException(500, f"ASR xatosi: {e}")
+    return {"text": text}
 
 
 @app.post("/reference/build")

@@ -4,33 +4,39 @@
 
 @layer base {
   :root {
-    --bg: 255 255 255;
-    --bg-subtle: 249 250 251;
-    --bg-muted: 243 244 246;
-    --fg: 17 24 39;
-    --fg-muted: 75 85 99;
-    --fg-subtle: 156 163 175;
-    --border: 229 231 235;
-    --accent: 79 70 229;
+    /* Light — toza, yumshoq neytrallar */
+    --bg: 250 250 252;
+    --bg-subtle: 255 255 255;
+    --bg-muted: 244 244 247;
+    --fg: 24 24 27;
+    --fg-muted: 82 82 91;
+    --fg-subtle: 142 142 152;
+    --border: 228 228 233;
+    --accent: 99 102 241;       /* indigo-500 */
+    --accent-2: 168 85 247;     /* violet-500 — gradient uchun */
     --accent-fg: 255 255 255;
     --success: 22 163 74;
-    --danger: 220 38 38;
+    --danger: 225 29 72;
     --warning: 217 119 6;
+    --ring: 99 102 241;
   }
 
   .dark {
-    --bg: 9 9 11;
-    --bg-subtle: 24 24 27;
-    --bg-muted: 39 39 42;
+    /* Dark — biroz ko'k tusli zamonaviy neytrallar */
+    --bg: 10 10 14;
+    --bg-subtle: 18 18 24;
+    --bg-muted: 32 32 40;
     --fg: 244 244 245;
     --fg-muted: 161 161 170;
-    --fg-subtle: 113 113 122;
-    --border: 39 39 42;
-    --accent: 129 140 248;
-    --accent-fg: 9 9 11;
-    --success: 34 197 94;
-    --danger: 239 68 68;
-    --warning: 245 158 11;
+    --fg-subtle: 113 113 130;
+    --border: 38 38 47;
+    --accent: 129 140 248;      /* indigo-400 */
+    --accent-2: 192 132 252;    /* violet-400 */
+    --accent-fg: 10 10 14;
+    --success: 52 211 153;
+    --danger: 251 113 133;
+    --warning: 251 191 36;
+    --ring: 129 140 248;
   }
 
   html {
@@ -39,16 +45,135 @@
 
   body {
     @apply bg-bg text-fg antialiased;
-    font-feature-settings: "cv11", "ss01", "ss03";
+    font-feature-settings: "cv11", "ss01";
   }
 
   *::selection {
-    background: rgb(var(--accent) / 0.3);
+    background: rgb(var(--accent) / 0.25);
   }
+
+  /* Fokus halqasi — zamonaviy, kirish qulayligi uchun */
+  *:focus-visible {
+    outline: 2px solid rgb(var(--ring) / 0.6);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Brend gradient — logo, sarlavhalar, asosiy CTA uchun */
+  .brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      rgb(var(--accent)),
+      rgb(var(--accent-2))
+    );
+  }
+  .brand-text {
+    background-image: linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-2)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Yumshoq sahifa fon gradienti */
+  .bg-app-gradient {
+    background:
+      radial-gradient(60rem 60rem at 110% -10%, rgb(var(--accent) / 0.10), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 10%, rgb(var(--accent-2) / 0.08), transparent 55%);
+  }
+
+  /* Animatsion aurora fon — premium, harakatlanuvchi gradient bloblar */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    overflow: hidden;
+    background: rgb(var(--bg));
+  }
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    width: 55vw;
+    height: 55vw;
+    border-radius: 9999px;
+    filter: blur(90px);
+    opacity: 0.5;
+    will-change: transform;
+  }
+  .aurora::before {
+    top: -20vw;
+    right: -10vw;
+    background: radial-gradient(circle, rgb(var(--accent) / 0.55), transparent 65%);
+    animation: aurora-1 22s ease-in-out infinite alternate;
+  }
+  .aurora::after {
+    bottom: -25vw;
+    left: -15vw;
+    background: radial-gradient(circle, rgb(var(--accent-2) / 0.45), transparent 65%);
+    animation: aurora-2 26s ease-in-out infinite alternate;
+  }
+  /* Nozik to'r naqshi */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -9;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgb(var(--fg) / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--fg) / 0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+  }
+
+  /* Standart matn kiritish maydoni */
+  .input {
+    @apply w-full rounded-lg border border-border bg-bg/60 px-3 py-2.5 text-sm outline-none transition;
+  }
+  .input:focus {
+    border-color: rgb(var(--accent) / 0.5);
+    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.12);
+  }
+
+  /* Shisha (glass) kartalar */
+  .card {
+    @apply rounded-2xl border border-border bg-bg-subtle/70 backdrop-blur-md;
+  }
+  /* Glow chegarali karta */
+  .card-glow {
+    @apply rounded-2xl border border-accent/30 bg-bg-subtle/70 backdrop-blur-md;
+    box-shadow: 0 0 0 1px rgb(var(--accent) / 0.10), 0 10px 40px rgb(var(--accent) / 0.12);
+  }
+}
+
+@keyframes aurora-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-8vw, 10vh) scale(1.2); }
+}
+@keyframes aurora-2 {
+  0% { transform: translate(0, 0) scale(1.1); }
+  100% { transform: translate(10vw, -8vh) scale(0.9); }
+}
+/* Audio to'lqin paneli */
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
+    scrollbar-color: rgb(var(--fg-subtle) / 0.4) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(var(--fg-subtle) / 0.35);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--fg-subtle) / 0.55);
   }
 }

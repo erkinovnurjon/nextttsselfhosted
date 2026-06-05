@@ -13,6 +13,11 @@ emas, balki "kechqurun yetti yarim" deb tabiiy o'qiydi.
 
 import re
 
+try:
+    from server.lexicon import apply_lexicon
+except ImportError:  # to'g'ridan-to'g'ri ishga tushirilganda
+    from lexicon import apply_lexicon
+
 # Asosiy raqam so'zlari
 UZBEK_DIGITS = ["nol", "bir", "ikki", "uch", "to'rt", "besh", "olti", "yetti", "sakkiz", "to'qqiz"]
 UZBEK_TENS = ["", "o'n", "yigirma", "o'ttiz", "qirq", "ellik", "oltmish", "yetmish", "sakson", "to'qson"]
@@ -235,6 +240,42 @@ def normalize_ordinals(text: str) -> str:
     return re.sub(pattern, repl, text)
 
 
+_ROMAN_MAP = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+_ROMAN_PAT = r"(?=[MDCLXVI])M{0,4}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})"
+_ROMAN_NOUNS = ["asr", "bob", "jild", "qism", "tip", "guruh", "sinf", "kurs", "tom", "jahon"]
+
+
+def roman_to_int(s: str) -> int:
+    total, prev = 0, 0
+    for ch in reversed(s.upper()):
+        v = _ROMAN_MAP.get(ch, 0)
+        if v < prev:
+            total -= v
+        else:
+            total += v
+            prev = v
+    return total
+
+
+def normalize_roman(text: str) -> str:
+    """Rim raqami + kontekst so'z (asr/bob/...) → tartib son.
+
+    Faqat BOSH HARFLI rim raqamlari va aniq kontekst bilan — oddiy harf/o'zgaruvchi
+    (X, V) tasodifan buzilmasligi uchun.
+    """
+    nouns = "|".join(_ROMAN_NOUNS)
+    # Kontekst so'z + ixtiyoriy o'zbekcha qo'shimcha (asr → asrda, asrning ...)
+    pat = re.compile(rf"\b({_ROMAN_PAT})[-\s]+({nouns})([a-zʻ']*)\b")
+
+    def repl(m: re.Match) -> str:
+        n = roman_to_int(m.group(1))
+        if n <= 0 or n > 3000:
+            return m.group(0)
+        return f"{cardinal_to_ordinal(number_to_uzbek(n))} {m.group(2)}{m.group(3)}"
+
+    return pat.sub(repl, text)
+
+
 def normalize_math(text: str) -> str:
     """5+3=8 → 'besh qo'shuv uch teng sakkiz'
 
@@ -316,6 +357,9 @@ def normalize_uzbek_text(text: str) -> str:
     7. Qolgan belgilar (°, & va h.k.)
     8. Yakuniy: qolgan butun sonlarni so'zga (eng oxirgi)
     """
+    # 0. Lug'at qatlami: qisqartma/valyuta/birlik/chet so'zlar (raqamlarga tegmaydi)
+    text = apply_lexicon(text)
+    text = normalize_roman(text)
     text = normalize_dates(text)
     text = normalize_times(text)
     text = normalize_ordinals(text)

@@ -1,0 +1,159 @@
+// NextTTS — Prisma schema
+// SQLite database for users, sessions, synthesis history, daily usage tracking
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────
+// Foydalanuvchi (Auth.js bilan mos)
+// ────────────────────────────────────────────────
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String?      // bcrypt hash; null bo'lsa OAuth
+  role          String       @default("user") // "user" | "admin"
+  balance       Int          @default(10000)  // kredit balansi (1 kredit = 1 belgi)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  syntheses     Synthesis[]
+  dailyUsage    DailyUsage[]
+  creditTxns    CreditTransaction[]
+  payments      Payment[]
+}
+
+// ────────────────────────────────────────────────
+// To'lov buyurtmalari (Payme / Click)
+// Bir buyurtma = bir balans to'ldirish urinishi.
+// Webhook tasdiqlangach status=paid bo'ladi va kredit beriladi (idempotent).
+// ────────────────────────────────────────────────
+model Payment {
+  id            String    @id @default(cuid())
+  userId        String
+  provider      String    // "payme" | "click"
+  amountSom     Int       // foydalanuvchi to'laydigan summa (butun so'm)
+  credits       Int       // muvaffaqiyatda beriladigan kredit
+  status        String    @default("pending") // pending | paid | canceled | failed
+  providerTxnId String?   // provayderdagi tranzaksiya ID (Payme _id / Click click_trans_id)
+  prepareId     String?   // Click merchant_prepare_id
+  state         Int       @default(0) // Payme holati: 0 yangi, 1 yaratilgan, 2 to'langan, -1/-2 bekor
+  createTime    BigInt?   // Payme create_time (ms)
+  performTime   BigInt?   // Payme perform_time (ms)
+  cancelTime    BigInt?   // Payme cancel_time (ms)
+  reason        Int?      // Payme cancel reason
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerTxnId])
+  @@index([userId, createdAt])
+}
+
+// ────────────────────────────────────────────────
+// Kredit tranzaksiyalari (ledger) — har bir o'zgarish yoziladi
+// amount: musbat = to'ldirish/bonus, manfiy = sarf
+// ────────────────────────────────────────────────
+model CreditTransaction {
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Int      // + grant/topup, − sarf
+  reason       String   // "signup" | "synthesis" | "topup" | "admin"
+  balanceAfter Int      // tranzaksiyadan keyingi balans
+  meta         String?  // qo'shimcha (masalan sintez matni qisqasi)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// Auth.js — OAuth providerlar uchun (kelajakda Google/Telegram)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ────────────────────────────────────────────────
+// TTS sintez tarixi
+// ────────────────────────────────────────────────
+model Synthesis {
+  id          String   @id @default(cuid())
+  userId      String?  // null = anonim foydalanuvchi
+  text        String
+  voice       String   // "ayol" | "erkak" | "base" | "mms" | va h.k.
+  speed       Float    @default(1.0)
+  charCount   Int
+  durationSec Float?
+  audioPath   String?  // disk'dagi WAV yo'li (ixtiyoriy)
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+// Kunlik limit kuzatuvi
+model DailyUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String   // ISO date "YYYY-MM-DD"
+  charsUsed Int      @default(0)
+  requests  Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// Anonim IP-bo'yicha limit
+model AnonymousUsage {
+  id        String   @id @default(cuid())
+  ipHash    String
+  date      String   // "YYYY-MM-DD"
+  charsUsed Int      @default(0)
+  requests  Int      @default(0)
+
+  @@unique([ipHash, date])
+}

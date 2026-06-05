@@ -1,13 +1,33 @@
 import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/sidebar";
-import { TopBar } from "@/components/top-bar";
+import { Providers } from "@/components/providers";
+
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "NextTTS — Self-hosted TTS Studio",
+  title: "NextTTS — O‘zbek tilida sun’iy ovoz",
   description:
-    "O'zbek tilida self-hosted TTS platformasi. Dataset to'plash, fine-tuning, voice cloning sinov muhiti.",
+    "O‘zbek tilida self-hosted TTS platformasi. Matnni ravon o‘zbek nutqiga aylantiring — ta’lim, kontent va dasturlash uchun.",
 };
+
+// FOUC oldini olish: tema + til <html> ga sahifa chizilishidan oldin qo‘yiladi.
+const BOOT = `(function(){try{
+  var t=localStorage.getItem('theme')||'dark';
+  document.documentElement.classList.toggle('dark',t==='dark');
+  var l=localStorage.getItem('lang');
+  if(l){document.documentElement.lang=l;}
+}catch(e){document.documentElement.classList.add('dark');}})();`;
 
 export default function RootLayout({
   children,
@@ -15,22 +35,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="uz" suppressHydrationWarning>
+    <html
+      lang="uz"
+      suppressHydrationWarning
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: BOOT }} />
       </head>
-      <body className="min-h-screen">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex flex-1 flex-col min-w-0">
-            <TopBar />
-            <div className="flex-1">{children}</div>
-          </div>
-        </div>
+      <body className="min-h-screen font-sans">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

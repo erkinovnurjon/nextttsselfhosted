@@ -1,0 +1,9 @@
+# NextTTS — Caddy reverse proxy (avtomatik HTTPS / Let's Encrypt)
+{$DOMAIN} {
+	encode gzip
+	# Katta audio/so'rovlar uchun
+	request_body {
+		max_size 50MB
+	}
+	reverse_proxy web:3000
+}

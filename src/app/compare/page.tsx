@@ -239,6 +239,8 @@ export default function ComparePage() {
             <div className="space-y-3">
               {visibleCheckpoints.map((cp) => {
                 const sample = cp.samples.find((s) => s.sentence_id === selectedSentence);
+                // Backend `/samples/audio/...` qaytaradi — Next.js proxy `/api` prefiksi kerak
+                const audioUrl = sample ? `/api${sample.url}` : null;
                 return (
                   <div
                     key={cp.id}
@@ -255,9 +257,9 @@ export default function ComparePage() {
                           </div>
                         )}
                       </div>
-                      {sample && (
+                      {sample && audioUrl && (
                         <a
-                          href={sample.url}
+                          href={audioUrl}
                           download={`${cp.id}_${sample.sentence_id}.wav`}
                           className="rounded p-1 hover:bg-bg-muted transition"
                           title="Yuklab olish"
@@ -266,8 +268,8 @@ export default function ComparePage() {
                         </a>
                       )}
                     </div>
-                    {sample ? (
-                      <audio src={sample.url} controls className="w-full h-8" />
+                    {sample && audioUrl ? (
+                      <audio src={audioUrl} controls className="w-full h-8" />
                     ) : (
                       <div className="text-[11px] text-fg-subtle py-2">
                         Bu jumla bu versiyada ovozlanmagan

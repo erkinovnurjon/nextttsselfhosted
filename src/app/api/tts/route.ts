@@ -1,4 +1,15 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import {
+  consumeAnonymousUsage,
+  getAnonymousUsage,
+  getUserUsage,
+  getClientIp,
+  hashIp,
+  LIMITS,
+} from "@/lib/usage";
+import { getBalance, spendCredits } from "@/lib/credits";
 
 const TTS_BACKEND_URL = process.env.TTS_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -26,56 +37,78 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const res = await fetch(`${TTS_BACKEND_URL}/synthesize`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        language,
-        voice,
-        speed,
-        temperature,
-        repetition_penalty,
-        top_k,
-        top_p,
-        checkpoint_id,
-      }),
-      signal: AbortSignal.timeout(180_000),
-    });
+  // ───── Limit / balans tekshiruvi ─────
+  // Login qilgan foydalanuvchi → kredit balansi
+  // Anonim foydalanuvchi → IP-bo'yicha kunlik limit
+  const session = await auth();
+  const charCount = text.length;
+  const ipHash = hashIp(getClientIp(request.headers));
 
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "");
+  let balance = 0;
+  let usage; // faqat anonim uchun
+
+  if (session?.user?.id) {
+    balance = await getBalance(session.user.id);
+    if (charCount > balance) {
       return NextResponse.json(
         {
-          error: `TTS server xatosi (${res.status})`,
-          details: errText,
-          hint:
-            "Python TTS server ishlamayapti bo'lishi mumkin. " +
-            "Ishga tushirish: cd tts-server && .\\.venv\\Scripts\\python.exe -m uvicorn server.main:app --port 8000",
+          error: `Balans yetarli emas: ${balance} kredit qoldi, bu matn ${charCount} kredit talab qiladi. Balansni to'ldiring.`,
+          balance,
+          required: charCount,
+          insufficientCredits: true,
         },
-        { status: 502 }
+        { status: 402 }
       );
     }
+  } else {
+    usage = await getAnonymousUsage(ipHash);
+    if (charCount > usage.remaining) {
+      const exhausted = usage.remaining === 0;
+      const error = exhausted
+        ? `Anonim limit tugadi (${usage.charsUsed}/${usage.limit} belgi). Roʻyxatdan oʻtsangiz ${LIMITS.user} kredit bonus.`
+        : `Limit yetarli emas: ${usage.remaining}/${usage.limit} belgi qoldi, siz ${charCount} belgi yubordingiz. Roʻyxatdan oʻtsangiz bonus olasiz.`;
+      return NextResponse.json(
+        { error, usage, requiresAuth: true },
+        { status: 429 }
+      );
+    }
+  }
 
-    const audioBuffer = await res.arrayBuffer();
-    return new NextResponse(audioBuffer, {
-      headers: {
-        "Content-Type": "audio/wav",
-        "X-Synthesis-Time-Sec": res.headers.get("X-Synthesis-Time-Sec") || "",
-        "X-Normalized-Text": res.headers.get("X-Normalized-Text") || "",
-        "X-Original-Text": res.headers.get("X-Original-Text") || "",
-        "X-Checkpoint-Id": res.headers.get("X-Checkpoint-Id") || "",
-        "X-Model-Kind": res.headers.get("X-Model-Kind") || "",
-        "Cache-Control": "no-cache",
-      },
-    });
+  // ───── Sintez ─────
+  let backendRes: Response;
+  try {
+    if (checkpoint_id === "mms") {
+      const speaking_rate =
+        typeof body?.speaking_rate === "number" ? body.speaking_rate : undefined;
+      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/mms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, normalize: true, speaking_rate, voice }),
+        signal: AbortSignal.timeout(120_000),
+      });
+    } else {
+      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          language,
+          voice,
+          speed,
+          temperature,
+          repetition_penalty,
+          top_k,
+          top_p,
+          checkpoint_id,
+        }),
+        signal: AbortSignal.timeout(180_000),
+      });
+    }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
       {
         error: "TTS backend bilan bog'lana olmadi",
-        details: msg,
+        details: err instanceof Error ? err.message : "Unknown error",
         hint:
           "Python TTS server ishlamayapti. " +
           "Ishga tushirish: cd tts-server && .\\.venv\\Scripts\\python.exe -m uvicorn server.main:app --port 8000",
@@ -83,9 +116,69 @@ export async function POST(request: Request) {
       { status: 502 }
     );
   }
+
+  if (!backendRes.ok) {
+    const errText = await backendRes.text().catch(() => "");
+    return NextResponse.json(
+      {
+        error: `TTS server xatosi (${backendRes.status})`,
+        details: errText,
+      },
+      { status: 502 }
+    );
+  }
+
+  const audioBuffer = await backendRes.arrayBuffer();
+  const synthTime = parseFloat(
+    backendRes.headers.get("X-Synthesis-Time-Sec") || "0"
+  );
+
+  // ───── Balans/limitni hisoblash + tarix saqlash ─────
+  const usageHeaders: Record<string, string> = {};
+  if (session?.user?.id) {
+    // Kreditni yechish (atomik) + sintez tarixiga yozish
+    const spend = await spendCredits(
+      session.user.id,
+      charCount,
+      "synthesis",
+      text.slice(0, 80)
+    );
+    usageHeaders["X-Credit-Balance"] = String(spend.balance);
+    await db.synthesis
+      .create({
+        data: {
+          userId: session.user.id,
+          text,
+          voice: checkpoint_id === "mms" ? "mms" : voice,
+          speed,
+          charCount,
+          durationSec: synthTime,
+        },
+      })
+      .catch(() => undefined);
+  } else {
+    const nextUsage = await consumeAnonymousUsage(ipHash, charCount);
+    usageHeaders["X-Usage-Limit"] = String(nextUsage.limit);
+    usageHeaders["X-Usage-Used"] = String(nextUsage.charsUsed);
+    usageHeaders["X-Usage-Remaining"] = String(nextUsage.remaining);
+  }
+
+  return new NextResponse(audioBuffer, {
+    headers: {
+      "Content-Type": "audio/wav",
+      "X-Synthesis-Time-Sec": backendRes.headers.get("X-Synthesis-Time-Sec") || "",
+      "X-Normalized-Text": backendRes.headers.get("X-Normalized-Text") || "",
+      "X-Original-Text": backendRes.headers.get("X-Original-Text") || "",
+      "X-Checkpoint-Id":
+        backendRes.headers.get("X-Checkpoint-Id") || checkpoint_id || "",
+      "X-Model-Kind": backendRes.headers.get("X-Model-Kind") || "",
+      ...usageHeaders,
+      "Cache-Control": "no-cache",
+    },
+  });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const res = await fetch(`${TTS_BACKEND_URL}/health`, {
       signal: AbortSignal.timeout(3000),
@@ -97,7 +190,18 @@ export async function GET() {
       );
     }
     const data = await res.json();
-    return NextResponse.json({ available: true, ...data });
+
+    // Foydalanuvchi limiti
+    const session = await auth();
+    let usage;
+    if (session?.user?.id) {
+      usage = await getUserUsage(session.user.id, session.user.role);
+    } else {
+      const ipHash = hashIp(getClientIp(request.headers));
+      usage = await getAnonymousUsage(ipHash);
+    }
+
+    return NextResponse.json({ available: true, ...data, usage });
   } catch (err) {
     return NextResponse.json(
       {

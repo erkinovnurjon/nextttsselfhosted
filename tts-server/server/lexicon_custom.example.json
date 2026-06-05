@@ -1,0 +1,24 @@
+{
+  "_izoh": "Bu NAMUNA. Ishlatish uchun shu faylni 'lexicon_custom.json' deb nusxalang va o'zingiznikini yozing. Server qayta ishga tushganda avtomatik yuklanadi.",
+
+  "abbreviations": {
+    "yhxb": "yo'l harakati xavfsizligi bo'limi",
+    "tatu": "Toshkent axborot texnologiyalari universiteti",
+    "soliq": "soliq qo'mitasi"
+  },
+
+  "pronunciation": {
+    "chatgpt": "chat-ji-pi-ti",
+    "nginx": "endjiniks",
+    "linux": "linuks",
+    "uzcard": "uzkard",
+    "humo": "humo"
+  },
+
+  "units": {
+    "px": "piksel",
+    "rpm": "aylanish daqiqasiga"
+  },
+
+  "spell": ["qr", "nfc", "otp"]
+}

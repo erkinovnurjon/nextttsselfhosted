@@ -1,0 +1,73 @@
+# NextTTS — production stack (hammasi bitta serverda)
+#   caddy  → HTTPS reverse proxy (avto Let's Encrypt)
+#   web    → Next.js frontend
+#   api    → FastAPI TTS+ASR backend (GPU bo'lsa ishlatadi)
+#   db     → PostgreSQL
+#
+# Ishga tushirish:  docker compose --env-file .env.prod up -d --build
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+    depends_on: [web]
+
+  web:
+    build: { context: ., dockerfile: Dockerfile }
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      # NextAuth v5 AUTH_SECRET ni o'qiydi (NEXTAUTH_SECRET emas)
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+      AUTH_TRUST_HOST: "true"
+      TTS_BACKEND_URL: http://api:8000
+      # To'lov (Payme/Click) — bo'sh bo'lsa checkout "sozlanmagan" deydi
+      APP_URL: ${APP_URL}
+      PAYME_MERCHANT_ID: ${PAYME_MERCHANT_ID:-}
+      PAYME_KEY: ${PAYME_KEY:-}
+      PAYME_CHECKOUT_URL: ${PAYME_CHECKOUT_URL:-https://checkout.paycom.uz}
+      CLICK_SERVICE_ID: ${CLICK_SERVICE_ID:-}
+      CLICK_MERCHANT_ID: ${CLICK_MERCHANT_ID:-}
+      CLICK_SECRET_KEY: ${CLICK_SECRET_KEY:-}
+      CLICK_CHECKOUT_URL: ${CLICK_CHECKOUT_URL:-https://my.click.uz/services/pay}
+    depends_on: [db, api]
+
+  api:
+    build: { context: ./tts-server, dockerfile: Dockerfile }
+    restart: unless-stopped
+    environment:
+      MMS_DEFAULT_VOICE: ${MMS_DEFAULT_VOICE:-base}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - hf_cache:/app/.hf_cache   # model'lar bir marta yuklanib keshlanadi
+    # ─── GPU uchun (server'да NVIDIA + nvidia-container-toolkit bo'lsa) ───
+    # quyidagi qatorlarni oching:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - { driver: nvidia, count: 1, capabilities: [gpu] }
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  caddy_data:
+  caddy_config:
+  hf_cache:
+  pg_data:

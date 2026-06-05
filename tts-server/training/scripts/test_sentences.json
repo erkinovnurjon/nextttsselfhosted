@@ -61,6 +61,54 @@
       "category": "tech",
       "text": "Sun'iy intellekt va mashina o'qitish texnologiyalari kelajakni o'zgartiradi",
       "focus": "texnik leksika"
+    },
+    {
+      "id": "h1_all",
+      "category": "hard",
+      "text": "Oʻzbek xalqining tarixi gʻoyat boy, shaharlari keng, togʻlari koʻrkam.",
+      "focus": "x gʻ oʻ sh ng — zich aralash"
+    },
+    {
+      "id": "h2_qishloq",
+      "category": "hard",
+      "text": "Togʻ etagidagi qishloqda dehqonlar gʻalla va sholi yetishtirishadi.",
+      "focus": "gʻ sh h q — qishloq"
+    },
+    {
+      "id": "h3_shahar",
+      "category": "hard",
+      "text": "Shoshilinch xushxabar kelganda, hamma shaharga otlandi.",
+      "focus": "sh x h — shahar"
+    },
+    {
+      "id": "h4_chol",
+      "category": "hard",
+      "text": "Choʻlda yongan choʻgʻ singari koʻnglim oʻrtanadi.",
+      "focus": "ch oʻ gʻ ng — she'riy"
+    },
+    {
+      "id": "h5_maktab",
+      "category": "hard",
+      "text": "Yangi ochilgan maktabda mingta oʻquvchi ilm oladi.",
+      "focus": "ng ch oʻ — maktab"
+    },
+    {
+      "id": "h6_singil",
+      "category": "hard",
+      "text": "Mehnatsevar singlim har kuni ingliz tilini oʻrganadi.",
+      "focus": "h ng oʻ — oila"
+    },
+    {
+      "id": "h7_shodlik",
+      "category": "hard",
+      "text": "Xushxabar eshitgan oʻrtoqlarim shodlikdan sakrashdi.",
+      "focus": "x sh oʻ — hissiyot"
+    },
+    {
+      "id": "h8_galaba",
+      "category": "hard",
+      "text": "Gʻalaba qoʻshigʻi yangrab, togʻu toshlar jaranglashdi.",
+      "focus": "gʻ oʻ sh ng — tantana"
     }
   ]
 }

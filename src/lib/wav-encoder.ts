@@ -52,7 +52,8 @@ async function resample(
     toRate
   );
   const buffer = offlineCtx.createBuffer(1, samples.length, fromRate);
-  buffer.copyToChannel(samples, 0, 0);
+  // Yangi ArrayBuffer-backed nusxa — TS 5.7+ TypedArray generikasi bilan mos
+  buffer.copyToChannel(new Float32Array(samples), 0, 0);
   const source = offlineCtx.createBufferSource();
   source.buffer = buffer;
   source.connect(offlineCtx.destination);

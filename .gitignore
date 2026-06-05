@@ -25,6 +25,14 @@ tts-server/.venv/
 .env
 .env.local
 .env*.local
+.env.prod
+
+# ============================================================
+# Prisma local DB
+# ============================================================
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations/dev.db*
 
 # ============================================================
 # Editor / OS / Logs
@@ -47,6 +55,8 @@ dataset/raw/
 # ============================================================
 # TRAINING — too large for GitHub (use HuggingFace Hub instead)
 # ============================================================
+# Butun training data (68+ GB) — hech qachon git'ga qo'shilmaydi
+tts-server/training/data/
 # ISSAI dataset (~9.5 GB tar + extracted)
 tts-server/training/data/ISSAI_USC.tar.gz
 tts-server/training/data/issai_raw/
@@ -66,7 +76,8 @@ tts-server/training/checkpoints/
 tts-server/output/
 
 # ============================================================
-# Voice references — keep model voice profile local
-# (small but contains user audio)
+# Voice references / samples — model'lar HF'dan yuklanadi, sample audio lokal
+# (~56 MB; admin compare/samples uchun, deploy'ga shart emas)
 # ============================================================
+tts-server/voices/
 tts-server/voices/*/reference.wav
