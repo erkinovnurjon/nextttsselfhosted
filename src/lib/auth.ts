@@ -58,6 +58,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "user";
+      } else if (token.id) {
+        // Rolni har safar DB'dan yangilab turamiz — set-role.mjs bilan
+        // o'zgartirilgan rol qayta login qilmasdan darrov kuchga kiradi.
+        const fresh = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (fresh) token.role = fresh.role;
       }
       return token;
     },

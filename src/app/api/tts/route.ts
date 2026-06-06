@@ -9,7 +9,7 @@ import {
   hashIp,
   LIMITS,
 } from "@/lib/usage";
-import { getBalance, spendCredits } from "@/lib/credits";
+import { getBalance, spendCredits, isUnlimited } from "@/lib/credits";
 
 const TTS_BACKEND_URL = process.env.TTS_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -46,19 +46,30 @@ export async function POST(request: Request) {
 
   let balance = 0;
   let usage; // faqat anonim uchun
+  // Rolni sessiya (eskirgan JWT) emas, DB'dan o'qiymiz — set-role.mjs bilan
+  // o'zgartirilgan rol qayta login qilmasdan darrov kuchga kiradi.
+  let unlimited = false;
 
   if (session?.user?.id) {
-    balance = await getBalance(session.user.id);
-    if (charCount > balance) {
-      return NextResponse.json(
-        {
-          error: `Balans yetarli emas: ${balance} kredit qoldi, bu matn ${charCount} kredit talab qiladi. Balansni to'ldiring.`,
-          balance,
-          required: charCount,
-          insufficientCredits: true,
-        },
-        { status: 402 }
-      );
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    unlimited = isUnlimited(dbUser?.role);
+    // Admin / VIP — cheksiz: balans tekshirilmaydi
+    if (!unlimited) {
+      balance = await getBalance(session.user.id);
+      if (charCount > balance) {
+        return NextResponse.json(
+          {
+            error: `Balans yetarli emas: ${balance} kredit qoldi, bu matn ${charCount} kredit talab qiladi. Balansni to'ldiring.`,
+            balance,
+            required: charCount,
+            insufficientCredits: true,
+          },
+          { status: 402 }
+        );
+      }
     }
   } else {
     usage = await getAnonymousUsage(ipHash);
@@ -136,14 +147,20 @@ export async function POST(request: Request) {
   // ───── Balans/limitni hisoblash + tarix saqlash ─────
   const usageHeaders: Record<string, string> = {};
   if (session?.user?.id) {
-    // Kreditni yechish (atomik) + sintez tarixiga yozish
-    const spend = await spendCredits(
-      session.user.id,
-      charCount,
-      "synthesis",
-      text.slice(0, 80)
-    );
-    usageHeaders["X-Credit-Balance"] = String(spend.balance);
+    // Admin / VIP — kredit yechilmaydi (cheksiz)
+    if (unlimited) {
+      usageHeaders["X-Credit-Balance"] = "unlimited";
+    } else {
+      // Kreditni yechish (atomik)
+      const spend = await spendCredits(
+        session.user.id,
+        charCount,
+        "synthesis",
+        text.slice(0, 80)
+      );
+      usageHeaders["X-Credit-Balance"] = String(spend.balance);
+    }
+    // Sintez tarixiga yozish (har doim)
     await db.synthesis
       .create({
         data: {

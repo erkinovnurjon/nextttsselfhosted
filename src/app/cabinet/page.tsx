@@ -13,12 +13,14 @@ import {
   ArrowRight,
   Wallet,
   Loader2,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { localeOf, formatDate } from "@/lib/format";
 
 interface MeData {
   user: { name: string | null; email: string | null; role: string; createdAt: string };
+  unlimited?: boolean;
   usage: { limit: number; charsUsed: number; remaining: number };
   credits: { balance: number; granted: number; spent: number };
   stats: { total: number; today: number; charsToday: number };
@@ -46,11 +48,12 @@ export default function DashboardPage() {
   }, []);
 
   const loc = localeOf(lang);
+  const unlimited = data?.unlimited ?? false;
   const balance = data?.credits?.balance ?? 0;
   const granted = data?.credits?.granted ?? 0;
   const spent = data?.credits?.spent ?? 0;
   const balancePct = granted > 0 ? Math.min(100, Math.round((balance / granted) * 100)) : 100;
-  const firstName = (data?.user.name || data?.user.email?.split("@")[0] || "").split(" ")[0];
+  const firstName = (data?.user?.name || data?.user?.email?.split("@")[0] || "").split(" ")[0];
 
   if (loading) {
     return (
@@ -89,28 +92,45 @@ export default function DashboardPage() {
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="mt-4">
-            <div className="flex items-baseline gap-1.5">
-              <span className="brand-text text-3xl font-semibold tabular-nums">
-                {balance.toLocaleString(loc)}
-              </span>
-              <span className="text-sm text-fg-muted">
-                {t("cabinet.dashboard.balanceUnit")}
-              </span>
+          {unlimited ? (
+            <div className="mt-4">
+              <div className="flex items-center gap-2">
+                <InfinityIcon className="h-8 w-8 text-amber-500" />
+                <span className="brand-text text-3xl font-semibold">
+                  {t("cabinet.dashboard.balanceUnlimited")}
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-muted">
+                <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-500" style={{ width: "100%" }} />
+              </div>
+              <div className="mt-2 text-[11px] text-fg-subtle">
+                {t("cabinet.dashboard.balanceUnlimitedHint")}
+              </div>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-muted">
-              <div
-                className="h-full brand-gradient transition-all"
-                style={{ width: `${balancePct}%` }}
-              />
+          ) : (
+            <div className="mt-4">
+              <div className="flex items-baseline gap-1.5">
+                <span className="brand-text text-3xl font-semibold tabular-nums">
+                  {balance.toLocaleString(loc)}
+                </span>
+                <span className="text-sm text-fg-muted">
+                  {t("cabinet.dashboard.balanceUnit")}
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-muted">
+                <div
+                  className="h-full brand-gradient transition-all"
+                  style={{ width: `${balancePct}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px] text-fg-subtle">
+                <span>{t("cabinet.dashboard.balanceHint")}</span>
+                <span className="tabular-nums">
+                  −{spent.toLocaleString(loc)}
+                </span>
+              </div>
             </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] text-fg-subtle">
-              <span>{t("cabinet.dashboard.balanceHint")}</span>
-              <span className="tabular-nums">
-                −{spent.toLocaleString(loc)}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Stat grid */}
@@ -133,7 +153,7 @@ export default function DashboardPage() {
           <StatCard
             icon={<CalendarDays className="h-4 w-4" />}
             label={t("cabinet.dashboard.statMember")}
-            value={data ? formatDate(data.user.createdAt, loc, { dateOnly: true }) : "—"}
+            value={data?.user?.createdAt ? formatDate(data.user.createdAt, loc, { dateOnly: true }) : "—"}
           />
         </div>
       </div>

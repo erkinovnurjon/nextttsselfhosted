@@ -37,7 +37,11 @@ services:
       CLICK_MERCHANT_ID: ${CLICK_MERCHANT_ID:-}
       CLICK_SECRET_KEY: ${CLICK_SECRET_KEY:-}
       CLICK_CHECKOUT_URL: ${CLICK_CHECKOUT_URL:-https://my.click.uz/services/pay}
-    depends_on: [db, api]
+    depends_on:
+      db:
+        condition: service_healthy   # Postgres tayyor bo'lgach migratsiya ishlaydi
+      api:
+        condition: service_started
 
   api:
     build: { context: ./tts-server, dockerfile: Dockerfile }
@@ -65,6 +69,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   caddy_data:

@@ -20,7 +20,7 @@ model User {
   name          String?
   image         String?
   password      String?      // bcrypt hash; null bo'lsa OAuth
-  role          String       @default("user") // "user" | "admin"
+  role          String       @default("user") // "user" | "vip" | "admin" (vip/admin = cheksiz)
   balance       Int          @default(10000)  // kredit balansi (1 kredit = 1 belgi)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

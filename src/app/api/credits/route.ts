@@ -6,6 +6,7 @@ import {
   grantCredits,
   TOPUP_AMOUNT,
 } from "@/lib/credits";
+import { isUnlimited } from "@/lib/role";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,12 @@ export async function GET(request: Request) {
     getLedger(session.user.id, limit),
   ]);
 
-  return NextResponse.json({ ...summary, ledger });
+  return NextResponse.json({
+    ...summary,
+    ledger,
+    role: session.user.role,
+    unlimited: isUnlimited(session.user.role),
+  });
 }
 
 // POST → demo "to'ldirish": balansga TOPUP_AMOUNT kredit qo'shadi.

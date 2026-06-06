@@ -1,5 +1,8 @@
 import { db } from "@/lib/db";
 
+// Cheksiz rollar (vip/admin) — role.ts'dan (client-safe). Qayta eksport.
+export { UNLIMITED_ROLES, isUnlimited } from "@/lib/role";
+
 // ────────────────────────────────────────────────
 // Kredit balansi tizimi
 // 1 kredit = 1 belgi. Ro'yxatdan o'tganda bonus beriladi,

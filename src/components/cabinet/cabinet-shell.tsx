@@ -21,13 +21,16 @@ import {
   BookText,
   Plus,
   Wallet,
+  Infinity as InfinityIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Backdrop } from "@/components/backdrop";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LangSwitcher } from "@/components/lang-switcher";
+import { VipBadge } from "@/components/cabinet/vip-badge";
 import { localeOf } from "@/lib/format";
+import { isUnlimited, isVip } from "@/lib/role";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -89,6 +92,8 @@ export function CabinetShell({
   }, [pathname]);
 
   const isAdmin = user.role === "admin";
+  const unlimited = isUnlimited(user.role);
+  const vip = isVip(user.role);
 
   const isActive = (href: string) =>
     href === "/cabinet" ? pathname === "/cabinet" : pathname.startsWith(href);
@@ -159,12 +164,22 @@ export function CabinetShell({
       {/* User */}
       <div className="border-t border-border/50 p-3">
         <div className="group flex items-center gap-2.5 rounded-2xl border border-border/60 bg-bg-muted/30 px-2.5 py-2 transition hover:border-accent/30 hover:bg-bg-muted/60">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full brand-gradient text-[13px] font-semibold text-white shadow-glow ring-2 ring-bg-subtle">
+          <span
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white shadow-glow ring-2",
+              vip
+                ? "bg-gradient-to-br from-amber-400 to-yellow-500 ring-amber-300/50"
+                : "brand-gradient ring-bg-subtle"
+            )}
+          >
             {initial}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold">
-              {user.name || user.email?.split("@")[0]}
+            <div className="flex items-center gap-1.5">
+              <span className="truncate text-[13px] font-semibold">
+                {user.name || user.email?.split("@")[0]}
+              </span>
+              <VipBadge role={user.role} size="sm" />
             </div>
             <div className="truncate text-[11px] text-fg-subtle">{user.email}</div>
           </div>
@@ -218,12 +233,23 @@ export function CabinetShell({
             <Link
               href="/cabinet/balans"
               title={t("cabinet.balans.current")}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-bg-subtle/60 px-2.5 text-[12px] font-medium text-fg transition hover:border-accent/30 hover:bg-bg-muted"
+              className={cn(
+                "inline-flex h-9 items-center gap-1.5 rounded-xl border bg-bg-subtle/60 px-2.5 text-[12px] font-medium text-fg transition hover:bg-bg-muted",
+                unlimited
+                  ? "border-amber-400/40 hover:border-amber-400/60"
+                  : "border-border hover:border-accent/30"
+              )}
             >
-              <Wallet className="h-4 w-4 text-accent" />
-              <span className="tabular-nums">
-                {balance === null ? "…" : balance.toLocaleString(loc)}
-              </span>
+              {unlimited ? (
+                <InfinityIcon className="h-4 w-4 text-amber-500" />
+              ) : (
+                <>
+                  <Wallet className="h-4 w-4 text-accent" />
+                  <span className="tabular-nums">
+                    {balance === null ? "…" : balance.toLocaleString(loc)}
+                  </span>
+                </>
+              )}
             </Link>
             <LangSwitcher />
             <ThemeToggle />

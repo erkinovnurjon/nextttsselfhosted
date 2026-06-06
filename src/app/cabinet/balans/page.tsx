@@ -10,6 +10,8 @@ import {
   AudioLines,
   Loader2,
   Sparkles,
+  Crown,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { localeOf, formatDate } from "@/lib/format";
@@ -30,6 +32,7 @@ interface CreditsData {
   granted: number;
   spent: number;
   ledger: Ledger[];
+  unlimited?: boolean;
 }
 
 const REASON_ICON: Record<string, typeof Gift> = {
@@ -65,6 +68,8 @@ export default function BalansPage() {
     );
   }
 
+  const unlimited = data?.unlimited ?? false;
+
   const reasonLabel = (r: string) =>
     t(`cabinet.balans.reasons.${r}`) === `cabinet.balans.reasons.${r}`
       ? r
@@ -78,32 +83,61 @@ export default function BalansPage() {
       </div>
 
       {/* Balance hero */}
-      <div className="card-glow relative overflow-hidden p-7">
-        <div className="pointer-events-none absolute inset-0 bg-app-gradient opacity-70" />
+      <div
+        className={cn(
+          "card-glow relative overflow-hidden p-7",
+          unlimited && "border-amber-400/40"
+        )}
+      >
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 opacity-70",
+            unlimited
+              ? "bg-gradient-to-br from-amber-400/15 via-transparent to-yellow-500/10"
+              : "bg-app-gradient"
+          )}
+        />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">
-              <Wallet className="h-4 w-4 text-accent" />
+              {unlimited ? (
+                <Crown className="h-4 w-4 text-amber-500" />
+              ) : (
+                <Wallet className="h-4 w-4 text-accent" />
+              )}
               {t("cabinet.balans.current")}
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="brand-text text-5xl font-bold tracking-tight tabular-nums">
-                {(data?.balance ?? 0).toLocaleString(loc)}
-              </span>
-              <span className="text-sm font-medium text-fg-muted">
-                {t("cabinet.balans.unit")}
-              </span>
-            </div>
-            <p className="mt-2 max-w-sm text-xs text-fg-subtle">{t("cabinet.balans.hint")}</p>
+            {unlimited ? (
+              <div className="mt-2 flex items-center gap-2">
+                <InfinityIcon className="h-12 w-12 text-amber-500" />
+                <span className="bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-4xl font-bold tracking-tight text-transparent">
+                  {t("cabinet.balans.unlimited")}
+                </span>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="brand-text text-5xl font-bold tracking-tight tabular-nums">
+                  {(data?.balance ?? 0).toLocaleString(loc)}
+                </span>
+                <span className="text-sm font-medium text-fg-muted">
+                  {t("cabinet.balans.unit")}
+                </span>
+              </div>
+            )}
+            <p className="mt-2 max-w-sm text-xs text-fg-subtle">
+              {unlimited ? t("cabinet.balans.vipNote") : t("cabinet.balans.hint")}
+            </p>
           </div>
 
-          <button
-            onClick={() => setModalOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" />
-            {t("cabinet.balans.topupOpen")}
-          </button>
+          {!unlimited && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" />
+              {t("cabinet.balans.topupOpen")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,9 +164,11 @@ export default function BalansPage() {
       </div>
 
       {/* Top-up note */}
-      <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 text-sm text-fg-muted">
-        {t("cabinet.balans.topupDesc")}
-      </div>
+      {!unlimited && (
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 text-sm text-fg-muted">
+          {t("cabinet.balans.topupDesc")}
+        </div>
+      )}
 
       {/* Ledger */}
       <div className="space-y-3">
