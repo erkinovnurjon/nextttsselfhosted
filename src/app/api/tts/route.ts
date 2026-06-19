@@ -97,6 +97,25 @@ export async function POST(request: Request) {
         body: JSON.stringify({ text, normalize: true, speaking_rate, voice }),
         signal: AbortSignal.timeout(120_000),
       });
+    } else if (checkpoint_id === "f5") {
+      // F5-TTS (Feruza) — tabiiy ayol ovozi. Sekinroq (diffuziya), shuning uchun
+      // timeout uzunroq.
+      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/f5`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // voice = F5 reference tanlovi: "feruza" (#1, tabiiy) yoki "jonli" (05, ifodali).
+        body: JSON.stringify({ text, speed, voice }),
+        signal: AbortSignal.timeout(180_000),
+      });
+    } else if (checkpoint_id === "piper") {
+      // Piper — NATIV o'zbek ovoz (FeruzaSpeech, espeak fonema x/gʻ/ch to'g'ri). CPU, tez.
+      const length_scale = typeof speed === "number" && speed > 0 ? 1 / speed : 1;
+      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/piper`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, length_scale }),
+        signal: AbortSignal.timeout(120_000),
+      });
     } else {
       backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize`, {
         method: "POST",
@@ -166,6 +185,7 @@ export async function POST(request: Request) {
         data: {
           userId: session.user.id,
           text,
+          // f5 -> "feruza"/"jonli" (i18n kaliti bor); mms -> "mms"; xtts -> voice.
           voice: checkpoint_id === "mms" ? "mms" : voice,
           speed,
           charCount,

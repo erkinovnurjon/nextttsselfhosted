@@ -86,11 +86,11 @@ function LoginForm() {
           )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-            <Field label={t("auth.login.email")}>
+            <Field label={t("auth.login.identifier")}>
               <input
-                type="email"
+                type="text"
                 required
-                autoComplete="email"
+                autoComplete="username"
                 autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

@@ -301,6 +301,13 @@ def health():
         "device": state["device"],
         "model_load_time_sec": state["model_load_time"],
     }
+    # F5 (Feruza) tabiiy ovoz mikroservisi holati — qisqa timeout, hech qachon health'ni buzmaydi.
+    try:
+        import requests as _rq
+        fr = _rq.get(f"{F5_SERVER_URL}/health", timeout=1.0).json()
+        info["f5"] = {"available": bool(fr.get("available")), "checkpoint": fr.get("checkpoint")}
+    except Exception:
+        info["f5"] = {"available": False, "checkpoint": None}
     if state["device"] == "cuda":
         info["gpu_name"] = torch.cuda.get_device_name(0)
         info["vram_total_gb"] = round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1)
@@ -629,6 +636,111 @@ class MMSSynthesizeRequest(BaseModel):
     noise_scale_duration: Optional[float] = Field(
         default=None, ge=0.0, le=1.0,
         description="PAST = barqarorroq ritm. Bo'sh — server default.",
+    )
+
+
+# F5-TTS (Feruza) — tabiiy/mayin ayol ovozi. Alohida .venv-f5 muhitida 8001-portda
+# ishlaydi (torch/transformers versiyalari boshqacha), shu yerdan proxy qilamiz.
+F5_SERVER_URL = os.environ.get("F5_SERVER_URL", "http://127.0.0.1:8001")
+
+
+class F5SynthesizeRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+    speed: float = Field(default=1.0, ge=0.3, le=2.0)
+    # nfe=48: ASR-sweep bilan tanlandi — o'qish aniqligi 28%→18% WER (cfg=2.0 eng yaxshi,
+    # oshirish battar; nfe=64 qo'shimcha foyda bermaydi). Sekinroq, lekin tiniqroq.
+    nfe_step: int = Field(default=48, ge=8, le=64)
+    # F5 reference tanlovi: feruza (#1, tabiiy) | jonli (05, ifodali). f5_server'ga uzatiladi.
+    voice: str = Field(default="feruza")
+
+
+@app.post("/synthesize/f5")
+def synthesize_f5(req: F5SynthesizeRequest):
+    """F5-TTS (Feruza) tabiiy ayol ovozi — :8001 mikroservisiga proxy.
+
+    Matn normalizatsiyasi F5 serverning o'zida (training bilan AYNAN mos) bajariladi,
+    shuning uchun bu yerda matnga tegmaymiz — test_f5.py bilan bir xil natija.
+    """
+    import requests as _rq
+
+    try:
+        r = _rq.post(
+            f"{F5_SERVER_URL}/synthesize/f5",
+            json={"text": req.text, "speed": req.speed, "nfe_step": req.nfe_step,
+                  "voice": req.voice},
+            timeout=180,
+        )
+    except Exception as e:
+        raise HTTPException(
+            503,
+            f"F5 ovoz serveri (8001) bilan bog'lanib bo'lmadi: {e}. "
+            "Ishga tushirish: .venv-f5/Scripts/python.exe -m uvicorn f5_server:app --port 8001",
+        )
+    if r.status_code != 200:
+        raise HTTPException(r.status_code, f"F5 sintez xatosi: {r.text[:300]}")
+
+    return StreamingResponse(
+        io.BytesIO(r.content),
+        media_type="audio/wav",
+        headers={
+            "X-Synthesis-Time-Sec": r.headers.get("X-Synthesis-Time-Sec", ""),
+            "X-Model-Kind": "f5-feruza",
+            "X-Engine": "f5",
+            "X-Voice": r.headers.get("X-Voice", req.voice),
+            "X-Checkpoint-Id": "f5-feruza",
+            "X-Checkpoint": r.headers.get("X-Checkpoint", ""),
+            "Content-Disposition": 'inline; filename="f5.wav"',
+        },
+    )
+
+
+# Piper-TTS — NATIV o'zbek ovoz (FeruzaSpeech, espeak fonema: x→χ, gʻ→ʁ, ch→tʃ).
+# Alohida venv-piper muhitida 8002-portda CPU'da ishlaydi (GPU talab qilmaydi).
+PIPER_SERVER_URL = os.environ.get("PIPER_SERVER_URL", "http://127.0.0.1:8002")
+
+
+class PiperSynthesizeRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=2000)
+    length_scale: float = Field(default=1.0, ge=0.5, le=2.0)
+    normalize: bool = Field(
+        default=True,
+        description="O'zbek linguistik normalizatsiya (sonlar, sana, qisqartmalar)",
+    )
+
+
+@app.post("/synthesize/piper")
+def synthesize_piper(req: PiperSynthesizeRequest):
+    """Piper nativ o'zbek ovozi — :8002 CPU mikroservisiga proxy."""
+    import requests as _rq
+
+    # MMS singari linguistik normalizatsiya: espeak xom raqamni xato o'qiydi
+    # (2025→2008). normalize_uzbek_text sonlar/sana/qisqartmani lotin so'zga aylantiradi.
+    text = normalize_uzbek_text(req.text) if req.normalize else req.text
+
+    try:
+        r = _rq.post(
+            f"{PIPER_SERVER_URL}/synthesize/piper",
+            json={"text": text, "length_scale": req.length_scale},
+            timeout=120,
+        )
+    except Exception as e:
+        raise HTTPException(
+            503,
+            f"Piper ovoz serveri (8002) bilan bog'lanib bo'lmadi: {e}. "
+            "Ishga tushirish: venv-piper/Scripts/python.exe -m uvicorn piper_server:app --port 8002",
+        )
+    if r.status_code != 200:
+        raise HTTPException(r.status_code, f"Piper sintez xatosi: {r.text[:300]}")
+
+    return StreamingResponse(
+        io.BytesIO(r.content),
+        media_type="audio/wav",
+        headers={
+            "X-Model-Kind": "piper-uz",
+            "X-Engine": "piper",
+            "X-Checkpoint-Id": "piper-uz",
+            "Content-Disposition": 'inline; filename="piper.wav"',
+        },
     )
 
 

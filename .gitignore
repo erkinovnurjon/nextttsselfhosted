@@ -84,3 +84,27 @@ tts-server/voices/*/reference.wav
 
 # HF fine-tune repo (alohida git-repo, deploy'ga shart emas)
 tts-server/training/finetune-hf-vits/
+
+# ============================================================
+# Qo'shimcha Python muhitlari (F5 / Piper alohida torch versiyalari)
+# ============================================================
+tts-server/.venv-f5/
+tts-server/venv-piper/
+tts-server/training/piper1-gpl/
+
+# ============================================================
+# Training/diag yugurish artefaktlari va scratch skriptlar
+# ============================================================
+runs/
+tts-server/runs/
+tts-server/training/scripts/runs/
+scripts/_*.mjs
+tts-server/scripts/_*.py
+
+# ============================================================
+# Admin compare/test sahifalari va vaqtinchalik audio (lokal sinov)
+# ============================================================
+public/_*.wav
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, Download, Sparkles, Mic, User2, UserRound } from "lucide-react";
+import { Loader2, Play, Download, Sparkles, Mic, User2, UserRound, Wand2, Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { WaveBars } from "@/components/wave-bars";
 import { blobToWav } from "@/lib/wav-encoder";
 
-type Voice = "ayol" | "erkak" | "base";
+type Voice = "piper" | "feruza" | "jonli" | "ayol" | "erkak" | "base";
+
+// piper — NATIV o'zbek ayol ovozi (FeruzaSpeech, espeak fonema x/gʻ/ch to'g'ri; checkpoint_id="piper").
+// feruza/jonli — F5-TTS tabiiy ayol ovozlari (alohida engine, checkpoint_id="f5").
+// base/ayol/erkak — tez MMS (checkpoint_id="mms").
+const F5_VOICES: Voice[] = ["feruza", "jonli"];
 
 interface Result {
   id: string;
@@ -25,16 +30,20 @@ const PRESETS = [
   "Gʻalaba qoʻshigʻi yangrab, togʻu toshlar jaranglashdi.",
 ];
 
+// "Ayol (tez)" (MMS-ayol) = tug'ma o'zbek, x/gʻ to'g'ri o'qiydi — ishonchli ayol tanlovi (default).
+// "Ayol (tabiiy)" (feruza, F5) = tabiiy tembr, lekin x'ni ba'zan xato o'qiydi (beta).
+// erkak/base = tez MMS. "jonli" (F5) UI'dan olingan — API/eski tarix uchun type/i18n'da qoladi.
 const VOICES: { id: Voice; icon: typeof Sparkles }[] = [
-  { id: "base", icon: Sparkles },
+  { id: "piper", icon: Star },
   { id: "ayol", icon: UserRound },
   { id: "erkak", icon: User2 },
+  { id: "base", icon: Sparkles },
 ];
 
 export default function SintezPage() {
   const { t } = useI18n();
   const [text, setText] = useState(PRESETS[0]);
-  const [voice, setVoice] = useState<Voice>("ayol");
+  const [voice, setVoice] = useState<Voice>("piper");
   const [speed, setSpeed] = useState(0.9);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -66,10 +75,17 @@ export default function SintezPage() {
     setLoading(true);
     setError(null);
     try {
+      // piper → nativ o'zbek (CPU); feruza/jonli → F5 engine; qolganlar → tez MMS.
+      const payload =
+        voice === "piper"
+          ? { text: t0, checkpoint_id: "piper", speed }
+          : F5_VOICES.includes(voice)
+            ? { text: t0, checkpoint_id: "f5", speed, voice }
+            : { text: t0, checkpoint_id: "mms", voice, speaking_rate: speed };
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: t0, checkpoint_id: "mms", voice, speaking_rate: speed }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
@@ -169,7 +185,7 @@ export default function SintezPage() {
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
           {t("cabinet.sintez.voiceLabel")}
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {VOICES.map((v) => {
             const Icon = v.icon;
             const active = voice === v.id;

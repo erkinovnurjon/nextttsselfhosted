@@ -26,18 +26,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        // "email" kaliti tarixiy — qiymat email YOKI username bo'lishi mumkin.
+        email: { label: "Email yoki username", type: "text" },
         password: { label: "Parol", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const email = String(credentials.email).toLowerCase().trim();
+        const ident = String(credentials.email).trim();
         const password = String(credentials.password);
 
-        const user = await db.user.findUnique({
-          where: { email },
-        });
+        let user;
+        if (ident.includes("@")) {
+          user = await db.user.findUnique({
+            where: { email: ident.toLowerCase() },
+          });
+        } else {
+          // Username = User.name (registerda bandlik tekshiriladi). Bir xil nomli
+          // eski hisoblar bo'lsa — noaniq, xavfsizlik uchun rad etamiz (email bilan kirsin).
+          const matches = await db.user.findMany({
+            where: { name: { equals: ident, mode: "insensitive" } },
+            take: 2,
+          });
+          if (matches.length !== 1) return null;
+          user = matches[0];
+        }
         if (!user || !user.password) return null;
 
         const valid = await bcrypt.compare(password, user.password);
