@@ -61,15 +61,19 @@ MODELS = {
 # x2kh: "init" = so'z boshidagi x (F5_FIX_X env, default o'chiq) | "all" = barcha x->kh
 #       (ayol modeli butun x'ni kh deb o'rgangan — training bilan AYNAN).
 # F5_REF_WAV/F5_REF_TXT env bo'lsa "feruza"ni almashtiradi (eski xulq, moslik uchun).
+# seed: None = har so'rovda random (variativ/tabiiyroq). Butun son = FIKS seed (barqaror,
+#   takrorlanuvchan). ayol=99: scripts/_ayol_seed_sweep.py (8 seed x 5 qiyin jumla, ASR-WER)
+#   bilan tanlandi — avg 24%, worst 50% (random/1234'dan yaxshi: katastrofik xato kamroq).
+#   F5_SEED env hamma ovozni majburan almashtiradi (eski xulq).
 VOICE_CFG = {
     "feruza": {"model": "uzbek100",
                "wav": Path(os.environ.get("F5_REF_WAV", str(VOICES / "f5_ref_main.wav"))),
                "txt": Path(os.environ.get("F5_REF_TXT", str(VOICES / "f5_ref_main.txt"))),
-               "x2kh": "init"},
+               "x2kh": "init", "seed": None},
     "jonli": {"model": "uzbek100", "wav": VOICES / "f5_ref_jonli.wav",
-              "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init"},
+              "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init", "seed": None},
     "ayol": {"model": "ayol", "wav": VOICES / "f5_ref_ayol.wav",
-             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "all"},
+             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "all", "seed": 99},
 }
 DEFAULT_VOICE = "feruza"
 
@@ -234,6 +238,7 @@ def load():
                 "wav": str(c["wav"]),
                 "text": normalize(txt.read_text(encoding="utf-8")) if txt.exists() else "",
                 "x2kh": c["x2kh"],
+                "seed": c.get("seed"),
             }
 
     if not state["models"]:
@@ -282,11 +287,16 @@ def synthesize(req: SynthReq):
     text = smart_lowercase(normalize(req.text))
     if not text:
         return JSONResponse({"error": "matn bo'sh"}, status_code=400)
-    # Seed: F5_SEED env bo'lsa fiks (takrorlanuvchan test); bo'lmasa har SO'ROVDA yangi
-    # random (variativ, tabiiyroq) — lekin bitta so'rov ichida barcha jumlaga BIR seed
-    # (jumlalar orasida mikro-ohang sakramasin).
+    # Seed tartibi: F5_SEED env (global override) > ovozning fiks seed'i (VOICE_CFG, masalan
+    # ayol=99 — sweep bilan tanlangan barqaror) > random (variativ). Bitta so'rov ichida
+    # barcha jumlaga BIR seed (jumlalar orasida mikro-ohang sakramasin).
     env_seed = os.environ.get("F5_SEED")
-    seed = int(env_seed) if env_seed else random.randint(0, 2**31 - 1)
+    if env_seed:
+        seed = int(env_seed)
+    elif vc.get("seed") is not None:
+        seed = int(vc["seed"])
+    else:
+        seed = random.randint(0, 2**31 - 1)
     t0 = time.time()
     # x -> kh: ovozga qarab (ayol = barcha x; uzbek100 = so'z boshi/F5_FIX_X).
     text = apply_x2kh(text, vc["x2kh"])
