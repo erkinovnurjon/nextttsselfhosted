@@ -1,0 +1,16 @@
+# uzbek70_f5/metadata_abs.csv -> F5 arrow (data/uzbek70_char/). ~70 soat test dataseti.
+import pyarrow.dataset  # noqa: F401
+import datasets  # noqa: F401
+import os, shutil
+from importlib.resources import files
+from pathlib import Path
+from cached_path import cached_path
+from f5_tts.train.datasets.prepare_csv_wavs import prepare_and_save_set
+
+CSV = r"C:/Projects/nexttts/tts-server/training/data/uzbek70_f5/metadata_abs.csv"
+OUT = Path(str(files("f5_tts").joinpath("../../data"))).resolve() / "uzbek70_char"
+OUT.mkdir(parents=True, exist_ok=True)
+print("OUT:", OUT, flush=True)
+prepare_and_save_set(CSV, str(OUT), is_finetune=False, num_workers=4)
+shutil.copy2(str(cached_path("hf://SWivid/F5-TTS/F5TTS_v1_Base/vocab.txt")), OUT / "vocab.txt")
+print("vocab almashtirildi (base 2545). Fayllar:", os.listdir(OUT))

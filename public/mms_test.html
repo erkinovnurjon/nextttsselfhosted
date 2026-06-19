@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMS vs F5 — qaysi to'g'ri o'qiydi</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px 64px; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+         background:#0b0f17; color:#e6e9ef; line-height:1.5; }
+  .wrap { max-width:880px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:#9aa4b2; font-size:14px; margin-bottom:16px; }
+  .note { background:#131a26; border:1px solid #1f2937; border-radius:12px; padding:12px 16px; margin-bottom:18px; font-size:14px; }
+  .note b { color:#fcd34d; }
+  .sent { background:#111722; border:1px solid #1f2937; border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+  .sent h2 { font-size:15px; margin:0 0 10px; color:#a5b4fc; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .cell { background:#0e141e; border:1px solid #1f2937; border-radius:10px; padding:8px 10px; }
+  .cell.good { border-color:#16a34a66; }
+  .lab { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; gap:6px; align-items:center; }
+  .tag { font-size:10px; padding:1px 6px; border-radius:999px; font-weight:700; }
+  .t-ok { background:#16a34a; color:#04130a; }
+  .t-bad { background:#7f1d1d; color:#fecaca; }
+  audio { width:100%; height:34px; }
+  @media (max-width:620px){ .grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔊 MMS vs F5 — qaysi so'zni to'g'ri o'qiydi?</h1>
+  <div class="sub">Sizning muammoli so'zlaringiz: xalqimiz, tarixi, xalqining, xavfsizlik</div>
+  <div class="note">
+    💡 <b>MMS</b> = native o'zbek (q/x/gʻ to'g'ri, lekin biroz robotsimon). <b>F5</b> = tabiiy tembr, lekin qiyin so'zni qoqadi.
+    Tinglang: MMS "xalqining/xalqimiz/xavfsizlik"ni <b>to'g'ri</b>, F5 ba'zilarini <b>xato</b> o'qiydi.
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+const SENTS = [
+  ["O'zbek xalqining tarixi g'oyat boy, tog'lari ko'rkam.", true, false],
+  ["Bizning xalqimiz va boy tariximiz bilan faxrlanamiz.", true, true],
+  ["Xalqaro xabarlarga ko'ra, xavfsizlik masalasi muhim.", true, false],
+];
+const list = document.getElementById("list");
+SENTS.forEach(([text, mmsOk, f5Ok], si) => {
+  const i = si + 1;
+  const box = document.createElement("div");
+  box.className = "sent";
+  const tag = (ok) => ok ? '<span class="tag t-ok">toʼgʼri</span>' : '<span class="tag t-bad">xato bor</span>';
+  box.innerHTML =
+    `<h2>${i}. "${text}"</h2><div class="grid">` +
+    `<div class="cell good"><div class="lab">MMS (native) ${tag(mmsOk)}</div>` +
+    `<audio controls preload="none" src="/mms_test/mms_${i}.wav"></audio></div>` +
+    `<div class="cell"><div class="lab">F5 (tabiiy) ${tag(f5Ok)}</div>` +
+    `<audio controls preload="none" src="/mms_test/f5_${i}.wav"></audio></div>` +
+    `</div>`;
+  list.appendChild(box);
+});
+document.addEventListener("play", (e) => {
+  document.querySelectorAll("audio").forEach((a) => { if (a !== e.target) a.pause(); });
+}, true);
+</script>
+</body>
+</html>

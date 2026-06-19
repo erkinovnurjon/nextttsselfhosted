@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMS tabiiylik sinovi — NextTTS</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px 64px; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+         background:#0b0f17; color:#e6e9ef; line-height:1.5; }
+  .wrap { max-width:780px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:#9aa4b2; font-size:14px; margin-bottom:14px; }
+  .sentence { background:#131a26; border:1px solid #1f2937; border-radius:12px; padding:12px 16px; margin-bottom:18px; font-size:14px; }
+  .sentence b { color:#a5b4fc; }
+  .card { background:#111722; border:1px solid #1f2937; border-radius:14px; padding:12px 16px; margin-bottom:10px; }
+  .card.cur { border-color:#3b82f6; }
+  .row { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .id { font-weight:700; font-size:15px; }
+  .badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+  .b-cur { background:#1d4ed8; color:#fff; }
+  .b-try { background:#f59e0b; color:#1a1206; }
+  .meta { color:#6b7280; font-size:12px; margin-left:auto; }
+  audio { width:100%; height:36px; }
+  .tip { color:#9aa4b2; font-size:13px; margin-top:16px; padding:12px 16px; background:#131a26; border-radius:12px; border:1px solid #1f2937; }
+  .tip b { color:#fcd34d; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎚️ MMS tabiiylik sinovi</h1>
+  <div class="sub">MMS = to'g'ri talaffuz · robotsimanlikni kamaytirish uchun 7 variant</div>
+  <div class="sentence">📝 <b>"Toshkent shahrida xalq ko'p, bog'larida qushlar sayraydi. Bugun ob-havo ochiq va iliq, kayfiyat a'lo."</b></div>
+  <div id="list"></div>
+  <div class="tip">💡 Hammasi <b>to'g'ri</b> o'qiydi (talaffuz buzilmaydi) — faqat <b>jonlilik/ohang</b> farq qiladi. Eng tabiiy/kam-robotsimon <b>raqamni</b> ayting, men o'shani MMS default qilaman.</div>
+</div>
+<script>
+const items = [
+  ["01_base_xom", "cur", "", "xom base · noise 0.4"],
+  ["02_ayol_HOZIRGI", "cur", "HOZIRGI", "ayol · noise 0.4 / nsd 0.2"],
+  ["03_ayol_jonli", "try", "jonliroq", "noise 0.6 / nsd 0.4"],
+  ["04_ayol_defaultnoise", "try", "", "noise 0.667 / nsd 0.4"],
+  ["05_ayol_yumshoq", "try", "yumshoq", "yumshoq gender · noise 0.6"],
+  ["06_ayol_tabiiy", "try", "⭐ tabiiyga urinish", "noise 0.667 / nsd 0.5 / sekin"],
+  ["07_ayol_pitchkam", "try", "past pitch", "pitch 240 · noise 0.6"],
+];
+const list = document.getElementById("list");
+for (const [name, cls, badge, meta] of items) {
+  const num = name.split("_")[0];
+  const card = document.createElement("div");
+  card.className = "card" + (cls === "cur" ? " cur" : "");
+  const b = badge ? `<span class="badge ${cls === "cur" ? "b-cur" : "b-try"}">${badge}</span>` : "";
+  card.innerHTML =
+    `<div class="row"><span class="id">${num}</span>${b}<span class="meta">${meta}</span></div>` +
+    `<audio controls preload="none" src="/mms_tune/_mms_${name}.wav"></audio>`;
+  list.appendChild(card);
+}
+document.addEventListener("play", (e) => {
+  document.querySelectorAll("audio").forEach((a) => { if (a !== e.target) a.pause(); });
+}, true);
+</script>
+</body>
+</html>
