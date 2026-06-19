@@ -29,6 +29,11 @@ VOICES = ROOT / "voices"
 
 # ── Yo'llar ──
 CKPTS_DIR = Path(str(files("f5_tts").joinpath("../../ckpts/feruza"))).resolve()
+# ckpts ildizi va afzal ko'riladigan sub-papkalar tartibi. "feruza" tarixiy default edi,
+# lekin u har doim mavjud emas — shu sababli live "uzbek100/model_last" (memory) kabi
+# mavjud papkalarga avtomatik tushamiz (F5_CKPT env hammasidan ustun).
+CKPTS_ROOT = CKPTS_DIR.parent
+CKPT_PREF = ["feruza", "uzbek100", "uzbek", "ayol"]
 # DEPLOY checkpoint = ISSAI+Feruza (43s) qayta o'rgatilgan model_34000 (ASR-WER: 24%→15%).
 # Training davom etsa ckpts/uzbek/ o'zgaradi, lekin bu nusxa BARQAROR (ustiga yozilmaydi).
 DEPLOY_CKPT = Path(str(files("f5_tts").joinpath("../../ckpts/uzbek_deploy.pt"))).resolve()
@@ -116,26 +121,44 @@ def split_sentences(text: str) -> list[str]:
             merged.append(s)
     return merged or [text]
 
+def _pick_from_dir(d: Path) -> str | None:
+    """Bitta papkadan eng yangi checkpoint: model_last ustun, aks holda eng katta step."""
+    if not d.exists():
+        return None
+    cands = list(d.glob("model_*.pt")) + list(d.glob("model_*.safetensors"))
+    if not cands:
+        return None
+    last = [p for p in cands if "last" in p.name]
+    if last:
+        return str(max(last, key=lambda p: p.stat().st_mtime))
+    # step raqami bo'yicha (model_last yo'q bo'lsa eng katta step)
+    def step(p: Path) -> int:
+        m = re.search(r"model_(\d+)", p.name)
+        return int(m.group(1)) if m else -1
+    return str(max(cands, key=step))
+
+
 def latest_checkpoint() -> str | None:
-    """Deploy checkpoint (uzbek_deploy.pt) ustun; F5_CKPT env undan ham ustun."""
+    """Tanlov tartibi: F5_CKPT env > uzbek_deploy.pt > ckpts/{feruza,uzbek100,uzbek,ayol}
+    > ckpts ostidagi istalgan model_*. (feruza har doim mavjud emas — env'siz ham ishlaydi.)"""
     env = os.environ.get("F5_CKPT")
     if env and Path(env).exists():
         return env
     if DEPLOY_CKPT.exists():
         return str(DEPLOY_CKPT)
-    if not CKPTS_DIR.exists():
-        return None
-    cands = list(CKPTS_DIR.glob("model_*.pt")) + list(CKPTS_DIR.glob("model_*.safetensors"))
-    if not cands:
-        return None
-    # step raqami bo'yicha (model_last yo'q bo'lsa eng katta step)
-    def step(p: Path) -> int:
-        m = re.search(r"model_(\d+)", p.name)
-        return int(m.group(1)) if m else -1
-    last = [p for p in cands if "last" in p.name]
-    if last:
-        return str(max(last, key=lambda p: p.stat().st_mtime))
-    return str(max(cands, key=step))
+    # Afzal sub-papkalar (feruza birinchi — tarixiy default; keyin live uzbek100).
+    for name in CKPT_PREF:
+        hit = _pick_from_dir(CKPTS_ROOT / name)
+        if hit:
+            return hit
+    # Oxirgi chora: ckpts ostidagi har qanday papkadan checkpoint izlash.
+    if CKPTS_ROOT.exists():
+        for d in sorted(CKPTS_ROOT.iterdir()):
+            if d.is_dir():
+                hit = _pick_from_dir(d)
+                if hit:
+                    return hit
+    return None
 
 # ── Model holati ──  refs: {voice: {"wav": str, "text": str}}
 state = {"model": None, "ckpt": None, "refs": {}}
@@ -143,7 +166,7 @@ state = {"model": None, "ckpt": None, "refs": {}}
 def load():
     ckpt = latest_checkpoint()
     if not ckpt:
-        raise RuntimeError(f"Checkpoint topilmadi: {CKPTS_DIR}")
+        raise RuntimeError(f"Checkpoint topilmadi: {CKPTS_ROOT} ostida {CKPT_PREF} yo'q")
     vocab = str(VOCAB) if VOCAB.exists() else ""
     print(f"⏳ F5 yuklanmoqda: ckpt={ckpt}", flush=True)
     state["model"] = F5TTS(model="F5TTS_v1_Base", ckpt_file=ckpt, vocab_file=vocab)
