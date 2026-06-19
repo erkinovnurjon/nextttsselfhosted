@@ -3,8 +3,9 @@
 #
 # Ko'p-modelli: bir nechta F5 fine-tune (har biri alohida checkpoint+vocab) bir vaqtda
 # yuklanadi, "voice" parametri bilan tanlanadi:
-#   feruza/jonli -> uzbek100 modeli (umumiy, reference almashinadi)
-#   ayol         -> 1571110404 (01) speakerga ATALGAN model (yosh/mayin, x->kh baked-in)
+#   feruza/jonli/ayol -> uzbek100 modeli (umumiy; reference klip almashinadi)
+#   ayol = speaker-01 (1571110404) ref bilan zero-shot klon, XOM matn (x/gʻ to'g'ri).
+#   (Eski dedicated kh-model "ayol" o'chirildi — x'ni buzardi; ckpts/ayol qoldi, ishlatilmaydi.)
 #
 # Ishga tushirish:
 #   cd tts-server
@@ -21,6 +22,16 @@ import re
 import time
 from pathlib import Path
 from importlib.resources import files
+
+# ── Determinizm ──  F5 diffuziyasi jarayonlar orasida CUDA-nondeterminizm beradi: fiks seed
+# bitta server-jarayonida yaxshi, qayta ishga tushirilganda buzilishi mumkin. Quyidagi rejim
+# seed natijasini RESTART'lar orasida ham takrorlanadigan qiladi (ayol seed=555 shu rejimda,
+# det-sweep bilan tanlangan — barcha qiyin x/gʻ jumlalar 0% WER). CUBLAS env torch'dan OLDIN.
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+import torch  # noqa: E402
+torch.use_deterministic_algorithms(True, warn_only=True)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 import numpy as np
 import soundfile as sf
@@ -72,8 +83,13 @@ VOICE_CFG = {
                "x2kh": "init", "seed": None},
     "jonli": {"model": "uzbek100", "wav": VOICES / "f5_ref_jonli.wav",
               "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init", "seed": None},
-    "ayol": {"model": "ayol", "wav": VOICES / "f5_ref_ayol.wav",
-             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "all", "seed": 99},
+    # ayol = uzbek100 model + speaker-01 ref (ZERO-SHOT klon) + XOM matn (kh YO'Q). Eski
+    # dedicated kh-model x'ni buzardi (xushxabar→qushga bor); uzbek100 xom x/gʻ'ni o'zi to'g'ri
+    # o'qiydi. seed=555 — determinizm rejimida sweep bilan tanlandi (barcha qiyin x/gʻ jumlalar
+    # 0% WER). Tembr = o'sha mayin 01 ovozi (female_voices.html'dan). Determinizm + 555 = restart'da
+    # ham bir xil to'g'ri natija.
+    "ayol": {"model": "uzbek100", "wav": VOICES / "f5_ref_ayol.wav",
+             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 555},
 }
 DEFAULT_VOICE = "feruza"
 
