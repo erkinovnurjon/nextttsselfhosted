@@ -1,6 +1,11 @@
 # F5-TTS inference mikroservisi (port 8001, .venv-f5 muhitida ishlaydi).
 # Asosiy backend (.venv, :8000) bundan alohida — main.py /synthesize/f5'ni shu yerga proxy qiladi.
 #
+# Ko'p-modelli: bir nechta F5 fine-tune (har biri alohida checkpoint+vocab) bir vaqtda
+# yuklanadi, "voice" parametri bilan tanlanadi:
+#   feruza/jonli -> uzbek100 modeli (umumiy, reference almashinadi)
+#   ayol         -> 1571110404 (01) speakerga ATALGAN model (yosh/mayin, x->kh baked-in)
+#
 # Ishga tushirish:
 #   cd tts-server
 #   KMP_DUPLICATE_LIB_OK=TRUE PYTHONUTF8=1 .venv-f5/Scripts/python.exe -m uvicorn f5_server:app --host 127.0.0.1 --port 8001
@@ -34,24 +39,43 @@ CKPTS_DIR = Path(str(files("f5_tts").joinpath("../../ckpts/feruza"))).resolve()
 # mavjud papkalarga avtomatik tushamiz (F5_CKPT env hammasidan ustun).
 CKPTS_ROOT = CKPTS_DIR.parent
 CKPT_PREF = ["feruza", "uzbek100", "uzbek", "ayol"]
+DATA_ROOT = Path(str(files("f5_tts").joinpath("../../data"))).resolve()
 # DEPLOY checkpoint = ISSAI+Feruza (43s) qayta o'rgatilgan model_34000 (ASR-WER: 24%→15%).
 # Training davom etsa ckpts/uzbek/ o'zgaradi, lekin bu nusxa BARQAROR (ustiga yozilmaydi).
 DEPLOY_CKPT = Path(str(files("f5_tts").joinpath("../../ckpts/uzbek_deploy.pt"))).resolve()
-VOCAB = Path(str(files("f5_tts").joinpath("../../data/feruza_char/vocab.txt"))).resolve()
-# Reference ovozlar (UI tanlovlari). F5 voice-cloning: tanlangan klip tembri/ohangida
-# gapiradi (qayta o'rgatish SHART EMAS — faqat reference almashadi).
-#   feruza = #1 audition (id 1187023182, tabiiy/tinch)   jonli = 05 audition (ifodali, jonliroq)
+
+# ── Modellar (har biri alohida fine-tune: checkpoint + vocab) ──
+# VRAM yetarli bo'lsa kerakli modellar startup'da yuklanadi. F5_CKPT env faqat uzbek100'ни
+# almashtiradi (tarixiy default, moslik uchun).
+MODELS = {
+    "uzbek100": {"dir": "uzbek100", "vocab": DATA_ROOT / "feruza_char" / "vocab.txt",
+                 "deploy": DEPLOY_CKPT, "env": "F5_CKPT", "fallback": CKPT_PREF},
+    "ayol": {"dir": "ayol", "vocab": DATA_ROOT / "ayol_char" / "vocab.txt",
+             "deploy": None, "env": None, "fallback": []},
+}
+
+# ── Ovozlar (UI tanlovlari): voice -> model + reference + x->kh rejimi ──
+# F5 voice-cloning: tanlangan klip tembri/ohangida gapiradi.
+#   feruza = #1 audition (tabiiy/tinch), jonli = 05 (ifodali) — ikkalasi uzbek100 modelida.
+#   ayol   = 1571110404 (01) speakerning O'Z klipi + O'Z modeli (mayin/yosh).
+# x2kh: "init" = so'z boshidagi x (F5_FIX_X env, default o'chiq) | "all" = barcha x->kh
+#       (ayol modeli butun x'ni kh deb o'rgangan — training bilan AYNAN).
 # F5_REF_WAV/F5_REF_TXT env bo'lsa "feruza"ni almashtiradi (eski xulq, moslik uchun).
-REFS_FILES = {
-    "feruza": (Path(os.environ.get("F5_REF_WAV", str(VOICES / "f5_ref_main.wav"))),
-               Path(os.environ.get("F5_REF_TXT", str(VOICES / "f5_ref_main.txt")))),
-    "jonli":  (VOICES / "f5_ref_jonli.wav", VOICES / "f5_ref_jonli.txt"),
+VOICE_CFG = {
+    "feruza": {"model": "uzbek100",
+               "wav": Path(os.environ.get("F5_REF_WAV", str(VOICES / "f5_ref_main.wav"))),
+               "txt": Path(os.environ.get("F5_REF_TXT", str(VOICES / "f5_ref_main.txt"))),
+               "x2kh": "init"},
+    "jonli": {"model": "uzbek100", "wav": VOICES / "f5_ref_jonli.wav",
+              "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init"},
+    "ayol": {"model": "ayol", "wav": VOICES / "f5_ref_ayol.wav",
+             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "all"},
 }
 DEFAULT_VOICE = "feruza"
 
 # ── Matn normalizatsiyasi (TRAINING bilan AYNAN bir xil bo'lishi shart!) ──
 # train: scripts/finalize_f5_metadata.py NORM bilan mos.
-_NORM = [("﻿", ""), ("​", ""), (" ", " "),  # BOM / zero-width / nbsp — F5 buzadi
+_NORM = [("﻿", ""), ("​", ""), (" ", " "),  # BOM / zero-width / nbsp — F5 buzadi
          ("‘", "'"), ("’", "'"), ("ʻ", "'"), ("ʼ", "'"), ("`", "'"),
          ("“", '"'), ("”", '"'), ("«", '"'), ("»", '"'),
          ("—", "-"), ("–", "-"), ("…", "..."),
@@ -97,6 +121,16 @@ def fix_x_pronunciation(t: str) -> str:
     return _X_INIT.sub(lambda m: "Kh" if m.group(1) == "X" else "kh", t)
 
 
+def fix_x_all(t: str) -> str:
+    # ayol modeli uchun: BARCHA x -> kh (training metadata'si shunday normalizatsiyalangan,
+    # model kh = /x/ ni o'rgangan). test_ayol_final.py norm() bilan AYNAN bir xil.
+    return t.replace("X", "Kh").replace("x", "kh")
+
+
+def apply_x2kh(t: str, mode: str) -> str:
+    return fix_x_all(t) if mode == "all" else fix_x_pronunciation(t)
+
+
 # Gap oxiri belgilaridan keyin bo'lamiz (probel/satr oxiri bilan). F5 uzun matnni
 # bir o'qishda chalkashtiradi — har jumlani ALOHIDA sintez qilsak o'qish ancha
 # aniqroq bo'ladi (ASR-sweep: nfe=48 bilan birga eng yaxshi natija).
@@ -121,6 +155,7 @@ def split_sentences(text: str) -> list[str]:
             merged.append(s)
     return merged or [text]
 
+
 def _pick_from_dir(d: Path) -> str | None:
     """Bitta papkadan eng yangi checkpoint: model_last ustun, aks holda eng katta step."""
     if not d.exists():
@@ -138,20 +173,25 @@ def _pick_from_dir(d: Path) -> str | None:
     return str(max(cands, key=step))
 
 
-def latest_checkpoint() -> str | None:
-    """Tanlov tartibi: F5_CKPT env > uzbek_deploy.pt > ckpts/{feruza,uzbek100,uzbek,ayol}
-    > ckpts ostidagi istalgan model_*. (feruza har doim mavjud emas — env'siz ham ishlaydi.)"""
-    env = os.environ.get("F5_CKPT")
-    if env and Path(env).exists():
-        return env
-    if DEPLOY_CKPT.exists():
-        return str(DEPLOY_CKPT)
-    # Afzal sub-papkalar (feruza birinchi — tarixiy default; keyin live uzbek100).
-    for name in CKPT_PREF:
+def resolve_ckpt(model_key: str) -> str | None:
+    """Model checkpoint'ini topish. Tartib: <env> > deploy.pt > ckpts/<dir> > fallback papkalar."""
+    cfg = MODELS[model_key]
+    env_name = cfg.get("env")
+    if env_name:
+        env = os.environ.get(env_name)
+        if env and Path(env).exists():
+            return env
+    deploy = cfg.get("deploy")
+    if deploy and deploy.exists():
+        return str(deploy)
+    hit = _pick_from_dir(CKPTS_ROOT / cfg["dir"])
+    if hit:
+        return hit
+    for name in cfg.get("fallback", []):
         hit = _pick_from_dir(CKPTS_ROOT / name)
         if hit:
             return hit
-    # Oxirgi chora: ckpts ostidagi har qanday papkadan checkpoint izlash.
+    # Oxirgi chora: ckpts ostidagi har qanday papka.
     if CKPTS_ROOT.exists():
         for d in sorted(CKPTS_ROOT.iterdir()):
             if d.is_dir():
@@ -160,26 +200,47 @@ def latest_checkpoint() -> str | None:
                     return hit
     return None
 
-# ── Model holati ──  refs: {voice: {"wav": str, "text": str}}
-state = {"model": None, "ckpt": None, "refs": {}}
+
+# ── Model holati ──
+# models: {model_key: F5TTS}, ckpts: {model_key: path}, voices: {voice: {...}}
+state = {"models": {}, "ckpts": {}, "voices": {}}
 
 def load():
-    ckpt = latest_checkpoint()
-    if not ckpt:
-        raise RuntimeError(f"Checkpoint topilmadi: {CKPTS_ROOT} ostida {CKPT_PREF} yo'q")
-    vocab = str(VOCAB) if VOCAB.exists() else ""
-    print(f"⏳ F5 yuklanmoqda: ckpt={ckpt}", flush=True)
-    state["model"] = F5TTS(model="F5TTS_v1_Base", ckpt_file=ckpt, vocab_file=vocab)
-    state["ckpt"] = ckpt
-    refs = {}
-    for name, (wav, txt) in REFS_FILES.items():
-        if wav.exists():
-            refs[name] = {
-                "wav": str(wav),
+    # Qaysi modellar kerak (reference'i mavjud ovozlar uchun).
+    needed: dict[str, list[str]] = {}
+    for v, c in VOICE_CFG.items():
+        if Path(c["wav"]).exists():
+            needed.setdefault(c["model"], []).append(v)
+    if not needed:
+        raise RuntimeError(f"Hech qanday F5 reference topilmadi: {VOICES}/f5_ref_*.wav")
+
+    for mk, voices in needed.items():
+        ckpt = resolve_ckpt(mk)
+        if not ckpt:
+            print(f"⚠️  F5 model '{mk}' checkpoint topilmadi — ovozlar {voices} o'tkazib yuborildi",
+                  flush=True)
+            continue
+        vocab = MODELS[mk]["vocab"]
+        vocab_s = str(vocab) if vocab.exists() else ""
+        print(f"⏳ F5 model yuklanmoqda: {mk}  ckpt={ckpt}", flush=True)
+        state["models"][mk] = F5TTS(model="F5TTS_v1_Base", ckpt_file=ckpt, vocab_file=vocab_s)
+        state["ckpts"][mk] = ckpt
+
+    for v, c in VOICE_CFG.items():
+        if c["model"] in state["models"] and Path(c["wav"]).exists():
+            txt = Path(c["txt"])
+            state["voices"][v] = {
+                "model": c["model"],
+                "wav": str(c["wav"]),
                 "text": normalize(txt.read_text(encoding="utf-8")) if txt.exists() else "",
+                "x2kh": c["x2kh"],
             }
-    state["refs"] = refs
-    print(f"✅ F5 tayyor. ovozlar={list(refs)}", flush=True)
+
+    if not state["models"]:
+        raise RuntimeError(f"Hech qanday F5 model yuklanmadi: {CKPTS_ROOT} ostida {CKPT_PREF} yo'q")
+    print(f"✅ F5 tayyor. ovozlar={list(state['voices'])} "
+          f"modellar={ {k: Path(p).parent.name + '/' + Path(p).name for k, p in state['ckpts'].items()} }",
+          flush=True)
 
 app = FastAPI(title="NextTTS F5 engine")
 
@@ -192,35 +253,43 @@ class SynthReq(BaseModel):
     speed: float = 1.0
     nfe_step: int = 48  # ASR-sweep: 28%→18% WER (cfg=2.0 default eng yaxshi)
     remove_silence: bool = False
-    voice: str = "feruza"  # reference tanlovi: feruza (#1, tabiiy) | jonli (05, ifodali)
+    voice: str = "feruza"  # feruza (tabiiy) | jonli (ifodali) | ayol (mayin, dedicated model)
 
 @app.get("/health")
 def health():
+    ck = state["ckpts"]
     return {
-        "available": state["model"] is not None,
+        "available": bool(state["models"]),
         "engine": "f5",
-        "checkpoint": state["ckpt"],
-        "voices": list(state["refs"]),
+        "voices": list(state["voices"]),
+        "models": {k: Path(p).parent.name + "/" + Path(p).name for k, p in ck.items()},
+        # backward-compat: main.py "checkpoint" kalitini o'qiydi
+        "checkpoint": ck.get("uzbek100") or (next(iter(ck.values())) if ck else None),
     }
 
 @app.post("/synthesize/f5")
 def synthesize(req: SynthReq):
-    if state["model"] is None:
+    if not state["models"]:
         return JSONResponse({"error": "model yuklanmagan"}, status_code=503)
+    voice = req.voice if req.voice in state["voices"] else DEFAULT_VOICE
+    vc = state["voices"].get(voice)
+    if vc is None:
+        vc = next(iter(state["voices"].values()), None)
+    if vc is None:
+        return JSONResponse({"error": "reference yuklanmagan"}, status_code=503)
+    model = state["models"][vc["model"]]
+
     text = smart_lowercase(normalize(req.text))
     if not text:
         return JSONResponse({"error": "matn bo'sh"}, status_code=400)
-    ref = state["refs"].get(req.voice) or state["refs"].get(DEFAULT_VOICE)
-    if ref is None:
-        return JSONResponse({"error": "reference yuklanmagan"}, status_code=503)
     # Seed: F5_SEED env bo'lsa fiks (takrorlanuvchan test); bo'lmasa har SO'ROVDA yangi
     # random (variativ, tabiiyroq) — lekin bitta so'rov ichida barcha jumlaga BIR seed
     # (jumlalar orasida mikro-ohang sakramasin).
     env_seed = os.environ.get("F5_SEED")
     seed = int(env_seed) if env_seed else random.randint(0, 2**31 - 1)
     t0 = time.time()
-    # So'z boshidagi "x" -> "kh" (faqat gen matn; reference matnga TEGILMAYDI).
-    text = fix_x_pronunciation(text)
+    # x -> kh: ovozga qarab (ayol = barcha x; uzbek100 = so'z boshi/F5_FIX_X).
+    text = apply_x2kh(text, vc["x2kh"])
     # Jumlama-jumla — har birini alohida sintez qilib, orasiga qisqa jimlik qo'shamiz.
     sentences = split_sentences(text)
     # Onset-pad: gap BOSHIDAGI birinchi so'z F5'da beqaror (xabar->sabr, xavfsizlik->
@@ -232,8 +301,8 @@ def synthesize(req: SynthReq):
     parts, sr = [], 24000
     prev_end = ""
     for sent in sentences:
-        w, sr, _ = state["model"].infer(
-            ref["wav"], ref["text"], onset_pad + sent,
+        w, sr, _ = model.infer(
+            vc["wav"], vc["text"], onset_pad + sent,
             nfe_step=req.nfe_step, speed=req.speed, remove_silence=req.remove_silence,
             seed=seed, show_info=lambda *a, **k: None,
         )
@@ -249,10 +318,11 @@ def synthesize(req: SynthReq):
     buf = io.BytesIO()
     sf.write(buf, np.asarray(wav), sr, format="WAV", subtype="PCM_16")
     buf.seek(0)
+    ckpt = state["ckpts"].get(vc["model"], "")
     return Response(
         content=buf.read(),
         media_type="audio/wav",
         headers={"X-Synthesis-Time-Sec": f"{dt:.2f}", "X-Engine": "f5",
-                 "X-Voice": req.voice,
-                 "X-Checkpoint": Path(state["ckpt"]).name if state["ckpt"] else ""},
+                 "X-Voice": voice,
+                 "X-Checkpoint": Path(ckpt).name if ckpt else ""},
     )

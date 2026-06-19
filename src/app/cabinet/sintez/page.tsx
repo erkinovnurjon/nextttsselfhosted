@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, Download, Sparkles, Mic, User2, UserRound, Wand2, Star } from "lucide-react";
+import { Loader2, Play, Download, Sparkles, Mic, User2, Wand2, Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { WaveBars } from "@/components/wave-bars";
@@ -10,9 +10,10 @@ import { blobToWav } from "@/lib/wav-encoder";
 type Voice = "piper" | "feruza" | "jonli" | "ayol" | "erkak" | "base";
 
 // piper — NATIV o'zbek ayol ovozi (FeruzaSpeech, espeak fonema x/gʻ/ch to'g'ri; checkpoint_id="piper").
-// feruza/jonli — F5-TTS tabiiy ayol ovozlari (alohida engine, checkpoint_id="f5").
-// base/ayol/erkak — tez MMS (checkpoint_id="mms").
-const F5_VOICES: Voice[] = ["feruza", "jonli"];
+// feruza/jonli/ayol — F5-TTS tabiiy ayol ovozlari (alohida engine, checkpoint_id="f5").
+//   ayol = 1571110404 (01) speakerga ATALGAN mayin/yosh model (dedicated fine-tune, x→kh baked-in).
+// base/erkak — tez MMS (checkpoint_id="mms").
+const F5_VOICES: Voice[] = ["feruza", "jonli", "ayol"];
 
 interface Result {
   id: string;
@@ -30,12 +31,13 @@ const PRESETS = [
   "Gʻalaba qoʻshigʻi yangrab, togʻu toshlar jaranglashdi.",
 ];
 
-// "Ayol (tez)" (MMS-ayol) = tug'ma o'zbek, x/gʻ to'g'ri o'qiydi — ishonchli ayol tanlovi (default).
-// "Ayol (tabiiy)" (feruza, F5) = tabiiy tembr, lekin x'ni ba'zan xato o'qiydi (beta).
-// erkak/base = tez MMS. "jonli" (F5) UI'dan olingan — API/eski tarix uchun type/i18n'da qoladi.
+// "Ayol (mayin)" (ayol, F5 dedicated) = yosh/mayin tabiiy tembr; qiyin (x-zich) so'zni
+//   ba'zan xato o'qiydi (beta), sekinroq (~5s). Eski MMS "Ayol (tez)" o'rniga keldi.
+// piper = nativ o'zbek (default, ishonchli, x/gʻ to'g'ri). base = neytral tez MMS. erkak = tez MMS.
+// "jonli/feruza" (F5) UI'dan olingan — API/eski tarix uchun type/i18n'da qoladi.
 const VOICES: { id: Voice; icon: typeof Sparkles }[] = [
   { id: "piper", icon: Star },
-  { id: "ayol", icon: UserRound },
+  { id: "ayol", icon: Wand2 },
   { id: "erkak", icon: User2 },
   { id: "base", icon: Sparkles },
 ];
