@@ -275,6 +275,13 @@ class SynthReq(BaseModel):
     nfe_step: int = 48  # ASR-sweep: 28%→18% WER (cfg=2.0 default eng yaxshi)
     remove_silence: bool = False
     voice: str = "feruza"  # feruza (tabiiy) | jonli (ifodali) | ayol (mayin, dedicated model)
+    # ── Per-user ZERO-SHOT klon ──
+    # ref_wav berilsa, VOICE_CFG'ni chetlab o'tamiz: uzbek100 modeli + foydalanuvchining
+    # o'z reference klipi (Next.js /api/tts DB'dan beradi — mijozdan EMAS). Qo'shimcha model
+    # yuklash yo'q, faqat reference almashadi → soniyalarda "mening ovozim".
+    ref_wav: str | None = None
+    ref_text: str | None = None       # reference klip transkripti
+    seed: int | None = None           # None = random (tabiiy variatsiya)
 
 @app.get("/health")
 def health():
@@ -292,12 +299,28 @@ def health():
 def synthesize(req: SynthReq):
     if not state["models"]:
         return JSONResponse({"error": "model yuklanmagan"}, status_code=503)
-    voice = req.voice if req.voice in state["voices"] else DEFAULT_VOICE
-    vc = state["voices"].get(voice)
-    if vc is None:
-        vc = next(iter(state["voices"].values()), None)
-    if vc is None:
-        return JSONResponse({"error": "reference yuklanmagan"}, status_code=503)
+    # ── Per-user zero-shot klon: ref_wav berilsa VOICE_CFG'ni chetlab o'tamiz ──
+    if req.ref_wav:
+        ref_path = Path(req.ref_wav)
+        if not ref_path.is_file():
+            return JSONResponse({"error": f"reference topilmadi: {req.ref_wav}"},
+                                status_code=400)
+        mk = "uzbek100" if "uzbek100" in state["models"] else next(iter(state["models"]))
+        vc = {
+            "model": mk,
+            "wav": str(ref_path),
+            "text": normalize(req.ref_text or ""),  # load() bilan bir xil (smart_lowercase'siz)
+            "x2kh": "init",   # uzbek100 xom x/gʻ'ni o'zi to'g'ri o'qiydi
+            "seed": req.seed,
+        }
+        voice = "myvoice"
+    else:
+        voice = req.voice if req.voice in state["voices"] else DEFAULT_VOICE
+        vc = state["voices"].get(voice)
+        if vc is None:
+            vc = next(iter(state["voices"].values()), None)
+        if vc is None:
+            return JSONResponse({"error": "reference yuklanmagan"}, status_code=503)
     model = state["models"][vc["model"]]
 
     text = smart_lowercase(normalize(req.text))

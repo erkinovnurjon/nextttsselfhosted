@@ -85,6 +85,33 @@ export async function POST(request: Request) {
     }
   }
 
+  // ───── Shaxsiy ovoz (zero-shot klon) ─────
+  // voice === "__me__" → foydalanuvchining reference klipini DB'dan olib F5'ga uzatamiz.
+  // ref_wav HECH QACHON mijozdan kelmaydi (path-injection yo'q) — faqat DB'dan olinadi.
+  let f5Ref: { ref_wav: string; ref_text: string } | null = null;
+  if (voice === "__me__") {
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Shaxsiy ovoz uchun tizimga kiring", requiresAuth: true },
+        { status: 401 }
+      );
+    }
+    const uv = await db.userVoice.findUnique({
+      where: { userId: session.user.id },
+      select: { refPath: true, refText: true, status: true },
+    });
+    if (!uv || uv.status !== "ready") {
+      return NextResponse.json(
+        {
+          error:
+            "Shaxsiy ovoz topilmadi. Avval \"Mening ovozim\" boʻlimida ovozingizni yozdiring.",
+        },
+        { status: 400 }
+      );
+    }
+    f5Ref = { ref_wav: uv.refPath, ref_text: uv.refText };
+  }
+
   // ───── Sintez ─────
   let backendRes: Response;
   try {
@@ -103,8 +130,9 @@ export async function POST(request: Request) {
       backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/f5`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // voice = F5 reference tanlovi: "feruza" (#1, tabiiy) yoki "jonli" (05, ifodali).
-        body: JSON.stringify({ text, speed, voice }),
+        // voice = F5 reference tanlovi: "feruza"/"jonli"/"ayol". "__me__" bo'lsa f5Ref
+        // (foydalanuvchi reference klipi) qo'shiladi → zero-shot shaxsiy ovoz.
+        body: JSON.stringify({ text, speed, voice, ...(f5Ref ?? {}) }),
         signal: AbortSignal.timeout(180_000),
       });
     } else if (checkpoint_id === "piper") {
@@ -185,8 +213,13 @@ export async function POST(request: Request) {
         data: {
           userId: session.user.id,
           text,
-          // f5 -> "feruza"/"jonli" (i18n kaliti bor); mms -> "mms"; xtts -> voice.
-          voice: checkpoint_id === "mms" ? "mms" : voice,
+          // f5 -> "feruza"/"jonli"; "__me__" -> "myvoice"; mms -> "mms"; xtts -> voice.
+          voice:
+            checkpoint_id === "mms"
+              ? "mms"
+              : voice === "__me__"
+                ? "myvoice"
+                : voice,
           speed,
           charCount,
           durationSec: synthTime,

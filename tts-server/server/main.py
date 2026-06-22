@@ -652,6 +652,10 @@ class F5SynthesizeRequest(BaseModel):
     nfe_step: int = Field(default=48, ge=8, le=64)
     # F5 reference tanlovi: feruza (#1, tabiiy) | jonli (05, ifodali). f5_server'ga uzatiladi.
     voice: str = Field(default="feruza")
+    # Per-user zero-shot klon (Next.js DB'dan beradi): foydalanuvchi reference klipi + matni.
+    ref_wav: str | None = Field(default=None)
+    ref_text: str | None = Field(default=None)
+    seed: int | None = Field(default=None)
 
 
 @app.post("/synthesize/f5")
@@ -667,7 +671,8 @@ def synthesize_f5(req: F5SynthesizeRequest):
         r = _rq.post(
             f"{F5_SERVER_URL}/synthesize/f5",
             json={"text": req.text, "speed": req.speed, "nfe_step": req.nfe_step,
-                  "voice": req.voice},
+                  "voice": req.voice, "ref_wav": req.ref_wav, "ref_text": req.ref_text,
+                  "seed": req.seed},
             timeout=180,
         )
     except Exception as e:

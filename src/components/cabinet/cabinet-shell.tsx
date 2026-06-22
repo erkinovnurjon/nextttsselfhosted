@@ -21,6 +21,7 @@ import {
   BookText,
   Plus,
   Wallet,
+  Fingerprint,
   Infinity as InfinityIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const MAIN_NAV: NavItem[] = [
   { href: "/cabinet", icon: LayoutDashboard, key: "dashboard" },
   { href: "/cabinet/sintez", icon: AudioLines, key: "sintez" },
   { href: "/cabinet/transkripsiya", icon: Mic, key: "transkripsiya" },
+  { href: "/cabinet/my-voice", icon: Fingerprint, key: "myVoice" },
   { href: "/cabinet/ovozlar", icon: Users, key: "ovozlar" },
   { href: "/cabinet/tarix", icon: History, key: "tarix" },
   { href: "/cabinet/balans", icon: Wallet, key: "balans" },
