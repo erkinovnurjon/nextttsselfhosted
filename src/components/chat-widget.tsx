@@ -83,6 +83,16 @@ export function ChatWidget() {
           return copy;
         });
       }
+      // Yakuniy flush: oxirgi chunk ko'p-baytli belgida (oʻ/gʻ/kirill) tugasa, tushib qolmasin.
+      const tail = dec.decode();
+      if (tail) {
+        acc += tail;
+        setMessages((prev) => {
+          const copy = prev.slice();
+          copy[copy.length - 1] = { role: "assistant", content: acc };
+          return copy;
+        });
+      }
       if (!acc.trim()) {
         setMessages((prev) => {
           const copy = prev.slice();

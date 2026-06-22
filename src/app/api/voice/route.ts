@@ -51,7 +51,8 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (durationSec > 0 && durationSec < MIN_REF_SECONDS) {
+  // Davomiylik yo'q/buzuq (0) bo'lsa ham rad etamiz — aks holda qisqa klip "ready" saqlanardi.
+  if (!durationSec || durationSec < MIN_REF_SECONDS) {
     return NextResponse.json(
       {
         error: `Yozuv juda qisqa (${durationSec.toFixed(

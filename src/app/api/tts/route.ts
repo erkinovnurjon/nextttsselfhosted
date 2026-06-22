@@ -89,7 +89,8 @@ export async function POST(request: Request) {
   // voice === "__me__" → foydalanuvchining reference klipini DB'dan olib F5'ga uzatamiz.
   // ref_wav HECH QACHON mijozdan kelmaydi (path-injection yo'q) — faqat DB'dan olinadi.
   let f5Ref: { ref_wav: string; ref_text: string } | null = null;
-  if (voice === "__me__") {
+  // Shaxsiy ovoz faqat F5 orqali ishlaydi — checkpoint f5 bo'lmasa DB'ni bezovta qilmaymiz.
+  if (voice === "__me__" && checkpoint_id === "f5") {
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Shaxsiy ovoz uchun tizimga kiring", requiresAuth: true },
