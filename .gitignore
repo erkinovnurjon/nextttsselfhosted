@@ -102,9 +102,17 @@ scripts/_*.mjs
 tts-server/scripts/_*.py
 
 # ============================================================
-# Admin compare/test sahifalari va vaqtinchalik audio (lokal sinov)
+# Admin compare/test sahifalari va review audio (lokal sinov)
+# Jonli ilova FAQAT public/audition/ ni ishlatadi (kabinet ovoz tanlash).
+# Qolgan public/*.html va public/**/*.wav = qo'lda review sahifalari —
+# localhost:3000/<name>.html da ko'riladi, Docker image'ga shart emas.
 # ============================================================
 public/_*.wav
+public/*.html
+public/**/*.wav
+public/**/results.json
+!public/audition/
+!public/audition/**
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
