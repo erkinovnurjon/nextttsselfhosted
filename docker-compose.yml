@@ -53,8 +53,13 @@ services:
       MMS_DEFAULT_VOICE: ${MMS_DEFAULT_VOICE:-base}
       WHISPER_DEVICE: ${WHISPER_DEVICE:-}
       HF_TOKEN: ${HF_TOKEN:-}
+      # Piper (nativ o'zbek, PILOT default ovozi) — alohida CPU servis; main.py shu yerga proxy qiladi
+      PIPER_SERVER_URL: http://piper:8002
     volumes:
       - hf_cache:/app/.hf_cache   # model'lar bir marta yuklanib keshlanadi
+    depends_on:
+      piper:
+        condition: service_started
     # ─── GPU uchun (server'да NVIDIA + nvidia-container-toolkit bo'lsa) ───
     # quyidagi qatorlarni oching:
     # deploy:
@@ -62,6 +67,11 @@ services:
     #     reservations:
     #       devices:
     #         - { driver: nvidia, count: 1, capabilities: [gpu] }
+
+  # Piper — nativ o'zbek ovoz (CPU, GPU shart emas). PILOT default ovozi.
+  piper:
+    build: { context: ./tts-server, dockerfile: Dockerfile.piper }
+    restart: unless-stopped
 
   db:
     image: postgres:16

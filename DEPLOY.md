@@ -57,6 +57,15 @@ docker compose --env-file .env.prod up -d --build
 - Parol/sirlarni `.env.prod`да saqlang, git'ga qo'shmang (`.gitignore`да).
 - Rate-limit/usage tizimi allaqachon bor (anonim/foydalanuvchi limitlari).
 
-## Eslatma — GPU vs CPU
-- **GPU:** sintez ~0.5s, ASR tez. `deploy.resources` + nvidia-container-toolkit kerak.
-- **CPU:** ishlaydi, lekin sintez ~2-4s, ASR ~3-5s. Kichik/o'rta trafik uchun yetarli.
+## TTS ovozlar — CPU pilot (GPU shart emas)
+Stack 4 servis: `caddy` (HTTPS) · `web` (Next.js) · `api` (MMS+Whisper :8000) · `piper` (nativ o'zbek :8002) · `db`.
+
+- **Piper (nativ o'zbek ayol) — DEFAULT ovoz.** CPU'da ishlaydi (`piper` servisi, onnxruntime), x/gʻ/q to'g'ri. Model image ichida (~61MB). Sintez ~0.5-1s.
+- **MMS (erkak / asosiy)** — `api` konteynerда, CPU'да ishlaydi (sekinroq ~2-4s). Birinchi so'rovда HF'дан yuklanadi → `hf_cache`.
+- **F5 ovozlar (Feruza/Jonli) va "Mening ovozim" (ovoz klonlash) — GPU TALAB QILADI** va alohida F5 servis kerak → **CPU pilotда O'CHIQ**. Bu ovozlar tanlansa xato qaytaradi. GPU server qo'shilganda:
+  1. F5 uchun servis qo'shing (`f5_server.py` + torch CUDA + `ckpts/uzbek100/model_last.pt` 3.2GB), `api`ga `F5_SERVER_URL` bering.
+  2. "Mening ovozim" uchun `web` va F5 servis orasida **`tts-server/voices` umumiy volume** (reference klip ikkala konteynerга ko'rinishi uchun).
+
+## Eslatma — GPU (kelajak, ixtiyoriy)
+- **GPU bo'lsa:** F5 ovozlar + klon ishlaydi; MMS/Piper ham tezroq. `api` Dockerfile'да torch'ni `cu121` wheel'ga qaytaring + `docker-compose.yml`да `api` (va F5 servisi) uchun `deploy.resources` GPU blokini oching + `nvidia-container-toolkit` o'rnating.
+- **CPU (pilot):** Piper default sifatida yetarli; kichik/o'rta trafik uchun mos.

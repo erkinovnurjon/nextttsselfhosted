@@ -1,0 +1,24 @@
+# NextTTS Piper engine — nativ o'zbek ovoz (CPU, onnxruntime). GPU TALAB QILMAYDI.
+# main.py (api) /synthesize/piper'ni shu servisga (PIPER_SERVER_URL) proxy qiladi.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8 PYTHONUTF8=1
+
+# espeak-ng — piper fonemizatsiyasi uchun (x->χ, gʻ->ʁ); libsndfile — audio.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    espeak-ng libsndfile1 && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Piper (OHF-Voice piper1-gpl = PyPI "piper-tts") + CPU onnxruntime + server deps.
+RUN pip install --no-cache-dir \
+    "piper-tts" onnxruntime soundfile "fastapi" "uvicorn[standard]" "numpy"
+
+# Server kodi + deploy modeli (~61MB, .dockerignore orqali kontekstda qoldirilgan).
+COPY piper_server.py /app/piper_server.py
+COPY training/data/piper_uz/uz_feruza_deploy.onnx /app/model/uz_feruza_deploy.onnx
+COPY training/data/piper_uz/uz_feruza_deploy.onnx.json /app/model/uz_feruza_deploy.onnx.json
+
+ENV PIPER_ONNX=/app/model/uz_feruza_deploy.onnx
+EXPOSE 8002
+CMD ["uvicorn", "piper_server:app", "--host", "0.0.0.0", "--port", "8002"]

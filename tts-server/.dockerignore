@@ -1,0 +1,17 @@
+# tts-server build konteksti — venv/checkpoint/katta data YUBORILMAYDI (gigabaytlar).
+.venv
+.venv-f5
+venv-piper
+**/__pycache__
+*.pyc
+*.log
+voices
+output
+runs
+
+# Butun training data og'ir — LEKIN piper deploy modeli kerak (qayta kiritiladi).
+training/data
+training/checkpoints
+training/finetune-hf-vits
+training/piper1-gpl
+!training/data/piper_uz
