@@ -1,30 +1,36 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
+import { MessageCircle, X, ArrowUp, Loader2, Bot } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const LABELS: Record<string, { title: string; placeholder: string; greeting: string }> = {
+const LABELS: Record<
+  string,
+  { title: string; subtitle: string; placeholder: string; greeting: string; chips: string[] }
+> = {
   uz: {
     title: "NextTTS yordamchi",
+    subtitle: "Sizga yordam beraman",
     placeholder: "Savol yozing…",
-    greeting:
-      "Salom! Men NextTTS yordamchisiman. Ovozlar, “Mening ovozim”, balans yoki matndan nutq bo'yicha so'rang.",
+    greeting: "Salom! Nima bo'yicha yordam kerak?",
+    chips: ["Ovozlar qanday?", "Mening ovozim", "Balansni to'ldirish", "Nutqdan matn"],
   },
   ru: {
     title: "Помощник NextTTS",
+    subtitle: "Я помогу вам",
     placeholder: "Напишите вопрос…",
-    greeting:
-      "Привет! Я помощник NextTTS. Спросите о голосах, «Мой голос», балансе или синтезе речи.",
+    greeting: "Привет! С чем помочь?",
+    chips: ["Какие голоса?", "Мой голос", "Пополнить баланс", "Речь в текст"],
   },
   en: {
     title: "NextTTS Assistant",
+    subtitle: "Here to help",
     placeholder: "Ask a question…",
-    greeting:
-      "Hi! I'm the NextTTS assistant. Ask about voices, “My voice”, balance, or text-to-speech.",
+    greeting: "Hi! How can I help?",
+    chips: ["What voices?", "My voice", "Top up balance", "Speech to text"],
   },
 };
 
@@ -38,7 +44,6 @@ export function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Ochilganda salomlashish (bir marta)
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([{ role: "assistant", content: L.greeting }]);
@@ -51,8 +56,8 @@ export function ChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(override?: string) {
+    const text = (override ?? input).trim();
     if (!text || busy) return;
     setInput("");
     const next: Msg[] = [...messages, { role: "user", content: text }];
@@ -102,67 +107,91 @@ export function ChatWidget() {
     }
   }
 
+  const showChips = messages.length <= 1 && !busy;
+
   return (
     <>
-      {/* Suzuvchi tugma */}
+      {/* Suzuvchi tugma — yagona gradient joy */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
           aria-label={L.title}
-          className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full brand-gradient text-white shadow-glow ring-1 ring-white/15 transition hover:scale-105 hover:opacity-95"
+          className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full brand-gradient text-white shadow-glow ring-1 ring-white/15 transition hover:scale-105 hover:opacity-95"
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-7 w-7" />
         </button>
       )}
 
-      {/* Panel */}
+      {/* Panel — toza, yordam uslubi */}
       {open && (
-        <div className="fixed bottom-4 right-4 z-50 flex h-[560px] max-h-[calc(100vh-2rem)] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-subtle/95 shadow-2xl backdrop-blur-xl animate-fade-in">
-          {/* Header */}
-          <div className="flex items-center gap-2.5 border-b border-border/60 bg-bg/60 px-4 py-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg brand-gradient text-white shadow-glow">
-              <Bot className="h-[18px] w-[18px]" />
+        <div className="fixed bottom-6 right-6 z-50 flex h-[560px] max-h-[calc(100vh-3rem)] w-[min(384px,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-border bg-bg-subtle shadow-xl">
+          {/* Header — avatar + sarlavha + ost-sarlavha */}
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Bot className="h-5 w-5" />
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">{L.title}</div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="truncate text-[14px] font-semibold tracking-tight">{L.title}</div>
+              <div className="truncate text-[11px] text-fg-subtle">{L.subtitle}</div>
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-lg p-1.5 text-fg-subtle transition hover:bg-bg-muted hover:text-fg"
+              className="-mr-1 rounded-lg p-1.5 text-fg-subtle transition hover:bg-bg-muted hover:text-fg"
               aria-label="close"
             >
-              <X className="h-4 w-4" />
+              <X className="h-[18px] w-[18px]" />
             </button>
           </div>
 
-          {/* Messages */}
-          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto scrollbar-thin px-3 py-3">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
-              >
-                <div
-                  className={cn(
-                    "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-[13px] leading-relaxed",
-                    m.role === "user"
-                      ? "brand-gradient text-white"
-                      : "border border-border bg-bg/60 text-fg"
-                  )}
-                >
-                  {m.content || (busy && i === messages.length - 1 ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-fg-subtle" />
-                  ) : (
-                    ""
-                  ))}
+          {/* Xabarlar */}
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto scrollbar-thin px-4 py-4">
+            {messages.map((m, i) =>
+              m.role === "user" ? (
+                <div key={i} className="flex justify-end">
+                  <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-accent/10 px-3.5 py-2 text-[13px] leading-relaxed text-fg">
+                    {m.content}
+                  </div>
                 </div>
+              ) : (
+                <div key={i} className="flex gap-2.5">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <Bot className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0 flex-1 whitespace-pre-wrap pt-0.5 text-[13.5px] leading-relaxed text-fg">
+                    {m.content ||
+                      (busy && i === messages.length - 1 ? (
+                        <span className="inline-flex gap-1 py-1.5">
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle [animation-delay:-0.3s]" />
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle [animation-delay:-0.15s]" />
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-fg-subtle" />
+                        </span>
+                      ) : (
+                        ""
+                      ))}
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* Tezkor savol chiplari */}
+            {showChips && (
+              <div className="flex flex-wrap gap-2 pl-[34px] pt-1">
+                {L.chips.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => send(c)}
+                    className="rounded-full border border-border bg-bg px-3 py-1.5 text-[12px] text-fg-muted transition hover:border-accent/40 hover:bg-accent/5 hover:text-fg"
+                  >
+                    {c}
+                  </button>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           {/* Input */}
-          <div className="border-t border-border/60 bg-bg/60 p-2.5">
-            <div className="flex items-end gap-2">
+          <div className="border-t border-border p-3">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-bg px-4 py-1 transition focus-within:border-accent/50">
               <input
                 ref={inputRef}
                 value={input}
@@ -174,20 +203,20 @@ export function ChatWidget() {
                   }
                 }}
                 placeholder={L.placeholder}
-                className="flex-1 rounded-xl border border-border bg-bg/60 px-3 py-2.5 text-[13px] outline-none transition focus:border-accent/50"
+                className="flex-1 bg-transparent py-2 text-[13px] outline-none placeholder:text-fg-subtle"
               />
               <button
-                onClick={send}
+                onClick={() => send()}
                 disabled={busy || !input.trim()}
                 className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition",
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition",
                   busy || !input.trim()
-                    ? "cursor-not-allowed bg-bg-muted text-fg-subtle"
-                    : "brand-gradient text-white shadow-glow hover:opacity-90"
+                    ? "cursor-not-allowed text-fg-subtle"
+                    : "bg-accent text-white hover:opacity-90"
                 )}
                 aria-label="send"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
               </button>
             </div>
           </div>
