@@ -37,6 +37,9 @@ services:
       CLICK_MERCHANT_ID: ${CLICK_MERCHANT_ID:-}
       CLICK_SECRET_KEY: ${CLICK_SECRET_KEY:-}
       CLICK_CHECKOUT_URL: ${CLICK_CHECKOUT_URL:-https://my.click.uz/services/pay}
+      # Chatbot (loyiha-yordamchi) — bo'sh bo'lsa FAQ rejimi
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CHATBOT_MODEL: ${CHATBOT_MODEL:-claude-opus-4-8}
     depends_on:
       db:
         condition: service_healthy   # Postgres tayyor bo'lgach migratsiya ishlaydi
