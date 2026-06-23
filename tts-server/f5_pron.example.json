@@ -1,0 +1,4 @@
+{
+  "_izoh": "F5 (uzbek100) ba'zi so'z-o'rta 'x' ni 'ks' deb o'qiydi. Bu yerda muammoli so'z STEMини to'g'ri talaffuz yozuviga moslang. Faylni 'f5_pron.json' deb nusxalang va F5 serverni qayta ishga tushiring. Stem bo'yicha: 'tarix' -> tarix/tarixi/tarixiy/tarixchi hammasi tuzaladi. Sinov: localhost:3000 -> Ayol (mayin) ovozda eshiting.",
+  "tarix": "tarih"
+}

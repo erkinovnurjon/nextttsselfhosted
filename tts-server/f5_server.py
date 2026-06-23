@@ -152,6 +152,29 @@ def apply_x2kh(t: str, mode: str) -> str:
     return fix_x_all(t) if mode == "all" else fix_x_pronunciation(t)
 
 
+# Talaffuz lug'ati: F5/uzbek100 ba'zi so'z-O'RTA "x"ни "ks" deb o'qiydi (tarixi -> "tariksi").
+# Bu so'zlarni "h" yozuviga aylantiramiz (foydalanuvchi quloq bilan tasdiqladi: "tarih" to'g'ri).
+# Stem bo'yicha — tarix/tarixi/tarixiy/tarixchi hammasi tuzaladi. Kengaytirish uchun
+# tts-server/f5_pron.json {"so'z": "talaffuz", ...} fayl qo'shing (qayta ishga tushiring).
+import json as _json
+_PRON_FIX = {"tarix": "tarih"}
+_pp = ROOT / "f5_pron.json"
+if _pp.exists():
+    try:
+        _PRON_FIX.update({k.lower(): v for k, v in _json.loads(_pp.read_text(encoding="utf-8")).items()})
+    except Exception:
+        pass
+_PRON_RE = (
+    re.compile(r"(?<![\w'ʻ`’])(" + "|".join(re.escape(k) for k in sorted(_PRON_FIX, key=len, reverse=True)) + r")", re.IGNORECASE)
+    if _PRON_FIX else None
+)
+
+def apply_pron_fix(t: str) -> str:
+    if _PRON_RE is None:
+        return t
+    return _PRON_RE.sub(lambda m: _PRON_FIX[m.group(1).lower()], t)
+
+
 # Gap oxiri belgilaridan keyin bo'lamiz (probel/satr oxiri bilan). F5 uzun matnni
 # bir o'qishda chalkashtiradi — har jumlani ALOHIDA sintez qilsak o'qish ancha
 # aniqroq bo'ladi (ASR-sweep: nfe=48 bilan birga eng yaxshi natija).
@@ -338,6 +361,8 @@ def synthesize(req: SynthReq):
     else:
         seed = random.randint(0, 2**31 - 1)
     t0 = time.time()
+    # Talaffuz lug'ati: muammoli x-so'zlar (tarix -> tarih) — model "ks" buzilishini tuzatadi.
+    text = apply_pron_fix(text)
     # x -> kh: ovozga qarab (ayol = barcha x; uzbek100 = so'z boshi/F5_FIX_X).
     text = apply_x2kh(text, vc["x2kh"])
     # Jumlama-jumla — har birini alohida sintez qilib, orasiga qisqa jimlik qo'shamiz.
