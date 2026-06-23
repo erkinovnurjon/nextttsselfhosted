@@ -175,6 +175,23 @@ def apply_pron_fix(t: str) -> str:
     return _PRON_RE.sub(lambda m: _PRON_FIX[m.group(1).lower()], t)
 
 
+def _trim_lead_silence(w, sr, pad_ms=30):
+    """Audio BOSHIDAGI sukunatni (onset-pad ', ' qoldirgan pauza) kesadi, kichik pad qoldiradi.
+    Birinchi-so'z himoyasi (matnda onset_pad) saqlanadi — faqat eshitiladigan pauza ketadi."""
+    a = np.asarray(w, dtype="float32")
+    if a.size == 0:
+        return a
+    amp = np.abs(a)
+    peak = float(amp.max())
+    if peak <= 0:
+        return a
+    voiced = np.where(amp > peak * 0.02)[0]
+    if voiced.size == 0:
+        return a
+    start = max(0, int(voiced[0]) - int(sr * pad_ms / 1000))
+    return a[start:]
+
+
 # Gap oxiri belgilaridan keyin bo'lamiz (probel/satr oxiri bilan). F5 uzun matnni
 # bir o'qishda chalkashtiradi — har jumlani ALOHIDA sintez qilsak o'qish ancha
 # aniqroq bo'ladi (ASR-sweep: nfe=48 bilan birga eng yaxshi natija).
@@ -389,6 +406,7 @@ def synthesize(req: SynthReq):
         parts.append(np.asarray(w, dtype="float32"))
         prev_end = sent.rstrip()[-1:] if sent.rstrip() else ""
     wav = np.concatenate(parts) if parts else np.zeros(1, dtype="float32")
+    wav = _trim_lead_silence(wav, sr)  # onset-pad (", ") qoldirgan boshidagi pauzani kesamiz
     dt = time.time() - t0
     buf = io.BytesIO()
     sf.write(buf, np.asarray(wav), sr, format="WAV", subtype="PCM_16")
