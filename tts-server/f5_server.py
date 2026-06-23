@@ -84,10 +84,11 @@ VOICE_CFG = {
     "jonli": {"model": "uzbek100", "wav": VOICES / "f5_ref_jonli.wav",
               "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init", "seed": None},
     # ayol = uzbek100 zero-shot klon, XOM matn (kh YO'Q — uzbek100 x/gʻ'ni o'zi to'g'ri o'qiydi).
-    # 2026-06-23: speaker-01 ref "i"ni cho'zardi (uning prozodiyasi) → reference YANGILANDI:
-    #   671820432 (female_voices, mayin) klipining ~4.5s qisqartmasi + audioga AYNAN mos matn.
-    #   F5 reference matni audiodan qisqa bo'lsa unlilarni cho'zadi — mos matn buni tuzatadi.
-    #   Eski speaker-01 ref = f5_ref_ayol_speaker01.bak.wav. seed=99 (B variant, "i" tabiiy).
+    # 2026-06-23 YAKUNIY: reference = speaker-01 (sevimli mayin tembr) klipining ~4.5s
+    #   TRIM'i + audioga AYNAN mos matn (Whisper bilan). SABOQ: F5 reference matni audiodan
+    #   qisqa bo'lsa unlilarni (i) cho'zadi → trim+mos matn buni tuzatadi. speaker-01'ning x'i
+    #   o'zidan to'g'ri (kh). 671820432 (boshqa speaker) i'ni tuzatdi-yu x'ni "iks" qildi (klipда
+    #   x yo'q) → speaker-01 trim eng yaxshisi: x=kh VA i tabiiy. seed=99. Full ref bak'da.
     "ayol": {"model": "uzbek100", "wav": VOICES / "f5_ref_ayol.wav",
              "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 99},
 }
