@@ -399,14 +399,15 @@ def synthesize(req: SynthReq):
             seed=seed, show_info=lambda *a, **k: None,
         )
         if parts:
-            # Pauza oldingi jumlaning tinish belgisiga mos: savol/undov nutqda
-            # uzunroq to'xtam talab qiladi, oddiy nuqta o'rtacha.
-            pause = {"?": 0.45, "!": 0.45, ".": 0.35}.get(prev_end, 0.3)
+            # Pauza tinish belgisiga mos (savol/undov uzunroq). KAMAYTIRILDI: ilgari
+            # 0.3-0.45 jumlalar orasini robotsimon/uzuq-yuluq qilardi.
+            pause = {"?": 0.32, "!": 0.32, ".": 0.2}.get(prev_end, 0.16)
             parts.append(np.zeros(int(pause * sr), dtype="float32"))
-        parts.append(np.asarray(w, dtype="float32"))
+        # HAR segment boshidagi onset-pad sukunatини kesamiz — aks holda har jumla orasida
+        # qo'shimcha pauza chiqib uzuq-yuluq bo'ladi (birinchi-so'z himoyasi saqlanadi).
+        parts.append(_trim_lead_silence(np.asarray(w, dtype="float32"), sr))
         prev_end = sent.rstrip()[-1:] if sent.rstrip() else ""
     wav = np.concatenate(parts) if parts else np.zeros(1, dtype="float32")
-    wav = _trim_lead_silence(wav, sr)  # onset-pad (", ") qoldirgan boshidagi pauzani kesamiz
     dt = time.time() - t0
     buf = io.BytesIO()
     sf.write(buf, np.asarray(wav), sr, format="WAV", subtype="PCM_16")
