@@ -83,13 +83,13 @@ VOICE_CFG = {
                "x2kh": "init", "seed": None},
     "jonli": {"model": "uzbek100", "wav": VOICES / "f5_ref_jonli.wav",
               "txt": VOICES / "f5_ref_jonli.txt", "x2kh": "init", "seed": None},
-    # ayol = uzbek100 model + speaker-01 ref (ZERO-SHOT klon) + XOM matn (kh YO'Q). Eski
-    # dedicated kh-model x'ni buzardi (xushxabar→qushga bor); uzbek100 xom x/gʻ'ni o'zi to'g'ri
-    # o'qiydi. seed=555 — determinizm rejimida sweep bilan tanlandi (barcha qiyin x/gʻ jumlalar
-    # 0% WER). Tembr = o'sha mayin 01 ovozi (female_voices.html'dan). Determinizm + 555 = restart'da
-    # ham bir xil to'g'ri natija.
+    # ayol = uzbek100 zero-shot klon, XOM matn (kh YO'Q — uzbek100 x/gʻ'ni o'zi to'g'ri o'qiydi).
+    # 2026-06-23: speaker-01 ref "i"ni cho'zardi (uning prozodiyasi) → reference YANGILANDI:
+    #   671820432 (female_voices, mayin) klipining ~4.5s qisqartmasi + audioga AYNAN mos matn.
+    #   F5 reference matni audiodan qisqa bo'lsa unlilarni cho'zadi — mos matn buni tuzatadi.
+    #   Eski speaker-01 ref = f5_ref_ayol_speaker01.bak.wav. seed=99 (B variant, "i" tabiiy).
     "ayol": {"model": "uzbek100", "wav": VOICES / "f5_ref_ayol.wav",
-             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 555},
+             "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 99},
 }
 DEFAULT_VOICE = "feruza"
 
