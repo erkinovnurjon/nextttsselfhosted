@@ -359,6 +359,13 @@ def normalize_uzbek_text(text: str) -> str:
     """
     # 0. Lug'at qatlami: qisqartma/valyuta/birlik/chet so'zlar (raqamlarga tegmaydi)
     text = apply_lexicon(text)
+    # 0.5. Ilmiy/matematik ifodalar (x², √, ∫, π, m/s², 10⁻³...) — sonlar so'zga
+    # aylanishidan OLDIN belgilarni so'zga aylantiramiz (lazy import: circular'dan saqlanish).
+    try:
+        from server.sci_normalizer import normalize_scientific
+    except ImportError:
+        from sci_normalizer import normalize_scientific
+    text = normalize_scientific(text)
     text = normalize_roman(text)
     text = normalize_dates(text)
     text = normalize_times(text)
