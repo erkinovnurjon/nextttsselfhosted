@@ -660,17 +660,22 @@ class F5SynthesizeRequest(BaseModel):
 
 @app.post("/synthesize/f5")
 def synthesize_f5(req: F5SynthesizeRequest):
-    """F5-TTS (Feruza) tabiiy ayol ovozi — :8001 mikroservisiga proxy.
+    """F5-TTS tabiiy ovoz — :8001 mikroservisiga proxy.
 
-    Matn normalizatsiyasi F5 serverning o'zida (training bilan AYNAN mos) bajariladi,
-    shuning uchun bu yerda matnga tegmaymiz — test_f5.py bilan bir xil natija.
+    Linguistik normalizatsiya (raqam/sana/matematik ifoda/birlik/lug'at → so'z) SHU YERDA
+    qilinadi — Piper/MMS bilan bir xil. F5 server keyin char/x→kh/talaffuz bilan davom etadi.
+    (Avval F5 XOM matn olardi → "2025"/"3+5=8"/"5000 so'm" g'aliz o'qilardi.)
     """
     import requests as _rq
+
+    # Raqam/sana/matematika/birlikni so'zga aylantiramiz (F5 server buni o'zi qilmaydi).
+    # x/gʻ/q char-normalizatsiya F5 server'da qoladi (training bilan mos).
+    text = normalize_uzbek_text(req.text)
 
     try:
         r = _rq.post(
             f"{F5_SERVER_URL}/synthesize/f5",
-            json={"text": req.text, "speed": req.speed, "nfe_step": req.nfe_step,
+            json={"text": text, "speed": req.speed, "nfe_step": req.nfe_step,
                   "voice": req.voice, "ref_wav": req.ref_wav, "ref_text": req.ref_text,
                   "seed": req.seed},
             timeout=180,
