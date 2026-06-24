@@ -176,8 +176,10 @@ def apply_pron_fix(t: str) -> str:
 
 
 def _trim_lead_silence(w, sr, pad_ms=30):
-    """Audio BOSHIDAGI sukunatni (onset-pad ', ' qoldirgan pauza) kesadi, kichik pad qoldiradi.
-    Birinchi-so'z himoyasi (matnda onset_pad) saqlanadi — faqat eshitiladigan pauza ketadi."""
+    """Audio BOSHIDAGI sukunatni VA onset-pad ', ' qoldirgan qisqa ovozli burst'ni kesadi.
+    Onset-pad ba'zan [qisqa burst][gap][asl so'z] qoldiradi — bu boshida "noaniq so'z" bo'lib
+    eshitiladi. Burst QISQA (<160ms) bo'lib keyin GAP kelsa, uni kesib asl so'zdan boshlaymiz.
+    Onset so'zga suvalган bo'lsa (past nfe), ajratib bo'lmaydi → faqat sukunat ketadi."""
     a = np.asarray(w, dtype="float32")
     if a.size == 0:
         return a
@@ -185,10 +187,20 @@ def _trim_lead_silence(w, sr, pad_ms=30):
     peak = float(amp.max())
     if peak <= 0:
         return a
-    voiced = np.where(amp > peak * 0.02)[0]
-    if voiced.size == 0:
+    # 1) sukunatdan keyingi birinchi nuqta (2% peak)
+    lo = np.flatnonzero(amp > peak * 0.02)
+    if lo.size == 0:
         return a
-    start = max(0, int(voiced[0]) - int(sr * pad_ms / 1000))
+    s0 = int(lo[0])
+    # 2) Comma nafasi ~120ms PAST energiya (<=~10% peak), keyin so'z KESKIN ko'tariladi.
+    #    Boshidagi 220ms ichida so'z energiyasi (12% peak) qayerdan boshlanishini topib,
+    #    o'shandan boshlaymiz (comma o'tib ketadi). pad_ms orqaga = frikativ (s/x/f) himoyasi.
+    #    ASR-sweep: 12 gap (x/s/sh/f/h/q boshli) x T=12% P=30ms => 0 klip.
+    win = int(sr * 0.22)
+    hi = np.flatnonzero(amp[s0:s0 + win] > peak * 0.12)
+    if hi.size:
+        s0 = s0 + int(hi[0])
+    start = max(0, s0 - int(sr * pad_ms / 1000))
     return a[start:]
 
 
@@ -340,6 +352,7 @@ class SynthReq(BaseModel):
     ref_wav: str | None = None
     ref_text: str | None = None       # reference klip transkripti
     seed: int | None = None           # None = random (tabiiy variatsiya)
+    onset: bool = True                # False = onset-pad ", " o'chadi (boshidagi g'aliz tovushni sinash uchun)
 
 @app.get("/health")
 def health():
@@ -406,7 +419,7 @@ def synthesize(req: SynthReq):
     # avval mikro-pauza oladi va birinchi so'z omon qoladi (ASR-eval 2 model x 4 gap x
     # 3 seed: 1-so'z to'g'ri 7/12 -> 12/12). Narxi: ba'zan juda qisqa onset tovushi.
     # F5_ONSET_PAD=0 bilan o'chadi.
-    onset_pad = ", " if os.environ.get("F5_ONSET_PAD", "1") != "0" else ""
+    onset_pad = ", " if (req.onset and os.environ.get("F5_ONSET_PAD", "1") != "0") else ""
     parts, sr = [], 24000
     prev_end = ""
     for sent in sentences:
