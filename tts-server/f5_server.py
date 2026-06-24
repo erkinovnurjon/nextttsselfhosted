@@ -191,24 +191,30 @@ def _voiced_runs(a, sr):
 
 
 def _trim_lead_silence(w, sr, pad_ms=30):
-    """Boshidagi sukunatni VA haqiqiy so'z OLDIDAGI alohida onset blip(lar)ini kesadi.
-    KONSERVATIV (adversarial-review): HAQIQIY birinchi so'zni HECH QACHON kesmaydi —
-    faqat undan oldingi QISQA(<80ms) YOKI SOKIN(<12% peak) run'lar = onset-pad ', '
-    artefakti, ularni o'tkazib yuboramiz. Birinchi (>=80ms VA >=12% peak) run = so'z."""
+    """Boshidagi sukunat + onset blip(lar) + REF-ECHO LEAK ni kesadi. KONSERVATIV:
+    HAQIQIY birinchi so'zni (eng baland run) HECH QACHON kesmaydi. Skip qilinadigan:
+      (a) BLIP: QISQA(<80ms) YOKI SOKIN(<12% peak) run = onset-pad ', ' artefakti;
+      (b) LEAK: birinchi so'zdan keyin KATTA pauza (>=300ms) — F5 qisqa matnda etalon
+         oxirini "gapirib" yuboradi, u katta pauza bilan ajraladi (repro: 'Salom' ->
+         [qizildi 516ms][437ms PAUZA][salom]). Eng baland run leak deb kesilmaydi."""
     a = np.asarray(w, dtype="float32")
     if a.size == 0:
         return a
     starts, ends, amp, peak = _voiced_runs(a, sr)
     if starts is None:
         return a
+    n = len(starts)
     i = 0
-    while i + 1 < len(starts):
+    while i + 1 < n:
         rlen = int(ends[i]) - int(starts[i])
         rpk = float(amp[starts[i]:ends[i]].max())
-        if rlen < int(sr * 0.08) or rpk < peak * 0.12:   # blip (qisqa yoki sokin) -> o'tkaz
+        gap = int(starts[i + 1]) - int(ends[i])
+        is_blip = rlen < int(sr * 0.08) or rpk < peak * 0.12
+        is_leak = gap >= int(sr * 0.30) and rpk < peak * 0.98   # katta pauza + eng baland EMAS
+        if is_blip or is_leak:
             i += 1
         else:
-            break                                         # haqiqiy so'z -> to'xta
+            break                                               # haqiqiy uzluksiz so'z -> to'xta
     start = max(0, int(starts[i]) - int(sr * pad_ms / 1000))
     return a[start:]
 
