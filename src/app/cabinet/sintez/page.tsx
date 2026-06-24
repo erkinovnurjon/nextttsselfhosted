@@ -31,21 +31,21 @@ const PRESETS = [
   "Gʻalaba qoʻshigʻi yangrab, togʻu toshlar jaranglashdi.",
 ];
 
-// "Erkak" (MMS) = ASOSIY/DEFAULT ovoz (foydalanuvchi tanlovi) — tez, ishonchli (CPU, GPU kutmaydi),
-//   x/gʻ/q tug'ma to'g'ri. ayol = "Ayol (mayin)" (F5, tabiiy/mayin, ~3s, F5 server kerak; onset/leak
-//   tuzatilgan). piper = nativ o'zbek ayol (CPU). base = neytral tez MMS.
+// "Asosiy" (base, MMS neytral) = ASOSIY/DEFAULT ovoz (foydalanuvchi tanlovi) — to'g'ri talaffuz,
+//   tez (CPU/MMS, ishonchli). Yonida ayol = "Ayol (mayin)" (F5, tabiiy/mayin, ~3s, F5 server kerak;
+//   onset/leak tuzatilgan). erkak = to'la erkak (MMS). piper = nativ o'zbek ayol (CPU).
 // "jonli/feruza" (F5) UI'dan olingan — API/eski tarix uchun type/i18n'da qoladi.
 const VOICES: { id: Voice; icon: typeof Sparkles }[] = [
-  { id: "erkak", icon: User2 },
+  { id: "base", icon: Star },
   { id: "ayol", icon: Wand2 },
-  { id: "piper", icon: Star },
-  { id: "base", icon: Sparkles },
+  { id: "erkak", icon: User2 },
+  { id: "piper", icon: Sparkles },
 ];
 
 export default function SintezPage() {
   const { t } = useI18n();
   const [text, setText] = useState(PRESETS[0]);
-  const [voice, setVoice] = useState<Voice>("erkak");
+  const [voice, setVoice] = useState<Voice>("base");
   const [speed, setSpeed] = useState(0.9);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
