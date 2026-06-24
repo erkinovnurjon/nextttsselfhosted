@@ -175,11 +175,48 @@ def apply_pron_fix(t: str) -> str:
     return _PRON_RE.sub(lambda m: _PRON_FIX[m.group(1).lower()], t)
 
 
+def _voiced_runs(a, sr):
+    """(starts, ends, amp, peak) — 50ms dan katta gap bilan ajralgan voiced run'lar."""
+    amp = np.abs(a)
+    peak = float(amp.max())
+    if peak <= 0:
+        return None, None, amp, peak
+    idx = np.flatnonzero(amp > peak * 0.02)
+    if idx.size == 0:
+        return None, None, amp, peak
+    g = np.flatnonzero(np.diff(idx) > int(sr * 0.05))
+    starts = idx[np.concatenate(([0], g + 1))]
+    ends = idx[np.concatenate((g, [idx.size - 1]))] + 1
+    return starts, ends, amp, peak
+
+
 def _trim_lead_silence(w, sr, pad_ms=30):
-    """Audio BOSHIDAGI sukunatni VA onset-pad ', ' qoldirgan qisqa ovozli burst'ni kesadi.
-    Onset-pad ba'zan [qisqa burst][gap][asl so'z] qoldiradi — bu boshida "noaniq so'z" bo'lib
-    eshitiladi. Burst QISQA (<160ms) bo'lib keyin GAP kelsa, uni kesib asl so'zdan boshlaymiz.
-    Onset so'zga suvalган bo'lsa (past nfe), ajratib bo'lmaydi → faqat sukunat ketadi."""
+    """Boshidagi sukunatni VA haqiqiy so'z OLDIDAGI alohida onset blip(lar)ini kesadi.
+    KONSERVATIV (adversarial-review): HAQIQIY birinchi so'zni HECH QACHON kesmaydi —
+    faqat undan oldingi QISQA(<80ms) YOKI SOKIN(<12% peak) run'lar = onset-pad ', '
+    artefakti, ularni o'tkazib yuboramiz. Birinchi (>=80ms VA >=12% peak) run = so'z."""
+    a = np.asarray(w, dtype="float32")
+    if a.size == 0:
+        return a
+    starts, ends, amp, peak = _voiced_runs(a, sr)
+    if starts is None:
+        return a
+    i = 0
+    while i + 1 < len(starts):
+        rlen = int(ends[i]) - int(starts[i])
+        rpk = float(amp[starts[i]:ends[i]].max())
+        if rlen < int(sr * 0.08) or rpk < peak * 0.12:   # blip (qisqa yoki sokin) -> o'tkaz
+            i += 1
+        else:
+            break                                         # haqiqiy so'z -> to'xta
+    start = max(0, int(starts[i]) - int(sr * pad_ms / 1000))
+    return a[start:]
+
+
+def _trim_carrier(w, sr, pad_ms=30, pause_ms=80):
+    """Karrier-so'z onset uchun: [karrier 'Eshiting,'][UZUN pauza][haqiqiy matn]. Birinchi
+    UZUN pauzagacha (>=pause_ms) bo'lgan hammasini (karrier) kesib, matndan boshlaymiz.
+    Uzun pauza topilmasa (karrier matn bilan suvalgan) -> oddiy konservativ trim."""
     a = np.asarray(w, dtype="float32")
     if a.size == 0:
         return a
@@ -187,21 +224,14 @@ def _trim_lead_silence(w, sr, pad_ms=30):
     peak = float(amp.max())
     if peak <= 0:
         return a
-    # 1) sukunatdan keyingi birinchi nuqta (2% peak)
-    lo = np.flatnonzero(amp > peak * 0.02)
-    if lo.size == 0:
+    idx = np.flatnonzero(amp > peak * 0.02)
+    if idx.size == 0:
         return a
-    s0 = int(lo[0])
-    # 2) Comma nafasi ~120ms PAST energiya (<=~10% peak), keyin so'z KESKIN ko'tariladi.
-    #    Boshidagi 220ms ichida so'z energiyasi (12% peak) qayerdan boshlanishini topib,
-    #    o'shandan boshlaymiz (comma o'tib ketadi). pad_ms orqaga = frikativ (s/x/f) himoyasi.
-    #    ASR-sweep: 12 gap (x/s/sh/f/h/q boshli) x T=12% P=30ms => 0 klip.
-    win = int(sr * 0.22)
-    hi = np.flatnonzero(amp[s0:s0 + win] > peak * 0.12)
-    if hi.size:
-        s0 = s0 + int(hi[0])
-    start = max(0, s0 - int(sr * pad_ms / 1000))
-    return a[start:]
+    big = np.flatnonzero(np.diff(idx) > int(sr * pause_ms / 1000))
+    if big.size:
+        s_word = int(idx[int(big[0]) + 1])
+        return a[max(0, s_word - int(sr * pad_ms / 1000)):]
+    return _trim_lead_silence(a, sr, pad_ms)
 
 
 # Gap oxiri belgilaridan keyin bo'lamiz (probel/satr oxiri bilan). F5 uzun matnni
@@ -353,6 +383,10 @@ class SynthReq(BaseModel):
     ref_text: str | None = None       # reference klip transkripti
     seed: int | None = None           # None = random (tabiiy variatsiya)
     onset: bool = True                # False = onset-pad ", " o'chadi (boshidagi g'aliz tovushni sinash uchun)
+    # ── Onset strategiya sweep (boshidagi "noaniq so'z"ni yo'qotish uchun) ──
+    onset_text: str | None = None     # onset prefiksini literal override (", " | ". " | "" ...)
+    onset_carrier: str | None = None  # tashlab yuboriladigan karrier so'z (masalan "Eshiting, ") — keyin kesiladi
+    ref_suffix: str | None = None     # ref_text oxiriga qo'shiladi (ref/gen chokkasini yumshatish, masalan ". ")
 
 @app.get("/health")
 def health():
@@ -419,12 +453,22 @@ def synthesize(req: SynthReq):
     # avval mikro-pauza oladi va birinchi so'z omon qoladi (ASR-eval 2 model x 4 gap x
     # 3 seed: 1-so'z to'g'ri 7/12 -> 12/12). Narxi: ba'zan juda qisqa onset tovushi.
     # F5_ONSET_PAD=0 bilan o'chadi.
-    onset_pad = ", " if (req.onset and os.environ.get("F5_ONSET_PAD", "1") != "0") else ""
+    # Onset strategiya: karrier so'z > onset_text override > ", " (default) > "" (o'chiq).
+    # Karrier ishlatilsa boshidagi karrierни _trim_carrier kesadi; aks holda konservativ trim.
+    if req.onset_carrier:
+        onset_pad, trim_fn = req.onset_carrier, _trim_carrier
+    elif req.onset_text is not None:
+        onset_pad, trim_fn = req.onset_text, _trim_lead_silence
+    else:
+        onset_pad = ", " if (req.onset and os.environ.get("F5_ONSET_PAD", "1") != "0") else ""
+        trim_fn = _trim_lead_silence
+    # ref_text: ref/gen chokkasini yumshatish uchun oxiriga ref_suffix (masalan ". ") qo'shsa bo'ladi.
+    ref_text_eff = (vc["text"].rstrip() + req.ref_suffix) if req.ref_suffix else vc["text"]
     parts, sr = [], 24000
     prev_end = ""
     for sent in sentences:
         w, sr, _ = model.infer(
-            vc["wav"], vc["text"], onset_pad + sent,
+            vc["wav"], ref_text_eff, onset_pad + sent,
             nfe_step=req.nfe_step, speed=req.speed, remove_silence=req.remove_silence,
             seed=seed, show_info=lambda *a, **k: None,
         )
@@ -435,7 +479,7 @@ def synthesize(req: SynthReq):
             parts.append(np.zeros(int(pause * sr), dtype="float32"))
         # HAR segment boshidagi onset-pad sukunatини kesamiz — aks holda har jumla orasida
         # qo'shimcha pauza chiqib uzuq-yuluq bo'ladi (birinchi-so'z himoyasi saqlanadi).
-        parts.append(_trim_lead_silence(np.asarray(w, dtype="float32"), sr))
+        parts.append(trim_fn(np.asarray(w, dtype="float32"), sr))
         prev_end = sent.rstrip()[-1:] if sent.rstrip() else ""
     wav = np.concatenate(parts) if parts else np.zeros(1, dtype="float32")
     dt = time.time() - t0
