@@ -1,5 +1,6 @@
 // NextTTS — Prisma schema
-// SQLite database for users, sessions, synthesis history, daily usage tracking
+// PostgreSQL (Neon yoki Docker postgres) — users, sessions, synthesis history,
+// daily usage, kredit/to'lov. provider = postgresql (DATABASE_URL orqali).
 
 generator client {
   provider = "prisma-client-js"

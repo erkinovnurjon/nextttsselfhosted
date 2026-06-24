@@ -1,4 +1,4 @@
-# NextTTS Python server (XTTS v2 voice cloning) ishga tushirish
+# NextTTS main backend (MMS TTS + Whisper ASR + F5/Piper proxy) :8000
 # Foydalanish: .\scripts\start-tts-server.ps1
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +13,7 @@ if (-not (Test-Path $VenvPython)) {
 }
 
 $env:PYTHONIOENCODING = "utf-8"
-$env:COQUI_TOS_AGREED = "1"
+$env:PYTHONUTF8 = "1"
 
 Set-Location $TtsServer
 Write-Host "[INFO] TTS server boshlanmoqda: http://127.0.0.1:8000" -ForegroundColor Cyan

@@ -1,39 +1,112 @@
 # NextTTS
 
-O'zbek tilida ishlaydigan, self-hosted, foydalanuvchi ovozi bilan gapiradigan TTS platformasi.
+O'zbek tilida ishlaydigan **self-hosted matn-nutq (TTS) platformasi** — OTM/LMS uchun pilot.
+Foydalanuvchilar matnni nutqqa aylantiradi, o'z ovozini yozdirib klonlaydi, balansini
+to'ldiradi. Web ilova + 3 ta TTS dvigatel + ASR + auth/to'lov/chatbotни o'z ichiga oladi.
 
-**Tech stack:** Next.js 16 (frontend) + Python 3.11 / FastAPI / XTTS v2 (ML backend) + RTX 3060 GPU
+**Tech stack:** Next.js 16 (React, TypeScript) · FastAPI (Python 3.11) · PostgreSQL (Prisma) ·
+NextAuth v5 · Piper / Meta MMS / F5-TTS · Whisper ASR.
 
 ---
 
-## Tezda ishga tushirish
+## Ovoz dvigatellari (3 ta)
+
+| Ovoz (UI) | Dvigatel | Port | Talab | Izoh |
+|-----------|----------|------|-------|------|
+| **Asosiy** (default), Erkak | MMS (Meta) | `:8000` | CPU | Nativ o'zbek, tez, x/gʻ/q to'g'ri |
+| **Ayol (nativ)** | Piper | `:8002` | CPU | Nativ o'zbek ayol, tabiiy |
+| **Ayol (mayin)**, "Mening ovozim" | F5-TTS | `:8001` | **GPU** | Tabiiy tembr + zero-shot klon |
+
+> F5 (GPU) ixtiyoriy — MMS/Piper ovozlari CPU'da ishlaydi. F5'siz "Ayol (mayin)" va
+> "Mening ovozim" ishlamaydi, qolgani ishlaydi.
+
+---
+
+## Arxitektura
+
+```
+Browser ──> Next.js web (:3000)
+                 │  src/app/api/*  (server route'lar)
+                 ▼  TTS_BACKEND_URL
+            main.py  FastAPI (:8000)  ── MMS TTS + Whisper ASR
+                 │   + BARCHA matn normalizatsiyasi (raqam/sana/x-gʻ-q/matematika)
+                 ├──> F5 server   (:8001)   proxy   (GPU)
+                 └──> Piper server (:8002)  proxy   (CPU)
+
+            PostgreSQL (Neon yoki Docker)  <── Prisma  (users, kredit, to'lov, tarix)
+```
+
+- Web `api/tts` route'i `TTS_BACKEND_URL` (main.py :8000) ga proxy qiladi; main.py o'zi
+  F5/Piper mikroservislariga proxy qiladi va **barcha matn normalizatsiyasini** (linguistik
+  raqam/sana + fonetik x/gʻ/q + ilmiy matematik belgilar) shu yerda bajaradi.
+- Reference kliplar `tts-server/voices/` da (web ↔ F5 umumiy volume kerak — `DEPLOY.md`).
+
+---
+
+## Lokal setup
 
 ```powershell
-# Birinchi marta — bog'liqliklarni o'rnatish (avval bajariladi)
+# 1. Web bog'liqliklari
 npm install
-cd tts-server
-uv venv --python 3.11
-uv pip install -e .
-uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
-uv pip install transformers==4.55.0
-cd ..
 
-# Har kuni ishga tushirish
-.\scripts\start-all.ps1
+# 2. Ma'lumotlar bazasi (Neon yoki lokal Postgres) -> .env da DATABASE_URL
+copy .env.example .env        # to'ldiring (DATABASE_URL, AUTH_SECRET, ...)
+npx prisma migrate dev        # jadvallarni yaratadi
+npx prisma generate           # ⚠️ avval `npm run dev` ni TO'XTATING (fayl lock)
+
+# 3. Python muhitlari (3 ta alohida venv — torch versiyalari farq qiladi)
+cd tts-server
+python -m venv .venv      ; .venv\Scripts\pip install -e . ; .venv\Scripts\pip install transformers==4.55.0   # MMS + ASR
+python -m venv .venv-f5   ; # torch (CUDA) + f5-tts + transformers==4.49.0   (GPU bo'lsa)
+python -m venv venv-piper ; # onnxruntime + piper-tts + fastapi + uvicorn + soundfile
 ```
 
-Yoki alohida-alohida (ikkita terminal):
+> TTS modellari HuggingFace'dan birinchi ishga tushishda yuklanadi. F5 checkpoint va
+> Piper `.onnx` modeli lokal/HF'da bo'lishi kerak (`DEPLOY.md`).
+
+---
+
+## Ishga tushirish
+
+**Hammasini birga** (alohida oynalar):
 
 ```powershell
-# Terminal 1 — Python TTS server
-.\scripts\start-tts-server.ps1
-
-# Terminal 2 — Next.js frontend
-.\scripts\start-frontend.ps1
+.\scripts\start-all.ps1          # web + MMS + Piper + F5
+.\scripts\start-all.ps1 -NoF5    # GPU yo'q bo'lsa — F5'siz
 ```
 
-- Frontend: <http://localhost:3000>
-- TTS API: <http://127.0.0.1:8000>
+**Yoki qo'lda** (har biri alohida terminalda, `PYTHONUTF8=1` shart):
+
+```powershell
+# Web
+npm run dev                                                          # :3000
+
+cd tts-server
+.venv\Scripts\python -m uvicorn server.main:app --port 8000          # MMS + ASR + proxy
+venv-piper\Scripts\python -m uvicorn piper_server:app --port 8002    # Piper (DEFAULT ovoz!)
+.venv-f5\Scripts\python -m uvicorn f5_server:app --port 8001         # F5 (GPU; ixtiyoriy)
+```
+
+- Web: <http://localhost:3000>
+- ⚠️ **Piper (:8002) ishlamasa default ovoz 503 qaytaradi** — uni doim yoqing.
+- F5 birinchi startda ~150s warmup qiladi (cold-start oldini olish uchun).
+
+---
+
+## Build (production)
+
+```powershell
+npm run build      # ICHIDA `next build --webpack` bor — Turbopack OOM beradi, O'ZGARTIRMANG
+npm start
+```
+
+---
+
+## Muhit o'zgaruvchilari
+
+`.env.example` — barcha o'zgaruvchilar izoh bilan (DATABASE_URL, AUTH_SECRET/AUTH_URL,
+TTS_BACKEND_URL, F5/Piper URL, Payme/Click kalitlari, ANTHROPIC_API_KEY). `.env` ga nusxalab
+to'ldiring. Haqiqiy `.env`/`.env.prod` git'ga qo'shilmaydi.
 
 ---
 
@@ -41,183 +114,47 @@ Yoki alohida-alohida (ikkita terminal):
 
 ```
 nexttts/
-├── src/                         # Next.js frontend (TypeScript)
+├── src/                         # Next.js web ilova (TypeScript)
 │   ├── app/
-│   │   ├── page.tsx             # Dashboard (dataset boshqaruv)
-│   │   ├── record/page.tsx      # Batch yozish rejimi (klaviatura shortcutlari)
-│   │   └── api/
-│   │       ├── sentences/       # Dataset CRUD
-│   │       ├── recordings/      # Audio upload/stream
-│   │       ├── stats/           # Statistika
-│   │       ├── export/          # metadata.csv eksport
-│   │       └── tts/             # FastAPI proxy
-│   ├── components/              # UI komponentlar
-│   ├── hooks/use-recorder.ts    # MediaRecorder hook
-│   └── lib/
-│       ├── dataset.ts           # fs operatsiyalari
-│       └── wav-encoder.ts       # webm → 22050 Hz mono WAV
+│   │   ├── cabinet/             # Foydalanuvchi kabineti (sintez, ovozlar, balans, ...)
+│   │   ├── api/                 # Server route'lar (tts, chat, payments, auth, ...)
+│   │   └── (landing/auth)       # Landing + kirish/ro'yxat
+│   ├── components/              # UI komponentlar (cabinet/, ui/, chat-widget, ...)
+│   └── lib/                     # auth, db, payments, chatbot, i18n, role, credits, ...
 │
-├── tts-server/                  # Python ML server
-│   ├── pyproject.toml
-│   ├── .venv/                   # Python 3.11 venv (uv)
-│   ├── server/main.py           # FastAPI inference server
-│   ├── scripts/
-│   │   ├── prepare_reference.py # Reference audio yaratish
-│   │   └── clone_voice.py       # CLI voice cloning
-│   ├── voices/main/             # Reference audio fayllar
-│   └── output/                  # Sintezlangan WAV fayllar
+├── tts-server/                  # Python TTS/ASR backend
+│   ├── server/
+│   │   ├── main.py              # FastAPI :8000 — MMS + ASR + F5/Piper proxy + normalizatsiya
+│   │   ├── mms_engine.py        # MMS TTS dvigatel
+│   │   ├── whisper_engine.py    # Whisper ASR (mikrofon STT)
+│   │   ├── linguistic_normalizer.py / text_normalizer.py / lexicon.py / sci_normalizer.py
+│   ├── f5_server.py             # F5-TTS :8001 (GPU)
+│   ├── piper_server.py          # Piper :8002 (DEFAULT ovoz)
+│   └── scripts/prepare_reference.py   # "Mening ovozim" reference quruvchi (runtime)
 │
-├── dataset/                     # Audio dataset
-│   ├── sentences.json           # 300 ta jumla (manba)
-│   ├── sentences.txt            # Boshlang'ich seed
-│   ├── wavs/                    # Yozilgan WAV fayllar (001.wav, ...)
-│   └── metadata.csv             # Eksport (LJSpeech format)
-│
-├── docs/
-│   └── 01-recording-guide.md    # Audio yozish qo'llanmasi
-│
-└── scripts/                     # PowerShell run scripts
+├── prisma/                      # DB schema + migratsiyalar (PostgreSQL)
+├── scripts/                     # start-*.ps1, set-role.mjs
+├── docs/                        # Loyiha eslatmalari
+├── DEPLOY.md                    # Production deploy (Docker compose)
+└── .env.example                 # Muhit o'zgaruvchilari namunasi
 ```
 
 ---
 
-## Workflow
+## Asosiy imkoniyatlar
 
-### 1. Dataset to'plash (Frontend)
-
-1. <http://localhost:3000> ga kiring
-2. **"Batch yozish"** tugmasini bosing (yoki [/record](http://localhost:3000/record))
-3. Klaviatura shortcutlari bilan tez yozing:
-   - `Space` — yozish/to'xtatish
-   - `Enter` — saqlash va keyingiga
-   - `Esc` — qayta yozish
-   - `←/→` — oldingi/keyingi
-
-WAV fayllar `dataset/wavs/` papkasiga 22050 Hz mono 16-bit format'da saqlanadi.
-
-### 2. Reference audio yangilash
-
-Yangi yozuvlar qo'shilgandan keyin reference'ni qayta yarating:
-
-```powershell
-cd tts-server
-.\.venv\Scripts\python.exe scripts\prepare_reference.py
-```
-
-Yoki API orqali:
-```bash
-curl -X POST http://127.0.0.1:8000/reference/build -H "Content-Type: application/json" -d '{"voice":"main","top":5}'
-```
-
-### 3. Voice clone sinash (CLI)
-
-```powershell
-cd tts-server
-
-# Bitta matn
-.\.venv\Scripts\python.exe scripts\clone_voice.py "Salom dunyo"
-
-# Interaktiv rejim
-.\.venv\Scripts\python.exe scripts\clone_voice.py --interactive
-
-# Demo benchmark (5 ta matn)
-.\.venv\Scripts\python.exe scripts\clone_voice.py --benchmark
-```
-
-Natijalar `tts-server/output/` papkasiga saqlanadi.
-
-### 4. Voice clone sinash (UI orqali)
-
-1. <http://localhost:3000> dashboard'da TTS Preview qismi
-2. "**Sizning ovoz**" rejimini tanlang
-3. Matn kiriting → "Mening ovozim bilan ayt" tugmasini bosing
-4. Audio chiqadi va eshitiladi
+- **Matndan nutq** — 4 ovoz; matn normalizatsiyasi (raqam, sana, valyuta, qisqartma,
+  matematik/fizik belgilar) avtomatik.
+- **Mening ovozim** — foydalanuvchi ovozini yozdirib zero-shot klon (F5).
+- **Nutqdan matn** — mikrofon ASR (Whisper, o'zbek).
+- **Auth + kredit** — NextAuth v5, balans, VIP cheksiz rol.
+- **To'lov** — Payme + Click (balans to'ldirish).
+- **Chatbot** — suzuvchi loyiha-yordamchi (Claude API; kalitsiz FAQ rejimi).
+- **3 til** — o'zbek / rus / ingliz; light/dark mavzu.
 
 ---
 
-## Live training status
+## Deploy
 
-📊 **[STATUS.md](./STATUS.md)** — har 10 daqiqada avtomatik yangilanadi.
-
-Uy noutbukidan training jarayonini kuzatish:
-```bash
-# GitHub'da: github.com/erkinovnurjon/nextttsselfhosted/blob/main/STATUS.md
-# Yoki repo'ni clone qilib local'da watch qilish:
-git clone https://github.com/erkinovnurjon/nextttsselfhosted.git
-cd nextttsselfhosted
-# Har 1 daqiqada o'qish (Mac/Linux):
-watch -n 60 'git pull && cat STATUS.md'
-```
-
-Asosiy PC'da auto-publisher ishga tushirish:
-```powershell
-cd C:\Projects\nexttts
-.\tts-server\.venv\Scripts\python.exe tts-server\training\scripts\publish_status.py --loop --interval 600
-```
-
----
-
-## Voice Lab va Solishtirish
-
-`/voice-lab` — **yangi matn** kiritib istalgan checkpoint bilan sinash:
-- Sidebar'dan checkpoint tanlash
-- Test preset matnlar (x/gʻ/q/oʻ fokuslangan)
-- Parametr sliderlar (temperature, top-k, top-p, repetition penalty, speed)
-- Sintez tarixi (har bir natija download qilish mumkin)
-
-`/compare` — **tayyor namunalar** har xil versiyalar bilan yonma-yon eshitish:
-- 10 ta fokuslangan jumla har bir checkpoint uchun avtomatik ovozlangan
-- Jumla tanlanganda barcha versiyalar bir vaqtda audio sifatida ko'rinadi
-- Versiyalarni yashirib qo'yish (faqat 2-3 ta solishtirish) mumkin
-
-## Autonomous training — overnight
-
-Foydalanuvchi uzoq vaqtga ketganida PC kechasi avtomatik bir necha
-fine-tuning bosqichidan o'tadi:
-
-```powershell
-# v5 → v6 → v7 ketma-ket, har bosqichdan keyin sample audios
-.\tts-server\.venv\Scripts\python.exe tts-server\training\scripts\long_run_orchestrator.py
-```
-
-Bosqichlar:
-- **v5**: lr=2e-6, 1 epoch (continue convergence)
-- **v6**: lr=1e-6, 1 epoch (finer adjustment)
-- **v7**: lr=5e-7, 1 epoch (super-fine tuning)
-
-Har round'dan keyin `generate_samples.py` orqali test sentence'lar ovozlanadi va
-STATUS.md GitHub'ga push qilinadi.
-
----
-
-## Roadmap
-
-- [x] **1-bosqich:** Dataset to'plash UI (Next.js)
-- [x] **2-bosqich:** Audio yozish + WAV konvertatsiya (browser)
-- [x] **3-bosqich:** Coqui XTTS v2 setup + voice cloning
-- [x] **4-bosqich:** FastAPI inference server
-- [x] **5-bosqich:** Frontend ↔ Backend integratsiya
-- [x] **6-bosqich:** XTTS v2 fine-tuning (O'zbek tilida) — v1-v4
-- [x] **7-bosqich:** Multi-checkpoint Voice Lab + auto status publish
-- [ ] **8-bosqich:** Auth + foydalanuvchi/kredit tizimi
-- [ ] **9-bosqich:** Production deploy (Docker + GPU server)
-
----
-
-## Til qo'llab-quvvatlash
-
-XTTS v2 **o'zbek tilini rasmiy qo'llab-quvvatlamaydi**. Hozir vaqtinchalik `tr` (turk) tili ishlatiladi — fonetik jihatdan eng yaqin. O'zbek tilini to'g'ri talaffuz qilish uchun **6-bosqich (fine-tuning)** kerak.
-
-Vaqtinchalik holatda:
-- ✅ Ishlaydi: a, b, d, e, f, g, h, i, k, l, m, n, o, p, r, s, t, u, v, z, y, ch, sh
-- ⚠️  Noto'g'ri talaffuz: q, x, oʻ, gʻ (Uzbek-specific)
-
----
-
-## Texnik xususiyatlar
-
-- **GPU:** NVIDIA RTX 3060 12GB VRAM (CUDA 12.1)
-- **Model:** Coqui XTTS v2 (~2 GB checkpoint)
-- **Sintez tezligi:** ~1.5-3x real-time (GPU bilan)
-- **Audio format:** 22050 Hz mono 16-bit WAV
-- **Reference audio:** 6-30 soniya (ideal: 15-20s, 3 ta yozuv birlashtirilgan)
+Production (Docker compose: caddy + web + api + piper + db) — **`DEPLOY.md`** ga qarang.
+CPU-pilot: Piper default ovoz; F5/klon = GPU server keyin.
