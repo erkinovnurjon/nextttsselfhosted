@@ -647,9 +647,10 @@ F5_SERVER_URL = os.environ.get("F5_SERVER_URL", "http://127.0.0.1:8001")
 class F5SynthesizeRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=2000)
     speed: float = Field(default=1.0, ge=0.3, le=2.0)
-    # nfe=48: ASR-sweep bilan tanlandi — o'qish aniqligi 28%→18% WER (cfg=2.0 eng yaxshi,
-    # oshirish battar; nfe=64 qo'shimcha foyda bermaydi). Sekinroq, lekin tiniqroq.
-    nfe_step: int = Field(default=48, ge=8, le=64)
+    # nfe=24: TEZLIK uchun (foydalanuvchi tanladi) — 5.9s->3.1s (~1.9x), sifat deyarli
+    # o'sha. nfe=48 sifatliroq lekin sekin; nfe=16 tezroq lekin pastroq. So'rovda almashtirsa
+    # bo'ladi. (Eski default 48 — ASR-sweep 28%->18% WER, lekin tezlik muhimroq.)
+    nfe_step: int = Field(default=24, ge=8, le=64)
     # F5 reference tanlovi: feruza (#1, tabiiy) | jonli (05, ifodali). f5_server'ga uzatiladi.
     voice: str = Field(default="feruza")
     # Per-user zero-shot klon (Next.js DB'dan beradi): foydalanuvchi reference klipi + matni.

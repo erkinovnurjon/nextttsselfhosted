@@ -306,9 +306,26 @@ def load():
 
 app = FastAPI(title="NextTTS F5 engine")
 
+def _warmup():
+    """Cold-start: F5'ning BIRINCHI inference'i CUDA kernellarni isitadi (~147s!). Startup'da
+    bir marta qisqa bo'sh sintez qilib, REAL birinchi so'rovni tez qilamiz. Sifatga ta'sir yo'q."""
+    try:
+        v = state["voices"].get(DEFAULT_VOICE) or next(iter(state["voices"].values()), None)
+        if v is None:
+            return
+        state["models"][v["model"]].infer(
+            v["wav"], v["text"], "salom dunyo", nfe_step=8,
+            show_info=lambda *a, **k: None,
+        )
+        print("✅ F5 warmup tugadi — cold-start o'ldirildi", flush=True)
+    except Exception as e:
+        print(f"⚠️ F5 warmup xato (zararsiz): {e}", flush=True)
+
+
 @app.on_event("startup")
 def _startup():
     load()
+    _warmup()
 
 class SynthReq(BaseModel):
     text: str
