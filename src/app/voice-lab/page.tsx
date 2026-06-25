@@ -7,22 +7,20 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Download,
   Trash2,
   Volume2,
-  Cpu,
-  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Checkpoint {
-  id: string;
-  name: string;
-  size_gb: number;
-  mtime: number;
-  kind: "best" | "step";
-  active: boolean;
-}
+import { synthesize as synthesizeTts } from "@/lib/tts-client";
+import { ParamSlider } from "@/components/synthesis/param-slider";
+import {
+  CheckpointSidebar,
+  type Checkpoint,
+} from "@/components/synthesis/checkpoint-sidebar";
+import {
+  VoiceLabResultCard,
+  type SynthResult,
+} from "@/components/synthesis/voice-lab-result-card";
 
 interface CheckpointsResponse {
   active: string | null;
@@ -38,23 +36,6 @@ interface BackendHealth {
   vram_allocated_gb?: number;
   checkpoint_id?: string;
   error?: string;
-}
-
-interface SynthResult {
-  id: string;
-  text: string;
-  normalizedText: string | null;
-  audioUrl: string;
-  checkpointId: string;
-  synthTime: number;
-  params: {
-    temperature: number;
-    speed: number;
-    repetition_penalty: number;
-    top_k: number;
-    top_p: number;
-  };
-  createdAt: number;
 }
 
 const TEST_PRESETS = [
@@ -146,10 +127,13 @@ export default function VoiceLabPage() {
     setLoadingSynth(true);
     setError(null);
     try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const {
+        url,
+        timeSec: synthTime,
+        checkpointId: checkpointIdHeader,
+        normalizedText: normalized,
+      } = await synthesizeTts(
+        {
           text: text.trim(),
           voice: "main",
           speed,
@@ -158,15 +142,10 @@ export default function VoiceLabPage() {
           top_k: topK,
           top_p: topP,
           checkpoint_id: selectedId,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Server xatosi (${res.status})`);
-      }
-      const synthTime = parseFloat(res.headers.get("X-Synthesis-Time-Sec") || "0");
-      const checkpointId = res.headers.get("X-Checkpoint-Id") || selectedId;
-      const normalized = res.headers.get("X-Normalized-Text");
+        },
+        { errorFallback: (status) => `Server xatosi (${status})` }
+      );
+      const checkpointId = checkpointIdHeader || selectedId;
       let normText: string | null = null;
       if (normalized) {
         try {
@@ -175,8 +154,6 @@ export default function VoiceLabPage() {
           normText = normalized;
         }
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
       const result: SynthResult = {
         id: crypto.randomUUID(),
         text: text.trim(),
@@ -265,93 +242,14 @@ export default function VoiceLabPage() {
 
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
         {/* Checkpoint tanlash sidebar */}
-        <aside className="space-y-3">
-          <div className="rounded-lg border border-border bg-bg-subtle p-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold flex items-center gap-1.5">
-                <Layers className="h-3.5 w-3.5 text-accent" />
-                Versiyalar
-              </h3>
-              <button
-                onClick={refreshCheckpoints}
-                className="rounded p-0.5 hover:bg-bg-muted"
-                title="Qayta yuklash"
-              >
-                <RefreshCw className="h-3 w-3" />
-              </button>
-            </div>
-            {loadingCp ? (
-              <div className="flex items-center gap-2 text-xs text-fg-muted py-3">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Yuklanmoqda…
-              </div>
-            ) : checkpoints.length === 0 ? (
-              <div className="text-xs text-fg-muted py-3">
-                Hech qanday checkpoint topilmadi
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {checkpoints.map((cp) => (
-                  <button
-                    key={cp.id}
-                    onClick={() => setSelectedId(cp.id)}
-                    className={cn(
-                      "w-full text-left rounded-md p-2 text-xs transition",
-                      cp.id === selectedId
-                        ? "bg-accent/20 border border-accent/40 text-fg"
-                        : "border border-transparent hover:bg-bg-muted text-fg-muted hover:text-fg"
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          cp.active ? "bg-success" : "bg-fg-subtle"
-                        )}
-                      />
-                      <span className="font-medium font-mono text-[11px] truncate">
-                        {cp.id}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-fg-subtle flex items-center gap-2">
-                      <span>{cp.size_gb} GB</span>
-                      <span>·</span>
-                      <span>{cp.kind}</span>
-                      {cp.active && (
-                        <>
-                          <span>·</span>
-                          <span className="text-success">aktiv</span>
-                        </>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {selectedCheckpoint && (
-            <div className="rounded-lg border border-border bg-bg-subtle p-3 text-[11px] space-y-1">
-              <div className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
-                <Cpu className="h-3.5 w-3.5 text-accent" />
-                Tanlangan
-              </div>
-              <div className="text-fg-muted break-all">
-                {selectedCheckpoint.name}
-              </div>
-              {selectedCheckpoint.mtime > 0 && (
-                <div className="text-fg-subtle">
-                  {new Date(selectedCheckpoint.mtime * 1000).toLocaleString("uz")}
-                </div>
-              )}
-              <div className="text-fg-subtle">
-                {selectedCheckpoint.id === "mms"
-                  ? "Meta MMS · tug'ma o'zbek talaffuz · ovoz cloning yo'q · birinchi sintez ~25s (model yuklanadi)."
-                  : "Kichik switch (~10-20s) faqat birinchi sintezda boʻladi."}
-              </div>
-            </div>
-          )}
-        </aside>
+        <CheckpointSidebar
+          checkpoints={checkpoints}
+          selectedId={selectedId}
+          selectedCheckpoint={selectedCheckpoint}
+          loadingCp={loadingCp}
+          onSelect={setSelectedId}
+          onRefresh={refreshCheckpoints}
+        />
 
         {/* Asosiy ish maydoni */}
         <div className="space-y-4 min-w-0">
@@ -492,7 +390,7 @@ export default function VoiceLabPage() {
             ) : (
               <div className="space-y-2">
                 {results.map((r) => (
-                  <ResultCard
+                  <VoiceLabResultCard
                     key={r.id}
                     result={r}
                     onDelete={() => removeResult(r.id)}
@@ -505,113 +403,5 @@ export default function VoiceLabPage() {
         </div>
       </div>
     </main>
-  );
-}
-
-function ParamSlider({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  step,
-  hint,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  step: number;
-  hint?: string;
-}) {
-  return (
-    <label className="flex flex-col gap-1 text-[11px]">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-fg-muted">{label}</span>
-        <span className="font-mono text-fg">{value.toFixed(step < 1 ? 2 : 0)}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full accent-accent"
-      />
-      {hint && <span className="text-[10px] text-fg-subtle">{hint}</span>}
-    </label>
-  );
-}
-
-function ResultCard({
-  result,
-  onDelete,
-  audioRef,
-}: {
-  result: SynthResult;
-  onDelete: () => void;
-  audioRef: (el: HTMLAudioElement | null) => void;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-bg-subtle p-3 space-y-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-accent font-mono">
-              <Layers className="h-2.5 w-2.5" />
-              {result.checkpointId || "?"}
-            </span>
-            <span className="text-fg-subtle">
-              {new Date(result.createdAt).toLocaleTimeString("uz")}
-            </span>
-            <span className="text-fg-subtle">
-              · {result.synthTime.toFixed(2)}s
-            </span>
-          </div>
-          <div className="text-sm text-fg break-words">{result.text}</div>
-          {result.normalizedText && result.normalizedText !== result.text && (
-            <details className="text-[11px] text-fg-muted">
-              <summary className="cursor-pointer hover:text-fg">
-                Normalizatsiya qilingan matn
-              </summary>
-              <div className="mt-1 rounded bg-bg-muted p-1.5 font-mono text-fg">
-                {result.normalizedText}
-              </div>
-            </details>
-          )}
-          <div className="flex flex-wrap gap-1.5 text-[10px] text-fg-subtle pt-0.5">
-            <span>T={result.params.temperature}</span>
-            <span>·</span>
-            <span>speed={result.params.speed}</span>
-            <span>·</span>
-            <span>rep={result.params.repetition_penalty}</span>
-            <span>·</span>
-            <span>top_k={result.params.top_k}</span>
-            <span>·</span>
-            <span>top_p={result.params.top_p}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <a
-            href={result.audioUrl}
-            download={`synth_${result.checkpointId}_${result.id.slice(0, 8)}.wav`}
-            className="rounded p-1 hover:bg-bg-muted transition"
-            title="Yuklab olish"
-          >
-            <Download className="h-3.5 w-3.5" />
-          </a>
-          <button
-            onClick={onDelete}
-            className="rounded p-1 hover:bg-bg-muted transition text-fg-muted hover:text-danger"
-            title="O'chirish"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-      <audio ref={audioRef} src={result.audioUrl} controls className="w-full h-8" />
-    </div>
   );
 }

@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, Download, Sparkles, Mic, User2, Wand2, Star, Fingerprint } from "lucide-react";
+import { Loader2, Play, Sparkles, Mic, User2, Wand2, Star, Fingerprint } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { WaveBars } from "@/components/wave-bars";
 import { blobToWav } from "@/lib/wav-encoder";
+import { synthesize } from "@/lib/tts-client";
+import { VoiceSelector } from "@/components/synthesis/voice-selector";
+import { SynthesisResultCard } from "@/components/synthesis/synthesis-result-card";
 
 type Voice = "piper" | "feruza" | "jonli" | "ayol" | "erkak" | "base" | "__me__";
 
@@ -98,18 +101,7 @@ export default function SintezPage() {
             : F5_VOICES.includes(voice)
               ? { text: t0, checkpoint_id: "f5", speed, voice }
               : { text: t0, checkpoint_id: "mms", voice, speaking_rate: speed };
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.error || `Error (${res.status})`);
-      }
-      const time = parseFloat(res.headers.get("X-Synthesis-Time-Sec") || "0");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const { url, timeSec: time } = await synthesize(payload);
       const result: Result = { id: crypto.randomUUID(), text: t0, voice, url, time };
       setResults((prev) => [result, ...prev]);
       // Topbar balansini yangilash (kredit yechildi)
@@ -208,46 +200,14 @@ export default function SintezPage() {
       </div>
 
       {/* Voice */}
-      <div>
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
-          {t("cabinet.sintez.voiceLabel")}
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {voiceList.map((v) => {
-            const Icon = v.icon;
-            const active = voice === v.id;
-            return (
-              <button
-                key={v.id}
-                onClick={() => setVoice(v.id)}
-                className={cn(
-                  "rounded-2xl border p-4 text-left transition-all",
-                  active
-                    ? "card-glow border-accent/40"
-                    : "border-border bg-bg-subtle/60 hover:bg-bg-muted"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-lg transition",
-                      active ? "brand-gradient text-white" : "bg-bg-muted text-fg-subtle"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="text-sm font-semibold">
-                    {voiceLabel(v.id)}
-                  </span>
-                </div>
-                <div className="mt-1.5 text-[11px] text-fg-muted">
-                  {voiceHint(v.id)}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <VoiceSelector
+        voiceList={voiceList}
+        selected={voice}
+        onSelect={setVoice}
+        label={t("cabinet.sintez.voiceLabel")}
+        voiceLabel={voiceLabel}
+        voiceHint={voiceHint}
+      />
 
       {/* Presets */}
       <div>
@@ -383,36 +343,22 @@ export default function SintezPage() {
       {/* Results */}
       <div className="space-y-3">
         {results.map((r) => (
-          <div key={r.id} className="card animate-fade-in space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                {voiceLabel(r.voice)}
-              </span>
-              <span className="text-[10px] text-fg-subtle">{r.time.toFixed(1)}s</span>
-            </div>
-            <p className="text-sm leading-relaxed">{r.text}</p>
-            <div className="flex items-center gap-2">
-              <audio
-                ref={(el) => {
-                  audioRefs.current[r.id] = el;
-                }}
-                src={r.url}
-                controls
-                className="h-9 flex-1"
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={() => setPlaying(false)}
-              />
-              <a
-                href={r.url}
-                download={`${r.voice}_${r.id.slice(0, 6)}.wav`}
-                className="rounded-lg border border-border p-2 text-fg-muted transition hover:bg-bg-muted hover:text-fg"
-                title={t("cabinet.sintez.download")}
-              >
-                <Download className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
+          <SynthesisResultCard
+            key={r.id}
+            id={r.id}
+            voiceId={r.voice}
+            voiceLabel={voiceLabel(r.voice)}
+            text={r.text}
+            time={r.time}
+            url={r.url}
+            downloadTitle={t("cabinet.sintez.download")}
+            audioRef={(el) => {
+              audioRefs.current[r.id] = el;
+            }}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+          />
         ))}
       </div>
     </div>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { blobToWav } from "@/lib/wav-encoder";
+import { synthesize } from "@/lib/tts-client";
 import { REFERENCE_SENTENCES, MIN_REF_SECONDS } from "@/lib/voice-sentences";
 
 type VoiceInfo = {
@@ -116,21 +117,15 @@ export default function MyVoicePage() {
     setTesting(true);
     setError(null);
     try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { url } = await synthesize(
+        {
           text: "Salom! Bu mening shaxsiy ovozim bilan aytilgan sinov gapi.",
           checkpoint_id: "f5",
           voice: "__me__",
           speed: 0.95,
-        }),
-      });
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.error || "Sintez xatosi");
-      }
-      const url = URL.createObjectURL(await res.blob());
+        },
+        { errorFallback: () => "Sintez xatosi" }
+      );
       setTestUrl(url);
       window.dispatchEvent(new Event("nexttts:credits-changed"));
     } catch (err) {

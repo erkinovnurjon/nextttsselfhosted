@@ -7,6 +7,8 @@
 #   ayol = speaker-01 (1571110404) ref bilan zero-shot klon, XOM matn (x/gʻ to'g'ri).
 #   (Eski dedicated kh-model "ayol" o'chirildi — x'ni buzardi; ckpts/ayol qoldi, ishlatilmaydi.)
 #
+# Matn normalizatsiya (f5lib/textnorm.py) va audio trim (f5lib/audio.py) alohida modullarda.
+#
 # Ishga tushirish:
 #   cd tts-server
 #   KMP_DUPLICATE_LIB_OK=TRUE PYTHONUTF8=1 .venv-f5/Scripts/python.exe -m uvicorn f5_server:app --host 127.0.0.1 --port 8001
@@ -39,6 +41,11 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from f5_tts.api import F5TTS
+
+# Matn normalizatsiya + audio trim — f5lib paketida (og'ir deps yo'q, import tartibiga
+# ta'sirsiz). f5_tts import'idan KEYIN qo'yildi (tartib o'zgarmasin).
+from f5lib.textnorm import normalize, smart_lowercase, apply_pron_fix, apply_x2kh, split_sentences
+from f5lib.audio import _trim_lead_silence, _trim_carrier
 
 ROOT = Path(__file__).resolve().parent  # tts-server/
 VOICES = ROOT / "voices"
@@ -93,176 +100,6 @@ VOICE_CFG = {
              "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 99},
 }
 DEFAULT_VOICE = "feruza"
-
-# ── Matn normalizatsiyasi (TRAINING bilan AYNAN bir xil bo'lishi shart!) ──
-# train: scripts/finalize_f5_metadata.py NORM bilan mos.
-_NORM = [("﻿", ""), ("​", ""), (" ", " "),  # BOM / zero-width / nbsp — F5 buzadi
-         ("‘", "'"), ("’", "'"), ("ʻ", "'"), ("ʼ", "'"), ("`", "'"),
-         ("“", '"'), ("”", '"'), ("«", '"'), ("»", '"'),
-         ("—", "-"), ("–", "-"), ("…", "..."),
-         ("ӯ", "u"), ("Ӯ", "U"), ("ӽ", "x")]
-
-def normalize(t: str) -> str:
-    for a, b in _NORM:
-        t = t.replace(a, b)
-    return t.strip()
-
-
-# Trening datasining ~78% (raw ISSAI 100.7k klip) BUTUNLAY kichik harfda — bosh harfli
-# so'z ("Xalqaro") model uchun siyrak belgi: katta "X" ni "iks" deb o'qib yuborishi mumkin.
-# Faqat bosh harfi katta (Title-case) so'zlarni kichraytiramiz; to'liq KATTA qisqartma
-# (AQSH, BMT) tegilmaydi. F5_LOWER=0 bilan o'chadi.
-_TITLE_WORD = re.compile(r"\b[A-ZА-ЯЁЎҒҚҲ][\w'ʻ-]*")
-
-def smart_lowercase(t: str) -> str:
-    if os.environ.get("F5_LOWER", "1") == "0":
-        return t
-
-    def fix(m: re.Match) -> str:
-        w = m.group(0)
-        if any(c.isupper() for c in w[1:]):  # AQSH, BMT — qisqartma, tegmaymiz
-            return w
-        return w.lower()
-
-    return _TITLE_WORD.sub(fix, t)
-
-
-# F5 talaffuz lug'ati: so'z BOSHIDAGI "x" ni "kh" ga almashtiramiz — model /x/ tovushini
-# shunda to'g'ri chiqaradi (foydalanuvchi quloq bilan tasdiqladi: khalq -> to'g'ri 'xalq').
-# So'z O'RTASIDAGI x (yaxshi, axborot) yaxshi o'qiladi — tegilmaydi. Lookbehind apostrof/
-# harfni istisno qiladi (o'xshash dagi x mid-word -> tegilmaydi). F5_FIX_X=0 bilan o'chadi.
-_X_INIT = re.compile(r"(?<![a-zA-Z'`’ʻ])([xX])")
-
-def fix_x_pronunciation(t: str) -> str:
-    # Default O'CHIQ: uzbek70+ avlod modellar /x/ ni o'zi to'g'ri o'qiydi, kh-hiyla
-    # ularda ZARAR (x-zich matn ASR-eval: khOFF 16% vs khON 40%). F5_FIX_X=1 bilan yonadi
-    # (faqat eski feruza/uzbek_deploy'dan oldingi ckpt uchun kerak bo'lishi mumkin).
-    if os.environ.get("F5_FIX_X", "0") == "0":
-        return t
-    return _X_INIT.sub(lambda m: "Kh" if m.group(1) == "X" else "kh", t)
-
-
-def fix_x_all(t: str) -> str:
-    # ayol modeli uchun: BARCHA x -> kh (training metadata'si shunday normalizatsiyalangan,
-    # model kh = /x/ ni o'rgangan). test_ayol_final.py norm() bilan AYNAN bir xil.
-    return t.replace("X", "Kh").replace("x", "kh")
-
-
-def apply_x2kh(t: str, mode: str) -> str:
-    return fix_x_all(t) if mode == "all" else fix_x_pronunciation(t)
-
-
-# Talaffuz lug'ati: F5/uzbek100 ba'zi so'z-O'RTA "x"ни "ks" deb o'qiydi (tarixi -> "tariksi").
-# Bu so'zlarni "h" yozuviga aylantiramiz (foydalanuvchi quloq bilan tasdiqladi: "tarih" to'g'ri).
-# Stem bo'yicha — tarix/tarixi/tarixiy/tarixchi hammasi tuzaladi. Kengaytirish uchun
-# tts-server/f5_pron.json {"so'z": "talaffuz", ...} fayl qo'shing (qayta ishga tushiring).
-import json as _json
-_PRON_FIX = {"tarix": "tarih"}
-_pp = ROOT / "f5_pron.json"
-if _pp.exists():
-    try:
-        _PRON_FIX.update({k.lower(): v for k, v in _json.loads(_pp.read_text(encoding="utf-8")).items()})
-    except Exception:
-        pass
-_PRON_RE = (
-    re.compile(r"(?<![\w'ʻ`’])(" + "|".join(re.escape(k) for k in sorted(_PRON_FIX, key=len, reverse=True)) + r")", re.IGNORECASE)
-    if _PRON_FIX else None
-)
-
-def apply_pron_fix(t: str) -> str:
-    if _PRON_RE is None:
-        return t
-    return _PRON_RE.sub(lambda m: _PRON_FIX[m.group(1).lower()], t)
-
-
-def _voiced_runs(a, sr):
-    """(starts, ends, amp, peak) — 50ms dan katta gap bilan ajralgan voiced run'lar."""
-    amp = np.abs(a)
-    peak = float(amp.max())
-    if peak <= 0:
-        return None, None, amp, peak
-    idx = np.flatnonzero(amp > peak * 0.02)
-    if idx.size == 0:
-        return None, None, amp, peak
-    g = np.flatnonzero(np.diff(idx) > int(sr * 0.05))
-    starts = idx[np.concatenate(([0], g + 1))]
-    ends = idx[np.concatenate((g, [idx.size - 1]))] + 1
-    return starts, ends, amp, peak
-
-
-def _trim_lead_silence(w, sr, pad_ms=30):
-    """Boshidagi sukunat + onset blip(lar) + REF-ECHO LEAK ni kesadi. KONSERVATIV:
-    HAQIQIY birinchi so'zni (eng baland run) HECH QACHON kesmaydi. Skip qilinadigan:
-      (a) BLIP: QISQA(<80ms) YOKI SOKIN(<12% peak) run = onset-pad ', ' artefakti;
-      (b) LEAK: birinchi so'zdan keyin KATTA pauza (>=300ms) — F5 qisqa matnda etalon
-         oxirini "gapirib" yuboradi, u katta pauza bilan ajraladi (repro: 'Salom' ->
-         [qizildi 516ms][437ms PAUZA][salom]). Eng baland run leak deb kesilmaydi."""
-    a = np.asarray(w, dtype="float32")
-    if a.size == 0:
-        return a
-    starts, ends, amp, peak = _voiced_runs(a, sr)
-    if starts is None:
-        return a
-    n = len(starts)
-    i = 0
-    while i + 1 < n:
-        rlen = int(ends[i]) - int(starts[i])
-        rpk = float(amp[starts[i]:ends[i]].max())
-        gap = int(starts[i + 1]) - int(ends[i])
-        is_blip = rlen < int(sr * 0.08) or rpk < peak * 0.12
-        is_leak = gap >= int(sr * 0.30) and rpk < peak * 0.98   # katta pauza + eng baland EMAS
-        if is_blip or is_leak:
-            i += 1
-        else:
-            break                                               # haqiqiy uzluksiz so'z -> to'xta
-    start = max(0, int(starts[i]) - int(sr * pad_ms / 1000))
-    return a[start:]
-
-
-def _trim_carrier(w, sr, pad_ms=30, pause_ms=80):
-    """Karrier-so'z onset uchun: [karrier 'Eshiting,'][UZUN pauza][haqiqiy matn]. Birinchi
-    UZUN pauzagacha (>=pause_ms) bo'lgan hammasini (karrier) kesib, matndan boshlaymiz.
-    Uzun pauza topilmasa (karrier matn bilan suvalgan) -> oddiy konservativ trim."""
-    a = np.asarray(w, dtype="float32")
-    if a.size == 0:
-        return a
-    amp = np.abs(a)
-    peak = float(amp.max())
-    if peak <= 0:
-        return a
-    idx = np.flatnonzero(amp > peak * 0.02)
-    if idx.size == 0:
-        return a
-    big = np.flatnonzero(np.diff(idx) > int(sr * pause_ms / 1000))
-    if big.size:
-        s_word = int(idx[int(big[0]) + 1])
-        return a[max(0, s_word - int(sr * pad_ms / 1000)):]
-    return _trim_lead_silence(a, sr, pad_ms)
-
-
-# Gap oxiri belgilaridan keyin bo'lamiz (probel/satr oxiri bilan). F5 uzun matnni
-# bir o'qishda chalkashtiradi — har jumlani ALOHIDA sintez qilsak o'qish ancha
-# aniqroq bo'ladi (ASR-sweep: nfe=48 bilan birga eng yaxshi natija).
-_SENT_SPLIT = re.compile(r"(?<=[.!?…])\s+")
-
-def split_sentences(text: str) -> list[str]:
-    parts: list[str] = []
-    for line in text.split("\n"):
-        line = line.strip()
-        if not line:
-            continue
-        for s in _SENT_SPLIT.split(line):
-            s = s.strip()
-            if s:
-                parts.append(s)
-    # Juda qisqa bo'laklarni (masalan "1.") oldingi jumlaga qo'shamiz.
-    merged: list[str] = []
-    for s in parts:
-        if merged and len(s.replace(".", "").strip()) < 3:
-            merged[-1] = merged[-1] + " " + s
-        else:
-            merged.append(s)
-    return merged or [text]
 
 
 def _pick_from_dir(d: Path) -> str | None:
