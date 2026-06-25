@@ -2,21 +2,13 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Mic,
-  Square,
-  Upload,
-  Loader2,
-  Copy,
-  Check,
-  Trash2,
-  AudioLines,
-  Info,
-} from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
-import { WaveBars } from "@/components/wave-bars";
 import { blobToWav } from "@/lib/wav-encoder";
+import { Hero } from "@/components/cabinet/transkripsiya/hero";
+import { RecordPanel } from "@/components/cabinet/transkripsiya/record-panel";
+import { ErrorBanner } from "@/components/cabinet/transkripsiya/error-banner";
+import { ResultPanel } from "@/components/cabinet/transkripsiya/result-panel";
+import { Hint } from "@/components/cabinet/transkripsiya/hint";
 
 export default function TranskripsiyaPage() {
   const { t } = useI18n();
@@ -145,152 +137,36 @@ export default function TranskripsiyaPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-7 animate-fade-in">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-bg-subtle/50 px-6 py-8 text-center backdrop-blur-md">
-        <div className="pointer-events-none absolute inset-0 bg-app-gradient opacity-70" />
-        <div className="relative space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {t("cabinet.transkripsiya.title")}
-          </h2>
-          <p className="text-sm text-fg-muted">{t("cabinet.transkripsiya.sub")}</p>
-          <WaveBars active={busy} className="h-11" />
-        </div>
-      </div>
+      <Hero t={t} busy={busy} />
 
       {/* Record / upload */}
-      <div className="card-glow space-y-4 p-6">
-        <button
-          onClick={recording ? stopRec : startRec}
-          disabled={transcribing}
-          className={cn(
-            "flex w-full items-center justify-center gap-2.5 rounded-2xl px-4 py-5 text-base font-semibold transition",
-            recording
-              ? "border border-danger bg-danger/15 text-danger"
-              : transcribing
-              ? "cursor-not-allowed bg-bg-muted text-fg-subtle"
-              : "brand-gradient text-white shadow-glow hover:opacity-90"
-          )}
-        >
-          {recording ? (
-            <>
-              <Square className="h-5 w-5 fill-current" />
-              {t("cabinet.transkripsiya.stop")} · {mmss}
-            </>
-          ) : transcribing ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {t("cabinet.transkripsiya.transcribing")}
-            </>
-          ) : (
-            <>
-              <Mic className="h-5 w-5" />
-              {t("cabinet.transkripsiya.record")}
-            </>
-          )}
-        </button>
+      <RecordPanel
+        t={t}
+        recording={recording}
+        transcribing={transcribing}
+        busy={busy}
+        mmss={mmss}
+        onToggleRec={recording ? stopRec : startRec}
+        onUploadClick={() => fileRef.current?.click()}
+        fileRef={fileRef}
+        onFile={onFile}
+      />
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-fg-subtle">
-          <span className="h-px flex-1 bg-border" />
-          {t("cabinet.transkripsiya.or")}
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-bg/40 px-4 py-3 text-sm font-medium transition",
-            busy ? "cursor-not-allowed text-fg-subtle" : "hover:bg-bg-muted"
-          )}
-        >
-          <Upload className="h-4 w-4" />
-          {t("cabinet.transkripsiya.upload")}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="audio/*"
-          className="hidden"
-          onChange={onFile}
-        />
-      </div>
-
-      {error && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       {/* Result */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
-            {t("cabinet.transkripsiya.resultLabel")}
-          </span>
-          <span className="text-[10px] text-fg-subtle">
-            {t("cabinet.transkripsiya.charCount", { n: text.length })}
-          </span>
-        </div>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={5}
-          placeholder={t("cabinet.transkripsiya.resultPlaceholder")}
-          className="w-full resize-none rounded-2xl border border-border bg-bg/60 px-4 py-3 text-base outline-none transition focus:border-accent/50"
-        />
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={copyText}
-            disabled={!text}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition",
-              !text
-                ? "cursor-not-allowed border-border text-fg-subtle"
-                : copied
-                ? "border-success/40 bg-success/10 text-success"
-                : "border-border hover:bg-bg-muted"
-            )}
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? t("cabinet.transkripsiya.copied") : t("cabinet.transkripsiya.copy")}
-          </button>
-
-          <button
-            onClick={() => setText("")}
-            disabled={!text}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition",
-              !text
-                ? "cursor-not-allowed border-border text-fg-subtle"
-                : "border-border hover:bg-bg-muted hover:text-danger"
-            )}
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("cabinet.transkripsiya.clear")}
-          </button>
-
-          <button
-            onClick={toSintez}
-            disabled={!text.trim()}
-            className={cn(
-              "ml-auto inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition",
-              !text.trim()
-                ? "cursor-not-allowed bg-bg-muted text-fg-subtle"
-                : "brand-gradient text-white shadow-glow hover:opacity-90"
-            )}
-          >
-            <AudioLines className="h-4 w-4" />
-            {t("cabinet.transkripsiya.toSintez")}
-          </button>
-        </div>
-      </div>
+      <ResultPanel
+        t={t}
+        text={text}
+        copied={copied}
+        onChangeText={(e) => setText(e.target.value)}
+        onCopy={copyText}
+        onClear={() => setText("")}
+        onToSintez={toSintez}
+      />
 
       {/* Hint */}
-      <div className="flex items-start gap-2.5 rounded-2xl border border-accent/20 bg-accent/5 p-4 text-sm text-fg-muted">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-        <span>{t("cabinet.transkripsiya.hint")}</span>
-      </div>
+      <Hint t={t} />
     </div>
   );
 }

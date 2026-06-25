@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Layers,
   RefreshCw,
   Loader2,
-  Download,
   Music,
   CheckCircle2,
   XCircle,
@@ -13,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { SentencePicker } from "@/components/compare/sentence-picker";
+import { SampleComparison } from "@/components/compare/sample-comparison";
 
 interface SentenceMeta {
   id: string;
@@ -166,120 +166,21 @@ export default function ComparePage() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           {/* Sentence picker */}
-          <aside className="space-y-3">
-            <div className="rounded-lg border border-border bg-bg-subtle p-3">
-              <h3 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
-                <span className="h-1 w-1 rounded-full bg-accent" />
-                Test jumlalari
-              </h3>
-              <div className="space-y-1">
-                {data.sentences.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedSentence(s.id)}
-                    className={cn(
-                      "w-full text-left rounded-md p-2 text-xs transition",
-                      selectedSentence === s.id
-                        ? "bg-accent/20 border border-accent/40 text-fg"
-                        : "border border-transparent hover:bg-bg-muted text-fg-muted hover:text-fg"
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[10px] uppercase tracking-wider text-fg-subtle">
-                        {s.id} · {s.category}
-                      </span>
-                    </div>
-                    <div className="text-fg break-words">{s.text}</div>
-                    <div className="text-[10px] text-fg-subtle mt-0.5">{s.focus}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-bg-subtle p-3 space-y-1.5">
-              <h3 className="text-xs font-semibold flex items-center gap-1.5">
-                <Layers className="h-3.5 w-3.5 text-accent" />
-                Versiyalarni ko'rsatish
-              </h3>
-              <p className="text-[10px] text-fg-subtle">
-                Solishtirish uchun bir nechta versiyani yashirib qo'yishingiz mumkin
-              </p>
-              <div className="space-y-0.5 pt-1">
-                {data.checkpoints.map((cp) => (
-                  <label
-                    key={cp.id}
-                    className="flex items-center gap-2 text-[11px] cursor-pointer hover:bg-bg-muted rounded px-1.5 py-0.5"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!hiddenCheckpoints.has(cp.id)}
-                      onChange={() => toggleCheckpoint(cp.id)}
-                      className="accent-accent"
-                    />
-                    <span className="font-mono truncate flex-1">{cp.id}</span>
-                    <span className="text-fg-subtle">{cp.samples.length}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </aside>
+          <SentencePicker
+            sentences={data.sentences}
+            checkpoints={data.checkpoints}
+            selectedSentence={selectedSentence}
+            onSelectSentence={setSelectedSentence}
+            hiddenCheckpoints={hiddenCheckpoints}
+            onToggleCheckpoint={toggleCheckpoint}
+          />
 
           {/* Comparison area */}
-          <div className="space-y-4 min-w-0">
-            {selectedMeta && (
-              <div className="rounded-lg border border-accent/40 bg-accent/5 p-3">
-                <div className="text-[10px] uppercase tracking-wider text-fg-subtle mb-1">
-                  Hozir tanlangan: {selectedMeta.id}
-                </div>
-                <div className="text-sm font-medium">{selectedMeta.text}</div>
-                <div className="text-[10px] text-fg-muted mt-1">{selectedMeta.focus}</div>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {visibleCheckpoints.map((cp) => {
-                const sample = cp.samples.find((s) => s.sentence_id === selectedSentence);
-                // Backend `/samples/audio/...` qaytaradi — Next.js proxy `/api` prefiksi kerak
-                const audioUrl = sample ? `/api${sample.url}` : null;
-                return (
-                  <div
-                    key={cp.id}
-                    className="rounded-lg border border-border bg-bg-subtle p-3 space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold font-mono truncate">
-                          {cp.id}
-                        </div>
-                        {cp.generated_at && (
-                          <div className="text-[10px] text-fg-subtle">
-                            Ovozlangan: {cp.generated_at}
-                          </div>
-                        )}
-                      </div>
-                      {sample && audioUrl && (
-                        <a
-                          href={audioUrl}
-                          download={`${cp.id}_${sample.sentence_id}.wav`}
-                          className="rounded p-1 hover:bg-bg-muted transition"
-                          title="Yuklab olish"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                    </div>
-                    {sample && audioUrl ? (
-                      <audio src={audioUrl} controls className="w-full h-8" />
-                    ) : (
-                      <div className="text-[11px] text-fg-subtle py-2">
-                        Bu jumla bu versiyada ovozlanmagan
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <SampleComparison
+            selectedMeta={selectedMeta}
+            visibleCheckpoints={visibleCheckpoints}
+            selectedSentence={selectedSentence}
+          />
         </div>
       )}
     </main>
