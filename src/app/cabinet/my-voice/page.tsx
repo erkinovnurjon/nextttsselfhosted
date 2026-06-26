@@ -12,6 +12,10 @@ import {
   Fingerprint,
   Sparkles,
   AudioLines,
+  Link2,
+  Upload,
+  Wand2,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { blobToWav } from "@/lib/wav-encoder";
@@ -34,6 +38,12 @@ export default function MyVoicePage() {
   const [error, setError] = useState<string | null>(null);
   const [testUrl, setTestUrl] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
+
+  // ── Video/qo'shiqdan klonlash ──
+  const [cloneUrl, setCloneUrl] = useState("");
+  const [cloneFile, setCloneFile] = useState<File | null>(null);
+  const [cloning, setCloning] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
 
   const recRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -135,6 +145,42 @@ export default function MyVoicePage() {
     }
   }
 
+  async function cloneFromMedia() {
+    if (cloning) return;
+    if (!cloneFile && !/^https?:\/\//.test(cloneUrl.trim())) {
+      setError("Video/audio URL kiriting yoki fayl tanlang.");
+      return;
+    }
+    setCloning(true);
+    setError(null);
+    setWarning(null);
+    setTestUrl(null);
+    try {
+      let res: Response;
+      if (cloneFile) {
+        const fd = new FormData();
+        fd.append("file", cloneFile, cloneFile.name);
+        res = await fetch("/api/clone", { method: "POST", body: fd });
+      } else {
+        res = await fetch("/api/clone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: cloneUrl.trim() }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Klonlashda xato");
+      setVoice(data.voice);
+      setWarning(data.warning ?? null);
+      setCloneUrl("");
+      setCloneFile(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Xato");
+    } finally {
+      setCloning(false);
+    }
+  }
+
   async function remove() {
     if (!window.confirm("Shaxsiy ovozni o'chirasizmi?")) return;
     await fetch("/api/voice", { method: "DELETE" }).catch(() => undefined);
@@ -224,6 +270,93 @@ export default function MyVoicePage() {
             </div>
           )}
 
+          {/* Video/qo'shiqdan klonlash */}
+          <div className="card-glow space-y-4 p-5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <Wand2 className="h-4 w-4" />
+              </span>
+              <div>
+                <div className="text-sm font-semibold">Video yoki qo'shiqdan klonlash</div>
+                <div className="text-[12px] text-fg-subtle">
+                  Havola qo'ying yoki fayl yuklang — AI ovozni ajratib oladi
+                </div>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 rounded-xl border border-border bg-bg/50 px-3 py-2.5 focus-within:border-accent/50">
+              <Link2 className="h-4 w-4 shrink-0 text-fg-subtle" />
+              <input
+                type="url"
+                value={cloneUrl}
+                onChange={(e) => {
+                  setCloneUrl(e.target.value);
+                  if (e.target.value) setCloneFile(null);
+                }}
+                placeholder="https://… (YouTube, video yoki audio havolasi)"
+                disabled={cloning}
+                className="w-full bg-transparent text-sm outline-none placeholder:text-fg-subtle"
+              />
+            </label>
+
+            <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-fg-subtle">
+              <span className="h-px flex-1 bg-border" />
+              yoki
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <label
+              className={cn(
+                "flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-sm transition hover:bg-bg-muted",
+                cloning && "cursor-not-allowed opacity-60"
+              )}
+            >
+              <Upload className="h-4 w-4 shrink-0 text-fg-subtle" />
+              <span className="truncate text-fg-muted">
+                {cloneFile ? cloneFile.name : "Video/audio fayl tanlang"}
+              </span>
+              <input
+                type="file"
+                accept="audio/*,video/*"
+                disabled={cloning}
+                onChange={(e) => {
+                  setCloneFile(e.target.files?.[0] ?? null);
+                  if (e.target.files?.[0]) setCloneUrl("");
+                }}
+                className="hidden"
+              />
+            </label>
+
+            <button
+              onClick={cloneFromMedia}
+              disabled={cloning || (!cloneFile && !cloneUrl.trim())}
+              className={cn(
+                "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition",
+                cloning || (!cloneFile && !cloneUrl.trim())
+                  ? "cursor-not-allowed bg-bg-muted text-fg-subtle"
+                  : "brand-gradient text-white shadow-glow hover:opacity-90"
+              )}
+            >
+              {cloning ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Ajratilmoqda… (1–2 daqiqa)
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4" />
+                  Ajratib klonlash
+                </>
+              )}
+            </button>
+
+            <div className="flex items-start gap-2 text-[11px] text-fg-subtle">
+              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+              Eng yaxshi natija — gapirayotgan odam (intervyu/vlog). Bu joriy faol
+              ovozni almashtiradi.
+            </div>
+          </div>
+
           {/* Yozish bo'limi */}
           <div className="card-glow space-y-5 p-5">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
@@ -295,6 +428,13 @@ export default function MyVoicePage() {
               </div>
             )}
           </div>
+
+          {warning && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              {warning}
+            </div>
+          )}
 
           {error && (
             <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">

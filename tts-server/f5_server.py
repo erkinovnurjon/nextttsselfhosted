@@ -231,6 +231,45 @@ class SynthReq(BaseModel):
     onset_carrier: str | None = None  # tashlab yuboriladigan karrier so'z (masalan "Eshiting, ") — keyin kesiladi
     ref_suffix: str | None = None     # ref_text oxiriga qo'shiladi (ref/gen chokkasini yumshatish, masalan ". ")
 
+
+class CloneExtractReq(BaseModel):
+    # source = URL (yt-dlp yuklaydi) YOKI shu mashinadagi media fayl yo'li (video/audio).
+    source: str
+    # out_path = ajratilgan reference.wav saqlanadigan yo'l (Next.js user_{id}/reference.wav beradi).
+    out_path: str
+    use_demucs: bool = True            # False = manba allaqachon toza nutq (ajratish shart emas)
+
+
+@app.post("/clone/extract")
+def clone_extract(req: CloneExtractReq):
+    """
+    Mediadan (video/qo'shiq) klonlash uchun toza ovoz reference ajratadi.
+
+    Pipeline scripts/extract_voice.py'da: yt-dlp -> ffmpeg -> Demucs -> segment.
+    Natija out_path'ga yoziladi; transkripsiya (ref_text) Next.js tomonidan
+    main :8000 /transcribe orqali alohida olinadi.
+    """
+    import sys as _sys
+    scripts_dir = str(ROOT / "scripts")
+    if scripts_dir not in _sys.path:
+        _sys.path.insert(0, scripts_dir)
+    try:
+        from extract_voice import extract
+    except Exception as e:
+        return JSONResponse({"error": f"extract_voice import xatosi: {e}"}, status_code=500)
+
+    out = Path(req.out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        meta = extract(req.source, out, use_demucs=req.use_demucs)
+    except ValueError as e:
+        # Sifat darvozasi (masalan "yetarli nutq topilmadi") — foydalanuvchiga to'g'ridan ko'rsatiladi.
+        return JSONResponse({"error": str(e)}, status_code=422)
+    except Exception as e:
+        return JSONResponse({"error": f"ajratish xatosi: {e}"}, status_code=500)
+    return meta
+
+
 @app.get("/health")
 def health():
     ck = state["ckpts"]
