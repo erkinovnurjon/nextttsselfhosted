@@ -102,7 +102,7 @@ def apply_pron_fix(t: str) -> str:
 _SENT_SPLIT = re.compile(r"(?<=[.!?…])\s+")
 
 
-def split_sentences(text: str) -> list[str]:
+def split_sentences(text: str, min_sentence_chars: int = 25) -> list[str]:
     parts: list[str] = []
     for line in text.split("\n"):
         line = line.strip()
@@ -119,4 +119,21 @@ def split_sentences(text: str) -> list[str]:
             merged[-1] = merged[-1] + " " + s
         else:
             merged.append(s)
-    return merged or [text]
+
+    # F5 QISQA jumlada beqaror (ayniqsa zero-shot klon: "Salom!" segmenti etalon
+    # aks-sadosi bilan g'ovlaydi, keyin o'ziga keladi). Qisqa jumlani KEYINGISIGA
+    # vergul bilan qo'shamiz — onset uzunroq matn oladi va barqarorlashadi.
+    # Oxirgi qisqa jumla (keyingisi yo'q) oldingisiga qo'shiladi.
+    stable: list[str] = []
+    i = 0
+    while i < len(merged):
+        s = merged[i]
+        while len(s) < min_sentence_chars and i + 1 < len(merged):
+            i += 1
+            s = s.rstrip(".!?…") + ", " + merged[i]
+        if len(s) < min_sentence_chars and stable:
+            stable[-1] = stable[-1] + " " + s
+        else:
+            stable.append(s)
+        i += 1
+    return stable or [text]

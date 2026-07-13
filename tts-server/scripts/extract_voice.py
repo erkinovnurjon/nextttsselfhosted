@@ -313,11 +313,15 @@ def _group_by_speaker(
 
 
 def select_best_segment(
-    vocals_wav: Path, min_s: float = 4.0, max_s: float = 15.0, target_s: float = 12.0
+    vocals_wav: Path, min_s: float = 4.0, max_s: float = 11.5, target_s: float = 10.0
 ) -> tuple[np.ndarray, int, dict]:
     """
     Silero VAD + speaker-diarizatsiya bilan AYNAN BITTA gapiruvchining toza nutqini
     topib birlashtiradi (musiqa/jimlik tashlanadi, ovozlar aralashmaydi).
+
+    max_s=11.5: F5 kutubxonasi 12s+ reference'ni O'ZI qirqadi, matn esa to'liq
+    qoladi — mos kelmaslik gallyutsinatsiya/ortiqcha tovush beradi. 12s ostida
+    qolsak klip va transkript har doim aynan mos.
 
     Nutq yetarli bo'lmasa (instrumental/musiqa/jim video) ValueError qaytaradi.
     """
@@ -365,17 +369,35 @@ def select_best_segment(
         pass                           # diarizatsiya xato bo'lsa hammasini ishlatamiz
 
     # Tanlangan bo'laklarni ORIGINAL sr'dan kesib birlashtiramiz, target_s ga yetguncha.
-    gap = np.zeros(int(0.12 * sr), dtype=np.float32)
-    parts: list[np.ndarray] = []
-    acc = 0.0
+    # MUHIM: umumiy uzunlik (oraliq jimliklar bilan) max_s dan OSHMAYDI va klip hech
+    # qachon so'z o'rtasidan kesilmaydi — bo'lak sig'masa olinmaydi (min_s'gacha
+    # yetmagan bo'lsakgina oxirgi bo'lakdan qisman olamiz).
+    GAP_S = 0.12
+    chosen: list[tuple[float, float]] = []
+    acc = 0.0  # jami klip uzunligi (gap'lar bilan)
     for (s, e) in segs:
-        parts.append(audio[int(s * sr): int(e * sr)])
-        acc += (e - s)
+        cost = (e - s) + (GAP_S if chosen else 0.0)
+        if acc + cost > max_s:
+            if acc >= min_s:
+                break
+            take = max_s - acc - (GAP_S if chosen else 0.0)
+            if take > 0.5:
+                chosen.append((s, s + take))
+                acc += take + (GAP_S if len(chosen) > 1 else 0.0)
+            break
+        chosen.append((s, e))
+        acc += cost
         if acc >= target_s:
             break
-        parts.append(gap)
 
-    clip = np.concatenate(parts)[: int(max_s * sr)]
+    gap = np.zeros(int(GAP_S * sr), dtype=np.float32)
+    parts: list[np.ndarray] = []
+    for k, (s, e) in enumerate(chosen):
+        if k:
+            parts.append(gap)
+        parts.append(audio[int(s * sr): int(e * sr)])
+
+    clip = np.concatenate(parts)
 
     snr = _estimate_snr(clip, audio)
 
@@ -403,22 +425,135 @@ def save_reference(clip: np.ndarray, sr: int, out_path: Path, target_sr: int = 2
     return out_path
 
 
-# ───────────────────────────── CLI ─────────────────────────────
+# ───────────────────────────── extract API ─────────────────────────────
 
-def extract(source: str, out: Path, use_demucs: bool = True) -> dict:
+def _extract_clip(source: str, use_demucs: bool = True) -> tuple[np.ndarray, int, dict]:
+    """Bitta manbadan eng toza klipni ajratadi (diskka yozmasdan)."""
     with tempfile.TemporaryDirectory(prefix="voiceclone_") as td:
         workdir = Path(td)
         media = download_if_url(source, workdir)
         wav = to_wav(media, workdir)
         voice_src = isolate_vocals(wav, workdir) if use_demucs else wav
         clip, sr, meta = select_best_segment(voice_src)
-        save_reference(clip, sr, out)
+    return clip, sr, meta
+
+
+def extract(source: str, out: Path, use_demucs: bool = True) -> dict:
+    clip, sr, meta = _extract_clip(source, use_demucs)
+    save_reference(clip, sr, out)
     meta["reference_path"] = str(out)
     print("\n✅ Reference tayyor:")
     print(json.dumps(meta, ensure_ascii=False, indent=2))
     if meta["snr"] < 10:
         print("⚠️  SNR past — fon shovqini ko'p bo'lishi mumkin, boshqa segment/manba sinab ko'ring.")
     return meta
+
+
+# Kliplararo "bir odammi?" chegarasi. _group_by_speaker'dagi 0.65 segmentlararo
+# (qisqa bo'laklar); bu yerda 12s'lik toza kliplar solishtiriladi — ishonchliroq,
+# shuning uchun biroz yuqoriroq chegara.
+CROSS_CLIP_SIM_THR = 0.70
+
+
+def _clip_embedding(clip: np.ndarray, sr: int) -> np.ndarray:
+    enc = _get_voice_encoder()
+    if sr != 16000:
+        import librosa
+        clip = librosa.resample(clip.astype(np.float32), orig_sr=sr, target_sr=16000)
+    peak = float(np.max(np.abs(clip))) if len(clip) else 0.0
+    if peak > 0:
+        clip = clip * (0.95 / peak)
+    emb = enc.embed_utterance(clip.astype(np.float32))
+    return emb / (np.linalg.norm(emb) + 1e-9)
+
+
+def extract_multi(
+    sources: list[str], out: Path, use_demucs: bool = True,
+    anchor_index: int | None = None,
+) -> dict:
+    """
+    Bir xil odamning bir nechta (2-4) videosidan ENG SIFATLI reference'ni tanlaydi.
+
+    Har manbadan eng toza klip ajratiladi -> sifat balli (SNR + davomiylik) ->
+    speaker-solishtirish bilan "boshqa ovoz" chiqib qolgan manbalar chetlatiladi ->
+    g'olib out'ga yoziladi.
+
+    anchor_index: berilsa (masalan mavjud modelni YAXSHILASH — sources[0] = joriy
+    reference) speaker-solishtirish ko'pchilik o'rniga AYNAN shu manbaga bog'lanadi:
+    unga o'xshamaganlar chetlatiladi. Bu boshqa odam videosi kelib qolganda mavjud
+    modelning buzilishidan saqlaydi.
+
+    Qaytadi: g'olib meta + winner_index + candidates[] (har manba holati).
+    Hech bir manbadan nutq chiqmasa ValueError (422 sifat darvozasi).
+    """
+    candidates: list[dict] = []
+    for i, src in enumerate(sources):
+        try:
+            clip, sr, meta = _extract_clip(src, use_demucs)
+            # Ball: SNR asosiy, uzunroq klip (12s gacha) kichik ustunlik beradi.
+            score = float(meta["snr"]) + 0.4 * min(float(meta["duration"]), 12.0)
+            candidates.append({"index": i, "clip": clip, "sr": sr, "meta": meta, "score": score})
+        except Exception as e:
+            candidates.append({"index": i, "error": str(e)})
+            print(f"⚠️  {i + 1}-manba o'tmadi: {e}")
+
+    ok = [c for c in candidates if "clip" in c]
+    if not ok:
+        detail = "; ".join(f"{c['index'] + 1}) {c['error']}" for c in candidates)
+        raise ValueError(f"Hech bir manbadan yaroqli nutq ajratilmadi: {detail}")
+
+    # ── Speaker-solishtirish: boshqa odam klipi chetlatiladi ──
+    mismatched: list[int] = []
+    pool = ok
+    if len(ok) >= 2:
+        try:
+            for c in ok:
+                c["emb"] = _clip_embedding(c["clip"], c["sr"])
+            anchor = None
+            if anchor_index is not None:
+                anchor = next((c for c in ok if c["index"] == anchor_index), None)
+            if anchor is not None:
+                # Anchor rejimi: faqat anchor (mavjud model) ovoziga o'xshaganlar qoladi.
+                pool = [
+                    c for c in ok
+                    if c is anchor
+                    or float(np.dot(c["emb"], anchor["emb"])) >= CROSS_CLIP_SIM_THR
+                ]
+                mismatched = sorted(c["index"] for c in ok if c not in pool)
+            else:
+                # Ko'pchilik rejimi: har klip uchun nechta boshqasi unga o'xshaydi.
+                for c in ok:
+                    c["agree"] = sum(
+                        1 for o in ok
+                        if o is not c and float(np.dot(c["emb"], o["emb"])) >= CROSS_CLIP_SIM_THR
+                    )
+                max_agree = max(c["agree"] for c in ok)
+                if max_agree > 0:
+                    pool = [c for c in ok if c["agree"] == max_agree]
+                    mismatched = sorted(c["index"] for c in ok if c["agree"] < max_agree)
+        except Exception as e:
+            print(f"⚠️  Speaker-solishtirish o'tmadi (e'tiborsiz): {e}")
+
+    winner = max(pool, key=lambda c: c["score"])
+    save_reference(winner["clip"], winner["sr"], out)
+
+    result = dict(winner["meta"])
+    result["reference_path"] = str(out)
+    result["winner_index"] = winner["index"]
+    result["speaker_mismatch"] = mismatched
+    result["candidates"] = [
+        {"index": c["index"], "error": c["error"]} if "error" in c else
+        {
+            "index": c["index"],
+            "duration": c["meta"]["duration"],
+            "snr": c["meta"]["snr"],
+            "score": round(c["score"], 2),
+        }
+        for c in candidates
+    ]
+    print(f"\n✅ G'olib: {winner['index'] + 1}-manba "
+          f"(SNR {winner['meta']['snr']}dB, {winner['meta']['duration']}s)")
+    return result
 
 
 def main():

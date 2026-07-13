@@ -45,7 +45,7 @@ from f5_tts.api import F5TTS
 # Matn normalizatsiya + audio trim — f5lib paketida (og'ir deps yo'q, import tartibiga
 # ta'sirsiz). f5_tts import'idan KEYIN qo'yildi (tartib o'zgarmasin).
 from f5lib.textnorm import normalize, smart_lowercase, apply_pron_fix, apply_x2kh, split_sentences
-from f5lib.audio import _trim_lead_silence, _trim_carrier
+from f5lib.audio import _trim_lead_silence, _trim_tail_silence, _trim_carrier
 
 ROOT = Path(__file__).resolve().parent  # tts-server/
 VOICES = ROOT / "voices"
@@ -98,6 +98,10 @@ VOICE_CFG = {
     #   x yo'q) → speaker-01 trim eng yaxshisi: x=kh VA i tabiiy. seed=99. Full ref bak'da.
     "ayol": {"model": "uzbek100", "wav": VOICES / "f5_ref_ayol.wav",
              "txt": VOICES / "f5_ref_ayol.txt", "x2kh": "init", "seed": 99},
+    # carleone = foydalanuvchi mediadan klonlagan erkak ovoz (don carleone),
+    # 2026-07-13 loyihaning o'rnatilgan ovoziga ko'tarildi (barcha deploy'larда chiqadi).
+    "carleone": {"model": "uzbek100", "wav": VOICES / "f5_ref_carleone.wav",
+                 "txt": VOICES / "f5_ref_carleone.txt", "x2kh": "init", "seed": None},
 }
 DEFAULT_VOICE = "feruza"
 
@@ -240,6 +244,16 @@ class CloneExtractReq(BaseModel):
     use_demucs: bool = True            # False = manba allaqachon toza nutq (ajratish shart emas)
 
 
+class CloneExtractMultiReq(BaseModel):
+    # Bir xil odamning bir nechta manbasi (URL yoki lokal fayl yo'li, 2-4 ta).
+    sources: list[str]
+    out_path: str
+    use_demucs: bool = True
+    # Mavjud modelni yaxshilashda: speaker-solishtirish shu manbaga (odatda 0 =
+    # joriy reference) bog'lanadi — unga o'xshamagan manbalar chetlatiladi.
+    anchor_index: int | None = None
+
+
 @app.post("/clone/extract")
 def clone_extract(req: CloneExtractReq):
     """
@@ -264,6 +278,40 @@ def clone_extract(req: CloneExtractReq):
         meta = extract(req.source, out, use_demucs=req.use_demucs)
     except ValueError as e:
         # Sifat darvozasi (masalan "yetarli nutq topilmadi") — foydalanuvchiga to'g'ridan ko'rsatiladi.
+        return JSONResponse({"error": str(e)}, status_code=422)
+    except Exception as e:
+        return JSONResponse({"error": f"ajratish xatosi: {e}"}, status_code=500)
+    return meta
+
+
+@app.post("/clone/extract_multi")
+def clone_extract_multi(req: CloneExtractMultiReq):
+    """
+    Bir xil odamning bir nechta videosidan ENG SIFATLI reference tanlaydi.
+
+    Har manbadan klip ajratiladi, SNR+davomiylik bo'yicha ballanadi,
+    speaker-solishtirish "boshqa ovoz" manbalarni chetlatadi, g'olib out_path'ga
+    yoziladi. Javob: g'olib meta + winner_index + candidates[] + speaker_mismatch[].
+    """
+    import sys as _sys
+    scripts_dir = str(ROOT / "scripts")
+    if scripts_dir not in _sys.path:
+        _sys.path.insert(0, scripts_dir)
+    try:
+        from extract_voice import extract_multi
+    except Exception as e:
+        return JSONResponse({"error": f"extract_voice import xatosi: {e}"}, status_code=500)
+
+    sources = [s for s in (req.sources or []) if str(s).strip()]
+    if not sources:
+        return JSONResponse({"error": "Kamida bitta manba kerak."}, status_code=422)
+
+    out = Path(req.out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        meta = extract_multi(sources, out, use_demucs=req.use_demucs,
+                             anchor_index=req.anchor_index)
+    except ValueError as e:
         return JSONResponse({"error": str(e)}, status_code=422)
     except Exception as e:
         return JSONResponse({"error": f"ajratish xatosi: {e}"}, status_code=500)
@@ -361,7 +409,10 @@ def synthesize(req: SynthReq):
             parts.append(np.zeros(int(pause * sr), dtype="float32"))
         # HAR segment boshidagi onset-pad sukunatини kesamiz — aks holda har jumla orasida
         # qo'shimcha pauza chiqib uzuq-yuluq bo'ladi (birinchi-so'z himoyasi saqlanadi).
-        parts.append(trim_fn(np.asarray(w, dtype="float32"), sr))
+        # Oxiridagi dum (nafas/ref-aks sado) ham kesiladi — klonlarda "ortiqcha tovush"
+        # shikoyatining asosiy manbai (tail-trim konservativ, haqiqiy so'z kesilmaydi).
+        seg = trim_fn(np.asarray(w, dtype="float32"), sr)
+        parts.append(_trim_tail_silence(seg, sr))
         prev_end = sent.rstrip()[-1:] if sent.rstrip() else ""
     wav = np.concatenate(parts) if parts else np.zeros(1, dtype="float32")
     dt = time.time() - t0

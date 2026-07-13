@@ -52,6 +52,34 @@ def _trim_lead_silence(w, sr, pad_ms=30):
     return a[start:]
 
 
+def _trim_tail_silence(w, sr, pad_ms=60):
+    """OXIRIDAGI sukunat + dum-blip (nafas/shishirish) + tail ref-leak'ni kesadi.
+    _trim_lead_silence'ning oynadagi aksi, lekin KONSERVATIVROQ chegaralar bilan:
+    jumla ichidagi vergul-pauzadan keyingi HAQIQIY oxirgi so'z kesilmasligi uchun
+    leak faqat JUDA katta pauza (>=450ms) + sezilarli past (<50% peak) bo'lsa kesiladi.
+      (a) BLIP: juda qisqa(<60ms) YOKI juda sokin(<8% peak) dum run = nafas/artefakt;
+      (b) LEAK: >=450ms pauzadan keyingi past run — F5 oxirida etalon aks-sadosi."""
+    a = np.asarray(w, dtype="float32")
+    if a.size == 0:
+        return a
+    starts, ends, amp, peak = _voiced_runs(a, sr)
+    if starts is None:
+        return a
+    j = len(starts) - 1
+    while j > 0:
+        rlen = int(ends[j]) - int(starts[j])
+        rpk = float(amp[starts[j]:ends[j]].max())
+        gap = int(starts[j]) - int(ends[j - 1])
+        is_blip = rlen < int(sr * 0.06) or rpk < peak * 0.08
+        is_leak = gap >= int(sr * 0.45) and rpk < peak * 0.5
+        if is_blip or is_leak:
+            j -= 1
+        else:
+            break                                   # haqiqiy oxirgi so'z -> to'xta
+    end = min(a.size, int(ends[j]) + int(sr * pad_ms / 1000))
+    return a[:end]
+
+
 def _trim_carrier(w, sr, pad_ms=30, pause_ms=80):
     """Karrier-so'z onset uchun: [karrier 'Eshiting,'][UZUN pauza][haqiqiy matn]. Birinchi
     UZUN pauzagacha (>=pause_ms) bo'lgan hammasini (karrier) kesib, matndan boshlaymiz.
