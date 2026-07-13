@@ -14,7 +14,10 @@ ASOSIY IMKONIYATLAR:
   • "Ayol (nativ)" / Piper — nativ o'zbek ayol ovozi, tez (CPU), x/gʻ/q to'g'ri talaffuz; standart tanlov.
   • F5 ovozlari (Feruza, Jonli, Ayol) — tabiiy, iliq ayol ovozlari (sekinroq, GPU).
   • "Erkak" va "Asosiy" (MMS) — tez ovozlar.
-- "MENING OVOZIM" (eng muhim funksiya): foydalanuvchi 4 ta jumlani o'qib ~20-30 soniya o'z ovozini yozdiradi → tizim uni ZERO-SHOT klonlaydi (alohida og'ir trening shart emas, soniyalarda tayyor) → keyin istalgan matnni O'Z OVOZIDA eshitishi mumkin. Joyi: kabinet → "Mening ovozim". Yozib bo'lgach "Sinab ko'rish" yoki "Matndan nutq → Mening ovozim".
+- "MENING OVOZIM" (eng muhim funksiya): foydalanuvchi o'z ovozidan model tayyorlaydi — tizim uni ZERO-SHOT klonlaydi (alohida og'ir trening shart emas, soniyalarda tayyor), keyin istalgan matnni O'Z OVOZIDA eshitishi mumkin. Joyi: kabinet → "Mening ovozim". IKKI USUL bor:
+  • Ovoz yozdirish: sahifada ko'rsatilgan tayyor jumlalarni ~20-30 soniya mikrofonga o'qib beriladi → darhol klonlanadi.
+  • Video yoki qo'shiqdan: gapirayotgan odam bo'lgan video/audio HAVOLASINI (masalan YouTube) qo'yadi YOKI faylni yuklaydi → AI ovozni avtomatik ajratib oladi (musiqa/shovqindan tozalaydi) va klonlaydi. Bu ~1-2 daqiqa. Eng yaxshi natija — aniq gapirayotgan yakka ovoz (intervyu/vlog).
+  Har ikki usuldan keyin "Sinab ko'rish" tugmasi yoki "Matndan nutq → Mening ovozim"ni tanlab o'z ovozida eshitiladi. Yangi klon oldingi shaxsiy ovozни almashtiradi.
 - Nutqdan matn (transkripsiya): mikrofonga gapirish yoki audio yuklash → matn (Whisper).
 - Balans/kredit: 1 kredit = 1 belgi. Ro'yxatdan o'tganda 10 000 kredit bonus. To'ldirish Payme yoki Click orqali (kabinet → Balans). VIP/admin = cheksiz.
 - Tillar: o'zbek, rus, ingliz. Mavzu: yorug'/qorong'i.
@@ -42,8 +45,10 @@ export function faqFallback(question: string): string {
   const q = question.toLowerCase();
   const has = (...ws: string[]) => ws.some((w) => q.includes(w));
 
-  if (has("mening ovoz", "o'z ovoz", "oz ovoz", "klon", "clone", "мой голос", "my voice"))
-    return "“Mening ovozim” bilan o'z ovozingizni klonlashingiz mumkin: Kabinet → “Mening ovozim” → ko'rsatilgan jumlalarni ~20-30 soniya o'qib yozing → “Sinab ko'rish”. Keyin “Matndan nutq”da “Mening ovozim”ni tanlab, istalgan matnni o'z ovozingizda eshitasiz.";
+  if (has("video", "youtube", "qo'shiq", "qoshiq", "havola", "url", "fayl", "видео", "yukla"))
+    return "Video yoki qo'shiqdan ovoz klonlash: Kabinet → “Mening ovozim” → “Video yoki qo'shiqdan klonlash” bo'limiga video/audio havolasini (masalan YouTube) qo'ying yoki faylni yuklang → “Ajratib klonlash”. AI ovozni avtomatik ajratib oladi (~1-2 daqiqa). Eng yaxshi natija — aniq gapirayotgan yakka ovoz (intervyu/vlog).";
+  if (has("mening ovoz", "o'z ovoz", "oz ovoz", "klon", "clone", "мой голос", "my voice", "model tayyor", "ovozimdan"))
+    return "“Mening ovozim”da o'z ovozingizdan model tayyorlaysiz — 2 usul: (1) Kabinet → “Mening ovozim” → ko'rsatilgan jumlalarni ~20-30 soniya o'qib yozing; yoki (2) gapirayotgan video/qo'shiq havolasini qo'ying/faylni yuklang — AI ovozni ajratib oladi. So'ng “Sinab ko'rish” yoki “Matndan nutq → Mening ovozim” bilan istalgan matnni o'z ovozingizda eshitasiz.";
   if (has("ovoz", "voice", "голос"))
     return "NextTTS'da bir nechta ovoz bor: nativ o'zbek ayol (Piper, tez), tabiiy F5 ayol ovozlari, erkak va tez MMS ovozlari, hamda o'zingiz klonlagan “Mening ovozim”. Kabinet → “Matndan nutq”da tanlanadi.";
   if (has("balans", "kredit", "to'lov", "tolov", "to'la", "pul", "payme", "click", "баланс", "оплат", "credit", "pay"))

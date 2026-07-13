@@ -44,6 +44,14 @@ export function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // Silliq typewriter oqishi: tarmoq matnni `targetRef`ga to'playdi, rAF sikli esa
+  // ko'rsatilgan belgilar sonini (`shownRef`) target'ga ravon yetkazadi — matn
+  // sakrab emas, silliq paydo bo'ladi.
+  const rafRef = useRef<number | null>(null);
+  const targetRef = useRef("");
+  const shownRef = useRef(0);
+  const doneRef = useRef(false);
+
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([{ role: "assistant", content: L.greeting }]);
@@ -56,6 +64,38 @@ export function ChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
+  // Komponent yo'q qilinsa rAF'ni tozalash
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  function reveal() {
+    const target = targetRef.current;
+    if (shownRef.current < target.length) {
+      const remaining = target.length - shownRef.current;
+      // Ease-out: orqada ko'p qolsa tezroq, yaqinlashsa sekinroq — silliq his
+      const inc = Math.max(2, Math.ceil(remaining / 6));
+      shownRef.current = Math.min(target.length, shownRef.current + inc);
+      const shown = target.slice(0, shownRef.current);
+      setMessages((prev) => {
+        const copy = prev.slice();
+        const last = copy.length - 1;
+        if (last >= 0 && copy[last].role === "assistant" && copy[last].content !== shown) {
+          copy[last] = { role: "assistant", content: shown };
+        }
+        return copy;
+      });
+    }
+    if (!doneRef.current || shownRef.current < targetRef.current.length) {
+      rafRef.current = requestAnimationFrame(reveal);
+    } else {
+      rafRef.current = null;
+      setBusy(false);
+    }
+  }
+
   async function send(override?: string) {
     const text = (override ?? input).trim();
     if (!text || busy) return;
@@ -63,6 +103,14 @@ export function ChatWidget() {
     const next: Msg[] = [...messages, { role: "user", content: text }];
     setMessages([...next, { role: "assistant", content: "" }]);
     setBusy(true);
+
+    // Silliq oqishni boshlash
+    targetRef.current = "";
+    shownRef.current = 0;
+    doneRef.current = false;
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(reveal);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -72,48 +120,22 @@ export function ChatWidget() {
       if (!res.ok || !res.body) throw new Error("xato");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
-      let acc = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += dec.decode(value, { stream: true });
-        setMessages((prev) => {
-          const copy = prev.slice();
-          copy[copy.length - 1] = { role: "assistant", content: acc };
-          return copy;
-        });
+        targetRef.current += dec.decode(value, { stream: true });
       }
       // Yakuniy flush: oxirgi chunk ko'p-baytli belgida (oʻ/gʻ/kirill) tugasa, tushib qolmasin.
-      const tail = dec.decode();
-      if (tail) {
-        acc += tail;
-        setMessages((prev) => {
-          const copy = prev.slice();
-          copy[copy.length - 1] = { role: "assistant", content: acc };
-          return copy;
-        });
-      }
-      if (!acc.trim()) {
-        setMessages((prev) => {
-          const copy = prev.slice();
-          copy[copy.length - 1] = {
-            role: "assistant",
-            content: "Kechirasiz, javob bo'sh keldi. Qaytadan urinib ko'ring.",
-          };
-          return copy;
-        });
+      targetRef.current += dec.decode();
+      if (!targetRef.current.trim()) {
+        targetRef.current = "Kechirasiz, javob bo'sh keldi. Qaytadan urinib ko'ring.";
       }
     } catch {
-      setMessages((prev) => {
-        const copy = prev.slice();
-        copy[copy.length - 1] = {
-          role: "assistant",
-          content: "Ulanishda xatolik. Birozdan so'ng qayta urinib ko'ring.",
-        };
-        return copy;
-      });
+      targetRef.current =
+        targetRef.current || "Ulanishda xatolik. Birozdan so'ng qayta urinib ko'ring.";
     } finally {
-      setBusy(false);
+      // Oqish tugadi — reveal qolgan matnni yetkazib, so'ng busy'ni o'chiradi.
+      doneRef.current = true;
     }
   }
 
@@ -121,32 +143,49 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Suzuvchi tugma — yagona gradient joy */}
+      {/* Suzuvchi tugma — yagona gradient joy, nozik jonlanish bilan */}
       {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          aria-label={L.title}
-          className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full brand-gradient text-white shadow-glow ring-1 ring-white/15 transition hover:scale-105 hover:opacity-95"
-        >
-          <MessageCircle className="h-7 w-7" />
-        </button>
+        <div className="fixed bottom-6 right-6 z-50 h-16 w-16">
+          {/* E'tibor halqasi — yumshoq puls */}
+          <span
+            aria-hidden
+            className="animate-chat-ring pointer-events-none absolute inset-0 rounded-full brand-gradient"
+          />
+          <button
+            onClick={() => setOpen(true)}
+            aria-label={L.title}
+            className="animate-chat-float relative flex h-16 w-16 items-center justify-center rounded-full brand-gradient text-white shadow-glow ring-1 ring-white/15 transition hover:scale-105 hover:opacity-95"
+          >
+            <MessageCircle className="h-7 w-7" />
+            {/* Jonli belgisi — kichik yashil puls */}
+            <span className="absolute right-1 top-1 flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white/70" />
+            </span>
+          </button>
+        </div>
       )}
 
-      {/* Panel — toza, yordam uslubi */}
+      {/* Panel — toza, yordam uslubi (silliq ochilish) */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[560px] max-h-[calc(100vh-3rem)] w-[min(384px,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-border bg-bg-subtle shadow-xl">
-          {/* Header — avatar + sarlavha + ost-sarlavha */}
-          <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+        <div className="animate-chat-panel-in fixed bottom-6 right-6 z-50 flex h-[560px] max-h-[calc(100vh-3rem)] w-[min(384px,calc(100vw-3rem))] origin-bottom-right flex-col overflow-hidden rounded-3xl border border-border bg-bg-subtle shadow-xl">
+          {/* Header — ozgina gradient fon + gradient avatar + onlayn belgisi */}
+          <div className="relative flex items-center gap-3 border-b border-border px-4 py-3.5">
+            <div className="pointer-events-none absolute inset-0 bg-app-gradient opacity-80" />
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full brand-gradient text-white shadow-glow">
               <Bot className="h-5 w-5" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-bg-subtle" />
             </span>
-            <div className="min-w-0 flex-1 leading-tight">
+            <div className="relative min-w-0 flex-1 leading-tight">
               <div className="truncate text-[14px] font-semibold tracking-tight">{L.title}</div>
-              <div className="truncate text-[11px] text-fg-subtle">{L.subtitle}</div>
+              <div className="flex items-center gap-1.5 truncate text-[11px] text-fg-subtle">
+                <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                {L.subtitle}
+              </div>
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="-mr-1 rounded-lg p-1.5 text-fg-subtle transition hover:bg-bg-muted hover:text-fg"
+              className="relative -mr-1 rounded-lg p-1.5 text-fg-subtle transition hover:bg-bg-muted hover:text-fg"
               aria-label="close"
             >
               <X className="h-[18px] w-[18px]" />
@@ -157,13 +196,13 @@ export function ChatWidget() {
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto scrollbar-thin px-4 py-4">
             {messages.map((m, i) =>
               m.role === "user" ? (
-                <div key={i} className="flex justify-end">
+                <div key={i} className="animate-chat-msg-in flex justify-end">
                   <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-accent/10 px-3.5 py-2 text-[13px] leading-relaxed text-fg">
                     {m.content}
                   </div>
                 </div>
               ) : (
-                <div key={i} className="flex gap-2.5">
+                <div key={i} className="animate-chat-msg-in flex gap-2.5">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
                     <Bot className="h-3.5 w-3.5" />
                   </span>
