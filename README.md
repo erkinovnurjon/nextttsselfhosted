@@ -61,8 +61,29 @@ python -m venv .venv-f5   ; # torch (CUDA) + f5-tts + transformers==4.49.0   (GP
 python -m venv venv-piper ; # onnxruntime + piper-tts + fastapi + uvicorn + soundfile
 ```
 
-> TTS modellari HuggingFace'dan birinchi ishga tushishda yuklanadi. F5 checkpoint va
-> Piper `.onnx` modeli lokal/HF'da bo'lishi kerak (`DEPLOY.md`).
+### 4. Modellarni yuklab olish (majburiy!)
+
+Model og'irliklari **git'da YO'Q** (F5 3.2GB, Piper 61MB — GitHub 100MB limitidan katta).
+Ular xususiy Hugging Face repo'sida turadi — clone'dan keyin bir buyruq bilan olinadi:
+
+```powershell
+# Bir marta: HF token (repo'ga o'qish huquqi bilan) — https://huggingface.co/settings/tokens
+.venv-f5\Scripts\huggingface-cli.exe login
+
+# Modellarni joyiga tushirish (tts-server papkasidan):
+$env:PYTHONUTF8="1"
+.venv-f5\Scripts\python.exe scripts\hf_models.py download --repo <username>/nexttts-models
+```
+
+Nimalar tushadi: Piper `.onnx` (DEFAULT ovoz — busiz sintez ishlamaydi), F5 checkpoint +
+vocab + reference kliplar (tabiiy ovozlar va "Mening ovozim" uchun; `.venv-f5` bo'lmasa
+o'tkazib yuboriladi — Piper baribir ishlaydi). MMS va Whisper ASR modellari esa birinchi
+ishga tushishda HuggingFace'dan avtomatik yuklanadi.
+
+> Model egasi uchun (bir marta): `scripts\hf_models.py upload --repo <username>/nexttts-models`
+> — barcha kerakli fayllarni private HF repo'ga chiqaradi. Jamoa a'zolariga repo'dan
+> o'qish huquqini bering. ⚠️ Repo'ni PUBLIC qilmang — trening ma'lumotlari notijoriy
+> litsenziyali (CC-BY-NC), tarqatishdan oldin litsenziya masalasi hal bo'lishi kerak.
 
 ---
 
