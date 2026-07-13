@@ -46,10 +46,11 @@ def number_to_uzbek(n: int) -> str:
         return t_word + (" " + number_to_uzbek(rest) if rest else "")
     if n < 1_000_000_000:
         millions, rest = divmod(n, 1_000_000)
-        m_word = (number_to_uzbek(millions) + " million") if millions > 1 else "million"
+        # "yuz"/"ming"dan farqli — million/milliard doim "bir" oladi (1 000 000 = "bir million")
+        m_word = number_to_uzbek(millions) + " million"
         return m_word + (" " + number_to_uzbek(rest) if rest else "")
     billions, rest = divmod(n, 1_000_000_000)
-    b_word = (number_to_uzbek(billions) + " milliard") if billions > 1 else "milliard"
+    b_word = number_to_uzbek(billions) + " milliard"
     return b_word + (" " + number_to_uzbek(rest) if rest else "")
 
 
@@ -80,36 +81,51 @@ def time_of_day(hour: int) -> str:
     return "tunda"  # 0-4
 
 
-def time_to_uzbek(hour: int, minute: int, include_soat: bool = True, include_period: bool = True) -> str:
-    """24-soat formatdagi vaqtni tabiiy o'zbek gapga aylantirish.
+def _vowel_connector(word: str) -> str:
+    """So'z oxiriga -u/-yu bog'lovchisini qo'shish ('to'qqiz'→'to'qqizu', 'olti'→'oltiyu')."""
+    last = word.rstrip("'`ʻ")[-1:].lower()
+    return word + ("yu" if last in "aeiouoʻ" else "u")
+
+
+def time_to_uzbek(
+    hour: int,
+    minute: int,
+    include_soat: bool = True,
+    include_period: bool = True,
+    suffix: str = "",
+) -> str:
+    """24-soat formatdagi vaqtni tabiiy, izchil o'zbek gapga aylantirish.
+
+    Tartib: [kun davri] soat [soat] [daqiqa]. Ortidan kelgan o'zbekcha qo'shimcha
+    (`da`/`dan`/`gacha`/`ga`) OXIRGI so'zga grammatik yopishadi — yolg'iz osilib
+    qolmaydi. Barcha shakl qo'shimcha oladi (ilgari "chorak qoldi" + "da" g'aliz edi).
 
     Misol:
-        time_to_uzbek(19, 30) → "kechqurun soat yetti yarim"
-        time_to_uzbek(9, 0)   → "ertalab soat to'qqiz"
-        time_to_uzbek(13, 45) → "kunduzi soat birga chorak qoldi"
-        time_to_uzbek(7, 15)  → "ertalab soat yettiyu o'n besh daqiqa"
+        time_to_uzbek(15, 30, suffix="da") → "kunduzi soat uch yarimda"
+        time_to_uzbek(9, 0)                → "ertalab soat to'qqiz"
+        time_to_uzbek(23, 45, suffix="da") → "kechasi soat o'n biru qirq besh daqiqada"
     """
     period = time_of_day(hour) if include_period else ""
-    # 24 → 12 soat formatga
-    h12 = hour % 12
-    if h12 == 0:
-        h12 = 12
-
+    h12 = hour % 12 or 12
     h_word = number_to_uzbek(h12)
-    soat = "soat " if include_soat else ""
-    prefix = (period + " ") if period else ""
+
+    parts: list[str] = []
+    if period:
+        parts.append(period)
+    if include_soat:
+        parts.append("soat")
 
     if minute == 0:
-        return f"{prefix}{soat}{h_word}".strip()
-    if minute == 30:
-        return f"{prefix}{soat}{h_word} yarim".strip()
-    if minute == 15:
-        return f"{prefix}{soat}{h_word}yu o'n besh daqiqa".strip()
-    if minute == 45:
-        next_h = (h12 % 12) + 1
-        next_word = number_to_uzbek(next_h)
-        return f"{prefix}{soat}{next_word}ga chorak qoldi".strip()
-    return f"{prefix}{soat}{h_word}yu {number_to_uzbek(minute)} daqiqa".strip()
+        parts.append(h_word + suffix)
+    elif minute == 30:
+        parts.append(h_word)
+        parts.append("yarim" + suffix)
+    else:
+        parts.append(_vowel_connector(h_word))
+        parts.append(number_to_uzbek(minute))
+        parts.append("daqiqa" + suffix)
+
+    return " ".join(parts).strip()
 
 
 # Oy nomlari (raqam → so'z)
@@ -169,6 +185,7 @@ def normalize_times(text: str) -> str:
         minute = int(m.group(2))
         if not (0 <= hour <= 23 and 0 <= minute <= 59):
             return m.group(0)
+        suffix = m.group(3) or ""  # ortidagi da/dan/gacha/ga — vaqt so'ziga yopishtiramiz
         # Vaqtdan oldingi so'zni tekshirish (oxirgi 1-2 so'z)
         before = text[: m.start()].rstrip()
         last_word = ""
@@ -180,8 +197,17 @@ def normalize_times(text: str) -> str:
             prev_word = words[-2].lower().strip(".,!?;:")
         has_soat = last_word == "soat" or prev_word == "soat"
         has_period = last_word in _PERIOD_WORDS or prev_word in _PERIOD_WORDS
-        return time_to_uzbek(hour, minute, include_soat=not has_soat, include_period=not has_period)
-    return re.sub(r"\b(\d{1,2}):(\d{2})\b", repl, text)
+        # "soat" oldindan bo'lsa kun davrini ham qo'shmaymiz — "soat kunduzi..." g'aliz
+        # tartibning oldini olish uchun (foydalanuvchi "soat X" shaklini xohlagan).
+        return time_to_uzbek(
+            hour,
+            minute,
+            include_soat=not has_soat,
+            include_period=not has_period and not has_soat,
+            suffix=suffix,
+        )
+    # Vaqt + ixtiyoriy o'zbekcha qo'shimcha (uzunroq variant avval: dagi/dan/gacha)
+    return re.sub(r"\b(\d{1,2}):(\d{2})(?:\s+(dagi|dan|gacha|da|ga))?\b", repl, text)
 
 
 def normalize_dates(text: str) -> str:
@@ -314,19 +340,60 @@ def normalize_symbols(text: str) -> str:
 
 
 def normalize_decimal_numbers(text: str) -> str:
-    """3.14 → 'uch nuqta o'n to'rt', 1,5 → 'bir yarim'"""
+    """O'nlik kasrlar: '92,3' → 'to'qson ikki butun uch', '2,5' → 'ikki yarim'.
+
+    O'zbekchada o'nlik kasr 'butun' bilan o'qiladi — 'vergul'/'nuqta' tinish belgisi
+    nomlari bo'lib, sun'iy eshitiladi. Maxsus holat: ',5' → 'yarim' (tabiiy).
+    """
     def repl(m):
         whole = int(m.group(1))
         frac = m.group(2)
         whole_word = number_to_uzbek(whole)
-        # Maxsus holat: ,5 yoki .5 → yarim
+        # ,5 yoki .5 → yarim ("ikki yarim"); butun qism nol bo'lsa faqat "yarim"
         if frac == "5":
-            return f"{whole_word} yarim"
-        # Aks holda har raqamni alohida o'qish
-        frac_words = " ".join(UZBEK_DIGITS[int(d)] for d in frac if d.isdigit())
-        sep = "vergul" if "," in m.group(0) else "nuqta"
-        return f"{whole_word} {sep} {frac_words}"
+            return "yarim" if whole == 0 else f"{whole_word} yarim"
+        # Kasr qismi: ko'p raqamli va boshida nol yo'q bo'lsa — butun son sifatida
+        # ("14"→"o'n to'rt", "45"→"qirq besh"); aks holda raqamlab (nolni saqlash: "05"→"nol besh")
+        if len(frac) >= 2 and frac[0] != "0":
+            frac_words = number_to_uzbek(int(frac))
+        else:
+            frac_words = " ".join(UZBEK_DIGITS[int(d)] for d in frac if d.isdigit())
+        return f"{whole_word} butun {frac_words}"
     return re.sub(r"\b(\d+)[.,](\d+)\b", repl, text)
+
+
+def normalize_grouped_numbers(text: str) -> str:
+    """Bo'sh joy bilan ajratilgan minglik guruhlarni bitta songa birlashtirish.
+
+    '250 000' → '250000', '461 750 000' → '461750000', '1 847' → '1847'.
+    Aks holda har guruh alohida o'qilib "ikki yuz ellik nol" kabi xato chiqadi.
+    Oddiy/uzun/tor bo'sh joy (' ', NBSP, NNBSP) ajratkichlarini qo'llab-quvvatlaydi.
+    Faqat 1-3 raqamli bosh guruh + 3 raqamli guruhlar (standart tipografiya) —
+    telefon raqami (+998 90 ...) yoki yil kabi 4 raqamli sonlar tegilmaydi.
+    """
+    sep = r"[     ]"  # oddiy, NBSP, NNBSP, ingichka, raqam boshligi
+    return re.sub(
+        rf"\b\d{{1,3}}(?:{sep}\d{{3}})+\b",
+        lambda m: re.sub(sep, "", m.group(0)),
+        text,
+    )
+
+
+# Qisqartma yoyilmasi oxiridagi so'zlar — foydalanuvchi ularni takrorlashi mumkin
+# ("QQS solig'i" → "...solig'i solig'i"). Faqat shu oq ro'yxatdagi ketma-ket takror yig'iladi
+# (o'zbekcha ta'kid takrori "juda juda"/"bir-bir" buzilmasligi uchun umumiy dedup EMAS).
+_ABBR_TAIL_DUPES = [
+    "solig'i", "solig'ini", "solig'ining", "jamiyat", "jamiyati", "vazirligi",
+    "vazirligining", "tashkiloti", "tashkilotining", "markazi", "markazining",
+    "hamdo'stligi", "muassasasi", "raqami", "solig‘i",
+]
+
+
+def collapse_abbrev_tail_dupes(text: str) -> str:
+    """Qisqartma yoyilmasidan kelib chiqqan ketma-ket so'z takrorini yig'ish."""
+    for w in _ABBR_TAIL_DUPES:
+        text = re.sub(rf"\b({re.escape(w)})\s+{re.escape(w)}\b", r"\1", text, flags=re.IGNORECASE)
+    return text
 
 
 def normalize_integers(text: str) -> str:
@@ -359,6 +426,8 @@ def normalize_uzbek_text(text: str) -> str:
     """
     # 0. Lug'at qatlami: qisqartma/valyuta/birlik/chet so'zlar (raqamlarga tegmaydi)
     text = apply_lexicon(text)
+    # 0.1. Qisqartma yoyilmasidagi ketma-ket so'z takrorini yig'ish ("solig'i solig'i")
+    text = collapse_abbrev_tail_dupes(text)
     # 0.5. Ilmiy/matematik ifodalar (x², √, ∫, π, m/s², 10⁻³...) — sonlar so'zga
     # aylanishidan OLDIN belgilarni so'zga aylantiramiz (lazy import: circular'dan saqlanish).
     try:
@@ -366,6 +435,8 @@ def normalize_uzbek_text(text: str) -> str:
     except ImportError:
         from sci_normalizer import normalize_scientific
     text = normalize_scientific(text)
+    # Bo'sh joyli minglik guruhlari ("250 000") — raqamlarni o'qishdan OLDIN birlashtirish
+    text = normalize_grouped_numbers(text)
     text = normalize_roman(text)
     text = normalize_dates(text)
     text = normalize_times(text)

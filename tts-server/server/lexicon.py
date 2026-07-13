@@ -41,6 +41,9 @@ LETTER_NAMES: dict[str, str] = {
 # ───────────────── Tanilgan qisqartmalar (kichik harfda kalit → lotin yoyilma) ─────────────────
 ABBREVIATIONS: dict[str, str] = {
     # Davlat / xalqaro tashkilotlar
+    # "otm" → to'liq yoyilma. ASR-sinov (2026-07-06): "otem"/"o te em" modelda
+    # buziladi ("ot endi", "otelda"; 33-60% WER); to'liq nom = 0% WER, tabiiy.
+    # "OTMda" → "oliy ta'lim muassasasida".
     "otm": "oliy ta'lim muassasasi",
     "aqsh": "Amerika Qo'shma Shtatlari",
     "bmt": "Birlashgan Millatlar Tashkiloti",
@@ -92,7 +95,19 @@ SPELL_OUT: set[str] = {
     "tv", "pc", "cpu", "gpu", "ssd", "vpn", "qr", "gps", "sql", "nfc", "otp",
     "atm", "pin", "imei", "ip", "dns", "http", "https", "ssh", "csv", "xml",
     "ui", "ux", "led", "lcd", "gsm", "lte", "fm", "tts", "asr", "gpt",
+    # Ta'lim / idora (harflab o'qiladi). "otm" bu yerda EMAS — u ABBREVIATIONS'da
+    # "otem" ravon so'zi sifatida (tabiiylik uchun).
+    "lms", "iib", "yei",
 }
+
+# ───────────────── O'zbekcha qo'shimchalar (akronimga yopishganda ajratish uchun) ─────────────────
+# "OTMda" → "OTM" + "da", "AQSHga" → "AQSH" + "ga". Uzunroq variantlar avval keladi
+# (regex jamlashida greedy bo'lishi uchun) — aks holda "ning" o'rniga "ni" ushlanadi.
+_UZ_ACRONYM_SUFFIX = (
+    r"nikidek|nikida|nikini|niki|ning|niki|dagi|larida|lariga|laridan|larini|"
+    r"lardagi|larda|larga|lardan|lari|larni|lar|gacha|siga|sida|sidan|sini|"
+    r"siz|da|dan|ga|ka|qa|ni|si|ta|cha|day|dek|li|lik|i|miz|ngiz"
+)
 
 # ───────────────── Valyuta belgilari ─────────────────
 CURRENCY_SYMBOLS: dict[str, str] = {
@@ -194,23 +209,45 @@ def expand_units(text: str) -> str:
     return text
 
 
+_ACRONYM_SUFFIXED = re.compile(
+    r"\b([A-Z]{2,})(" + _UZ_ACRONYM_SUFFIX + r")?\b"
+)
+
+
 def expand_abbreviations(text: str) -> str:
     """Tanilgan qisqartmalarni yoyadi va SPELL_OUT'dagilarni harflab o'qiydi.
 
-    Xavfsizlik: nuqtali qisqartmalar (prof., h.k.) registrдан qat'i nazar;
-    qolganlari FAQAT bosh harfli yozilganda (OTM, USB) — kichik harfli oddiy
-    so'zlar (masalan "it", "id") buzilmasligi uchun.
+    Ikki bosqich:
+      1. Bosh harfli akronim + ixtiyoriy o'zbekcha qo'shimcha ("OTMda" → "o te em da",
+         "AQSHga" → "Amerika Qo'shma Shtatlariga"). Qo'shimcha yoyilmaga qo'shib qo'yiladi.
+      2. Nuqtali/aralash registrli qisqartmalar (prof., h.k., MChJ) — butun token bo'yicha.
+
+    Xavfsizlik: faqat BOSH HARFLI yozilganda qo'llanadi — kichik harfli oddiy
+    so'zlar ("it", "id", "da") buzilmasligi uchun.
     """
 
-    def repl(m: re.Match) -> str:
+    # 1-bosqich: AKRONIM + qo'shimcha
+    def repl_acr(m: re.Match) -> str:
+        core = m.group(1)
+        suffix = m.group(2) or ""
+        low = core.lower()
+        if low in ABBREVIATIONS:
+            # Yoyilma + qo'shimcha (oxirgi so'zga yopishadi: "...Shtatlari" + "ga")
+            return ABBREVIATIONS[low] + suffix
+        if low in SPELL_OUT:
+            spelled = _spell_token(low)
+            return spelled + (" " + suffix if suffix else "")
+        return m.group(0)
+
+    text = _ACRONYM_SUFFIXED.sub(repl_acr, text)
+
+    # 2-bosqich: nuqtali / aralash registrli qisqartmalar (qo'shimchasiz)
+    def repl_dot(m: re.Match) -> str:
         token = m.group(0)
         has_dot = "." in token
         low = token.lower().rstrip(".")
         if has_dot and low in ABBREVIATIONS:
             return ABBREVIATIONS[low]
-        # Akronim deb hisoblanadi: butunlay bosh harf (OTM) YOKI 2+ bosh harf
-        # (MChJ, AJ — "ch" digrafi tufayli aralash registr). Oddiy so'zlar (0–1
-        # bosh harf) buzilmaydi.
         uppers = sum(1 for c in token if c.isupper())
         if token.isupper() or uppers >= 2:
             if low in ABBREVIATIONS:
@@ -219,8 +256,7 @@ def expand_abbreviations(text: str) -> str:
                 return _spell_token(low)
         return token
 
-    # So'z chegaralarida tokenlar (nuqtali qisqartmalar uchun ham)
-    return re.sub(r"\b[A-Za-z][A-Za-z.]{0,6}\b", repl, text)
+    return re.sub(r"\b[A-Za-z][A-Za-z.]{0,6}\b", repl_dot, text)
 
 
 def apply_pronunciation(text: str) -> str:
