@@ -173,7 +173,8 @@ export const uz: Dict = {
     sintez: {
       title: "Matndan nutq",
       sub: "Matn yozing — ravon o‘zbek ovozini eshiting",
-      voiceLabel: "Ovoz",
+      voiceLabel: "Asosiy ovozlar",
+      myVoiceLabel: "Mening ovozlarim",
       presetsLabel: "Tayyor jumlalar",
       placeholder: "Bu yerga matn yozing…",
       mic: "Bosib turib gapiring (ovozdan matn)",
@@ -196,6 +197,7 @@ export const uz: Dict = {
         base: { label: "Asosiy", hint: "Neytral · to'g'ri talaffuz (MMS)" },
         ayol: { label: "Ayol (mayin)", hint: "Yosh, mayin tabiiy ovoz · x/gʻ to'g'ri (F5)" },
         erkak: { label: "Erkak", hint: "To‘la erkak ovozi · tez (MMS)" },
+        carleone: { label: "Don Karleone", hint: "Mediadan klonlangan erkak ovoz · manba uslubida (F5)" },
       },
     },
     transkripsiya: {

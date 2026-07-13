@@ -173,7 +173,8 @@ export const en: Dict = {
     sintez: {
       title: "Text to speech",
       sub: "Type text — hear natural Uzbek speech",
-      voiceLabel: "Voice",
+      voiceLabel: "Built-in voices",
+      myVoiceLabel: "My voices",
       presetsLabel: "Sample phrases",
       placeholder: "Type your text here…",
       mic: "Hold and speak (voice to text)",
@@ -196,6 +197,7 @@ export const en: Dict = {
         base: { label: "Base", hint: "Neutral · correct pronunciation (MMS)" },
         ayol: { label: "Female (soft)", hint: "Young, soft natural voice · correct x/gʻ (F5)" },
         erkak: { label: "Male", hint: "Full male voice · fast (MMS)" },
+        carleone: { label: "Don Carleone", hint: "Male voice cloned from media (F5)" },
       },
     },
     transkripsiya: {

@@ -87,6 +87,7 @@ export async function POST(request: Request) {
 
   // ───── Shaxsiy ovoz (zero-shot klon) ─────
   // voice === "__me__" → foydalanuvchining reference klipini DB'dan olib F5'ga uzatamiz.
+  // user_voice_id = kutubxonadagi konkret ovoz (Ronaldo, Messi ...); berilmasa eng yangisi.
   // ref_wav HECH QACHON mijozdan kelmaydi (path-injection yo'q) — faqat DB'dan olinadi.
   let f5Ref: { ref_wav: string; ref_text: string } | null = null;
   // Shaxsiy ovoz faqat F5 orqali ishlaydi — checkpoint f5 bo'lmasa DB'ni bezovta qilmaymiz.
@@ -97,15 +98,27 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-    const uv = await db.userVoice.findUnique({
-      where: { userId: session.user.id },
-      select: { refPath: true, refText: true, status: true },
+    const userVoiceId =
+      typeof body?.user_voice_id === "string" && body.user_voice_id
+        ? body.user_voice_id
+        : undefined;
+    // Aniq id berilsa draft ham sintez qilinadi (my-voice'dagi "Sinash" tugmasi);
+    // id'siz (fallback eng yangi) — faqat tasdiqlangan (ready) ovoz.
+    const uv = await db.userVoice.findFirst({
+      where: {
+        userId: session.user.id,
+        ...(userVoiceId
+          ? { id: userVoiceId, status: { in: ["ready", "draft"] } }
+          : { status: "ready" }),
+      },
+      orderBy: { createdAt: "desc" },
+      select: { refPath: true, refText: true },
     });
-    if (!uv || uv.status !== "ready") {
+    if (!uv) {
       return NextResponse.json(
         {
           error:
-            "Shaxsiy ovoz topilmadi. Avval \"Mening ovozim\" boʻlimida ovozingizni yozdiring.",
+            "Shaxsiy ovoz topilmadi. Avval \"Mening ovozim\" boʻlimida ovoz yarating.",
         },
         { status: 400 }
       );
