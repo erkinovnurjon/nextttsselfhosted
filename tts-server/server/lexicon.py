@@ -129,6 +129,13 @@ UNITS: dict[str, str] = {
 
 # ───────────────── Chet / qarz so'zlar (qanday eshitilishi kerak) ─────────────────
 PRONUNCIATION: dict[str, str] = {
+    # Platformaning O'Z nomi — eng ko'p uchraydi, xom holda espeak uni buzadi
+    # ("Mixt Tetris" bo'lib eshitiladi). "nekst" + TTS o'zbek harf nomlari bilan.
+    # ASR-sinov (2026-07-16): defis "ti-ti-es" va "ti ti es" buziladi, o'zbek
+    # "te te es" toza chiqadi (STT "next tts" deb eshitadi). Bo'sh joyli va
+    # qo'shimchali ("NextTTS'da") variantlar ham ushlanadi.
+    "nexttts": "nekst te te es",
+    "next tts": "nekst te te es",
     # Web / ilovalar
     "google": "gugl", "youtube": "yutub", "facebook": "feysbuk",
     "whatsapp": "votsap", "twitter": "tvitter", "gmail": "gmeyl",
