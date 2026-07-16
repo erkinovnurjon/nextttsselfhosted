@@ -381,7 +381,7 @@ export default function SintezPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+        <div className="whitespace-pre-line rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </div>
       )}
