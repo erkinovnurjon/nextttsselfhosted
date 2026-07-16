@@ -10,6 +10,15 @@ import {
   LIMITS,
 } from "@/lib/usage";
 import { getBalance, spendCredits, isUnlimited } from "@/lib/credits";
+import {
+  BACKEND_DOWN_HINT,
+  isEngine,
+  metaHeaders,
+  resolveUserVoiceRef,
+  synthesizeOnBackend,
+  type Engine,
+  type F5Ref,
+} from "@/lib/tts-backend";
 
 const TTS_BACKEND_URL = process.env.TTS_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -88,8 +97,7 @@ export async function POST(request: Request) {
   // ───── Shaxsiy ovoz (zero-shot klon) ─────
   // voice === "__me__" → foydalanuvchining reference klipini DB'dan olib F5'ga uzatamiz.
   // user_voice_id = kutubxonadagi konkret ovoz (Ronaldo, Messi ...); berilmasa eng yangisi.
-  // ref_wav HECH QACHON mijozdan kelmaydi (path-injection yo'q) — faqat DB'dan olinadi.
-  let f5Ref: { ref_wav: string; ref_text: string } | null = null;
+  let f5Ref: F5Ref | null = null;
   // Shaxsiy ovoz faqat F5 orqali ishlaydi — checkpoint f5 bo'lmasa DB'ni bezovta qilmaymiz.
   if (voice === "__me__" && checkpoint_id === "f5") {
     if (!session?.user?.id) {
@@ -98,23 +106,13 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-    const userVoiceId =
+    f5Ref = await resolveUserVoiceRef(
+      session.user.id,
       typeof body?.user_voice_id === "string" && body.user_voice_id
         ? body.user_voice_id
-        : undefined;
-    // Aniq id berilsa draft ham sintez qilinadi (my-voice'dagi "Sinash" tugmasi);
-    // id'siz (fallback eng yangi) — faqat tasdiqlangan (ready) ovoz.
-    const uv = await db.userVoice.findFirst({
-      where: {
-        userId: session.user.id,
-        ...(userVoiceId
-          ? { id: userVoiceId, status: { in: ["ready", "draft"] } }
-          : { status: "ready" }),
-      },
-      orderBy: { createdAt: "desc" },
-      select: { refPath: true, refText: true },
-    });
-    if (!uv) {
+        : undefined
+    );
+    if (!f5Ref) {
       return NextResponse.json(
         {
           error:
@@ -123,87 +121,47 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    f5Ref = { ref_wav: uv.refPath, ref_text: uv.refText };
   }
 
   // ───── Sintez ─────
-  let backendRes: Response;
-  try {
-    if (checkpoint_id === "mms") {
-      const speaking_rate =
-        typeof body?.speaking_rate === "number" ? body.speaking_rate : undefined;
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/mms`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, normalize: true, speaking_rate, voice }),
-        signal: AbortSignal.timeout(120_000),
-      });
-    } else if (checkpoint_id === "f5") {
-      // F5-TTS (Feruza) — tabiiy ayol ovozi. Sekinroq (diffuziya), shuning uchun
-      // timeout uzunroq.
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/f5`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // voice = F5 reference tanlovi: "feruza"/"jonli"/"ayol". "__me__" bo'lsa f5Ref
-        // (foydalanuvchi reference klipi) qo'shiladi → zero-shot shaxsiy ovoz.
-        body: JSON.stringify({ text, speed, voice, ...(f5Ref ?? {}) }),
-        signal: AbortSignal.timeout(180_000),
-      });
-    } else if (checkpoint_id === "piper") {
-      // Piper — NATIV o'zbek ovoz (FeruzaSpeech, espeak fonema x/gʻ/ch to'g'ri). CPU, tez.
-      const length_scale = typeof speed === "number" && speed > 0 ? 1 / speed : 1;
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/piper`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, length_scale }),
-        signal: AbortSignal.timeout(120_000),
-      });
-    } else {
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          language,
-          voice,
-          speed,
-          temperature,
-          repetition_penalty,
-          top_k,
-          top_p,
-          checkpoint_id,
-        }),
-        signal: AbortSignal.timeout(180_000),
-      });
+  // Dvigatel tanlash va backend chaqiruvi @/lib/tts-backend'da — ommaviy
+  // /api/v1/tts bilan bir xil yo'l (ikki nusxa bo'lsa biri eskirardi).
+  const engine: Engine = isEngine(checkpoint_id) ? checkpoint_id : "xtts";
+  const out = await synthesizeOnBackend({
+    text,
+    engine,
+    voice,
+    speed,
+    f5Ref,
+    speaking_rate:
+      typeof body?.speaking_rate === "number" ? body.speaking_rate : undefined,
+    language,
+    temperature,
+    repetition_penalty,
+    top_k,
+    top_p,
+    checkpointId: checkpoint_id,
+  });
+
+  if (!out.ok) {
+    if (out.kind === "down") {
+      return NextResponse.json(
+        {
+          error: "TTS backend bilan bog'lana olmadi",
+          details: out.details,
+          hint: BACKEND_DOWN_HINT,
+        },
+        { status: 502 }
+      );
     }
-  } catch (err) {
     return NextResponse.json(
-      {
-        error: "TTS backend bilan bog'lana olmadi",
-        details: err instanceof Error ? err.message : "Unknown error",
-        hint:
-          "Python TTS server ishlamayapti. " +
-          "Ishga tushirish: cd tts-server && .\\.venv\\Scripts\\python.exe -m uvicorn server.main:app --port 8000",
-      },
+      { error: `TTS server xatosi (${out.status})`, details: out.details },
       { status: 502 }
     );
   }
 
-  if (!backendRes.ok) {
-    const errText = await backendRes.text().catch(() => "");
-    return NextResponse.json(
-      {
-        error: `TTS server xatosi (${backendRes.status})`,
-        details: errText,
-      },
-      { status: 502 }
-    );
-  }
-
-  const audioBuffer = await backendRes.arrayBuffer();
-  const synthTime = parseFloat(
-    backendRes.headers.get("X-Synthesis-Time-Sec") || "0"
-  );
+  const audioBuffer = out.audio;
+  const synthTime = out.meta.synthTimeSec;
 
   // ───── Balans/limitni hisoblash + tarix saqlash ─────
   const usageHeaders: Record<string, string> = {};
@@ -250,12 +208,7 @@ export async function POST(request: Request) {
   return new NextResponse(audioBuffer, {
     headers: {
       "Content-Type": "audio/wav",
-      "X-Synthesis-Time-Sec": backendRes.headers.get("X-Synthesis-Time-Sec") || "",
-      "X-Normalized-Text": backendRes.headers.get("X-Normalized-Text") || "",
-      "X-Original-Text": backendRes.headers.get("X-Original-Text") || "",
-      "X-Checkpoint-Id":
-        backendRes.headers.get("X-Checkpoint-Id") || checkpoint_id || "",
-      "X-Model-Kind": backendRes.headers.get("X-Model-Kind") || "",
+      ...metaHeaders(out.meta),
       ...usageHeaders,
       "Cache-Control": "no-cache",
     },
