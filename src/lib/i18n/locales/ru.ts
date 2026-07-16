@@ -205,6 +205,7 @@ export const ru: Dict = {
     apiKeys: {
       title: "API ключи",
       sub: "Создайте ключ, чтобы подключить TTS к другим вашим проектам",
+      guide: "Руководство по интеграции",
       nameLabel: "Название",
       namePlaceholder: "LMS — основной сайт",
       kindLabel: "Тип ключа",

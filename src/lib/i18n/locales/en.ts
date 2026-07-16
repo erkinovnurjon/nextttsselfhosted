@@ -205,6 +205,7 @@ export const en: Dict = {
     apiKeys: {
       title: "API keys",
       sub: "Create a key to connect TTS to your other projects",
+      guide: "Integration guide",
       nameLabel: "Name",
       namePlaceholder: "LMS — main site",
       kindLabel: "Key type",

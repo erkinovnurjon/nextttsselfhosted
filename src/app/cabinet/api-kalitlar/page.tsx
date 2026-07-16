@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { KeyRound, Copy, Check, Trash2, Plus, ShieldAlert, Globe } from "lucide-react";
+import { KeyRound, Copy, Check, Trash2, Plus, ShieldAlert, Globe, BookOpen } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -103,12 +104,21 @@ export default function ApiKeysPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <KeyRound className="h-6 w-6 text-accent" />
-          {t("cabinet.apiKeys.title")}
-        </h1>
-        <p className="mt-1 text-sm text-fg-muted">{t("cabinet.apiKeys.sub")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold">
+            <KeyRound className="h-6 w-6 text-accent" />
+            {t("cabinet.apiKeys.title")}
+          </h1>
+          <p className="mt-1 text-sm text-fg-muted">{t("cabinet.apiKeys.sub")}</p>
+        </div>
+        <Link
+          href="/integratsiya"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-bg-subtle/60 px-3 py-2 text-sm text-fg-muted transition hover:bg-bg-muted hover:text-fg"
+        >
+          <BookOpen className="h-4 w-4" />
+          {t("cabinet.apiKeys.guide")}
+        </Link>
       </div>
 
       {/* Yangi kalit — bir marta ko'rsatiladigan oyna */}

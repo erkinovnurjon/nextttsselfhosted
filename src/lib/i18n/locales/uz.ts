@@ -205,6 +205,7 @@ export const uz: Dict = {
     apiKeys: {
       title: "API kalitlar",
       sub: "TTS'ni boshqa loyihalaringizga ulash uchun kalit yarating",
+      guide: "Integratsiya qo‘llanmasi",
       nameLabel: "Nom",
       namePlaceholder: "LMS — asosiy sayt",
       kindLabel: "Kalit turi",
