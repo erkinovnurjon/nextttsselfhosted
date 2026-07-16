@@ -131,6 +131,7 @@ export const uz: Dict = {
       myVoice: "Mening ovozim",
       ovozlar: "Ovozlar",
       tarix: "Tarix",
+      apiKeys: "API kalitlar",
       balans: "Balans",
       sozlamalar: "Sozlamalar",
       adminSection: "Admin",
@@ -200,6 +201,33 @@ export const uz: Dict = {
         erkak: { label: "Erkak", hint: "To‘la erkak ovozi · tez (MMS)" },
         carleone: { label: "Don Karleone", hint: "Mediadan klonlangan erkak ovoz · manba uslubida (F5)" },
       },
+    },
+    apiKeys: {
+      title: "API kalitlar",
+      sub: "TTS'ni boshqa loyihalaringizga ulash uchun kalit yarating",
+      nameLabel: "Nom",
+      namePlaceholder: "LMS — asosiy sayt",
+      kindLabel: "Kalit turi",
+      kind: {
+        secret: "Faqat serverda. To‘liq huquq.",
+        publishable: "Brauzer/vidjet. Domenga bog‘langan.",
+      },
+      originsLabel: "Ruxsat etilgan domenlar",
+      originsHint:
+        "Har qatorda bitta. Kalit faqat shu domenlardan ishlaydi — o‘g‘irlansa boshqa saytda foydasiz. Domensiz kalit umuman ishlamaydi.",
+      create: "Kalit yaratish",
+      creating: "Yaratilmoqda…",
+      onceWarning:
+        "Kalit FAQAT SHU YERDA, bir marta ko‘rsatiladi. Nusxalab, xavfsiz joyga saqlang — biz uni saqlamaymiz va qayta ko‘rsata olmaymiz.",
+      snippetHint: "Vidjetni ulash uchun shu qatorni sahifangizga qo‘ying:",
+      copy: "Nusxalash",
+      copied: "Nusxalandi",
+      hide: "Yashirish",
+      revoke: "O‘chirish",
+      confirmRevoke:
+        "Kalit o‘chirilsin? Undan foydalanayotgan loyihalar darhol ishlamay qoladi.",
+      loading: "Yuklanmoqda…",
+      empty: "Hali kalit yaratilmagan.",
     },
     dublyaj: {
       title: "Video dublyaj",

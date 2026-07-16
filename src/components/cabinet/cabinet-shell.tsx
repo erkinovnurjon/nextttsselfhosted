@@ -23,6 +23,7 @@ import {
   Plus,
   Wallet,
   Fingerprint,
+  KeyRound,
   Infinity as InfinityIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -49,6 +50,7 @@ const MAIN_NAV: NavItem[] = [
   { href: "/cabinet/my-voice", icon: Fingerprint, key: "myVoice" },
   { href: "/cabinet/ovozlar", icon: Users, key: "ovozlar" },
   { href: "/cabinet/tarix", icon: History, key: "tarix" },
+  { href: "/cabinet/api-kalitlar", icon: KeyRound, key: "apiKeys" },
   { href: "/cabinet/balans", icon: Wallet, key: "balans" },
   { href: "/cabinet/sozlamalar", icon: Settings, key: "sozlamalar" },
 ];
