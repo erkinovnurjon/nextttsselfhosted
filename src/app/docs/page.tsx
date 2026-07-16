@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DocTopBar } from "@/components/doc-topbar";
 import {
   BookOpen,
   Volume2,
@@ -52,6 +53,8 @@ const TOC = [
 
 export default function DocsPage() {
   return (
+    <>
+    <DocTopBar />
     <main className="mx-auto max-w-4xl px-4 py-10 animate-fade-in md:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
@@ -204,6 +207,7 @@ export default function DocsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 

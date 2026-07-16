@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { CodeBlock, CodeTabs } from "@/components/integratsiya/snippet";
+import { DocTopBar } from "@/components/doc-topbar";
 
 export const metadata = {
   title: "Integratsiya qo'llanmasi — NextTTS",
@@ -64,6 +65,8 @@ function Code({ children }: { children: React.ReactNode }) {
 
 export default function IntegratsiyaPage() {
   return (
+    <>
+    <DocTopBar />
     <main className="mx-auto max-w-4xl px-4 py-10 animate-fade-in md:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
@@ -466,6 +469,7 @@ with open("ovoz.wav", "wb") as f:
         </div>
       </div>
     </main>
+    </>
   );
 }
 
