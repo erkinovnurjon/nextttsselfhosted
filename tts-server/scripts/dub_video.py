@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -269,31 +270,62 @@ def _collapse_repeats(text: str, max_run: int = 2) -> str:
     return " ".join(out)
 
 
-def _translate_claude(texts: list[str]) -> list[str]:
-    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not key:
-        raise RuntimeError("ANTHROPIC_API_KEY yo'q — Claude tarjima ishlamaydi.")
-    model = os.environ.get("CHATBOT_MODEL", "claude-opus-4-8")
+# Bir so'rovga nechta segment. Butun kinoni BITTA so'rovга tiqish max_tokens'ni
+# oshirib yuboradi → javob o'rtadan kesiladi va segmentlarning yarmi jimgina
+# inglizcha qoladi (eski bug). 40 = kontekst uchun yetarli (ketma-ket replikalar
+# birga tarjima qilinsa tabiiyroq), lekin javobni chegaraга sig'diradi.
+CLAUDE_BATCH = 40
+
+# Bir batch chiqishiga yetarli tokens. 40 qisqa replika ≈ 1.5-2k token; 8000
+# katta zaxira. stop_reason=="max_tokens" bo'lsa OGOHLANTIRAMIZ (jim kesilmasin).
+CLAUDE_MAX_TOKENS = 8000
+
+_CLAUDE_SYS = (
+    "Sen film/video dublyaji uchun ingliz→o'zbek tarjimonisen. Qoidalar:\n"
+    "- TABIIY, og'zaki o'zbek tili (lotin yozuvi) — kitobiy emas, personaj gapiradigandek.\n"
+    "- Atoqli otlar (ism, joy, tashkilot) o'zbekcha tanish shaklда saqlansin "
+    "(masalan 'White Walkers' → 'Oq Yuruvchilar', 'John' → 'Jon').\n"
+    "- Har replikaning uzunligini imkon qadar saqla — dublyaj original vaqtga sig'ishi kerak.\n"
+    "- Kontekstni hisobga ol: replikalar ketma-ket, bir sahna.\n"
+    "- FAQAT tarjimani '<raqam>. <tarjima>' formatida qaytar, izohsiz."
+)
+
+
+def _translate_claude_batch(texts: list[str], key: str, model: str) -> list[str]:
+    """Bitta batchni tarjima qiladi. Xato bo'lsa o'sha batch inglizcha qoladi
+    (butun kinoni yiqitmaslik uchun) — sabab stderr'ga chiqadi."""
     numbered = "\n".join(f"{i+1}. {t}" for i, t in enumerate(texts))
-    prompt = (
-        "Quyidagi ingliz tilidagi film resplikalarini TABIIY, og'zaki o'zbek tiliga "
-        "tarjima qil (lotin yozuvi). Har qatorni ALOHIDA tarjima qil, uzunligini "
-        "imkon qadar saqla (dublyaj vaqtga sig'ishi kerak). FAQAT tarjimani shu "
-        "formatda qaytar: '<raqam>. <tarjima>'.\n\n" + numbered
-    )
     body = json.dumps({
-        "model": model, "max_tokens": 4096,
-        "messages": [{"role": "user", "content": prompt}],
+        "model": model,
+        "max_tokens": CLAUDE_MAX_TOKENS,
+        "system": _CLAUDE_SYS,
+        "messages": [{"role": "user", "content": numbered}],
     }).encode()
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages", data=body,
         headers={"x-api-key": key, "anthropic-version": "2023-06-01",
                  "content-type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=120) as r:
-        data = json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:200]
+        print(f"  ⚠️ Claude batch xatosi ({e.code}): {detail}", flush=True)
+        return list(texts)  # inglizcha fallback
+    except Exception as e:
+        print(f"  ⚠️ Claude batch xatosi: {type(e).__name__}: {e}", flush=True)
+        return list(texts)
+
+    # Xavfsizlik rad javobi (opus-4-8 stop_reason='refusal') — content bo'sh bo'lishi mumkin.
+    if data.get("stop_reason") == "refusal":
+        print("  ⚠️ Claude tarjimani rad etdi (refusal) — bu batch inglizcha qoladi.", flush=True)
+        return list(texts)
+    if data.get("stop_reason") == "max_tokens":
+        # Endi JIM emas — ko'rinadigan ogohlantirish. CLAUDE_BATCH kichraytirilsa yo'qoladi.
+        print("  ⚠️ Claude javobi max_tokens'ga yetdi — batch qisqartiring.", flush=True)
+
     text = "".join(b.get("text", "") for b in data.get("content", []))
-    # Raqamlangan qatorlarni parse qilamiz.
     by_num: dict[int, str] = {}
     for line in text.splitlines():
         line = line.strip()
@@ -302,7 +334,23 @@ def _translate_claude(texts: list[str]) -> list[str]:
         num, _, rest = line.partition(".")
         if num.strip().isdigit():
             by_num[int(num.strip())] = rest.strip()
+    # Yetishmagan qator (parse xatosi yoki kesilish) inglizcha qoladi.
     return [by_num.get(i + 1, texts[i]) for i in range(len(texts))]
+
+
+def _translate_claude(texts: list[str]) -> list[str]:
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("ANTHROPIC_API_KEY yo'q — Claude tarjima ishlamaydi.")
+    model = os.environ.get("CHATBOT_MODEL", "claude-opus-4-8")
+    out: list[str] = []
+    total = (len(texts) + CLAUDE_BATCH - 1) // CLAUDE_BATCH
+    for bi, i in enumerate(range(0, len(texts), CLAUDE_BATCH), start=1):
+        batch = texts[i : i + CLAUDE_BATCH]
+        if total > 1:
+            print(f"  Claude tarjima: batch {bi}/{total} ({len(batch)} replika)", flush=True)
+        out.extend(_translate_claude_batch(batch, key, model))
+    return out
 
 
 def translate(texts: list[str], engine: str) -> list[str]:
