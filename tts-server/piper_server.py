@@ -39,6 +39,23 @@ def _trim_silence(pcm: bytes, sr: int, lead_ms=LEAD_PAD_MS, tail_ms=TAIL_PAD_MS)
     end = min(a.size, voiced[-1] + 1 + int(sr * tail_ms / 1000))
     return a[start:end].tobytes()
 
+# espeak-ng "uz" ovozi apostrof sifatida FAQAT ASCII ' va ’ (U+2019) ni tanidi.
+# Boshqa variantni ko'rsa so'zni tarjima qila olmay HARFLAB o'qishga tushadi:
+#   "sunʼiy" (ʼ = U+02BC, to'g'ri o'zbek tutuq belgisi) -> "es u en jective i ye"
+# Ya'ni to'g'ri yozilgan o'zbekcha matn eng yomon o'qiladi. Kirish yo'llari ko'p
+# (foydalanuvchi matni, klaviatura, ASR: whisper_engine 'ъ' -> U+02BC), shuning
+# uchun normallashtirish aynan espeak chegarasida — chetlab o'tib bo'lmasin.
+# oʻ/gʻ uchun U+02BB va ASCII ' bir xil fonema beradi (ˈozbek/ʁˈɑjæt), demak
+# hammasini ASCII ' ga keltirish talaffuzni buzmaydi.
+_APOSTROPHES = "ʻʼ`‘’ʾ´′ʹ"
+
+
+def _normalize_apostrophes(text: str) -> str:
+    for ch in _APOSTROPHES:
+        text = text.replace(ch, "'")
+    return text
+
+
 ROOT = Path(__file__).resolve().parent  # tts-server/
 # Barqaror deploy nusxasi (training ustiga yozmaydi); PIPER_ONNX env bilan almashtiriladi.
 ONNX = os.environ.get(
@@ -80,6 +97,7 @@ def synthesize(req: Req):
     text = (req.text or "").strip()
     if not text:
         return JSONResponse({"error": "matn bo'sh"}, status_code=400)
+    text = _normalize_apostrophes(text)
     syn = SynthesisConfig(
         length_scale=req.length_scale,
         noise_scale=req.noise_scale,

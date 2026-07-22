@@ -152,10 +152,19 @@ def normalize_scientific(text: str) -> str:
     # Qolgan indekslar (formula qoldig'i): raqamga aylantiramiz
     text = re.sub("(" + _SUB_RUN + ")", lambda m: _sub_phrase(m.group(1)), text)
 
-    # 7) Yunon harflari
-    for g, w in GREEK.items():
-        if g in text:
-            text = text.replace(g, f" {w} ")
+    # 7) Yunon harflari — FAQAT YOLG'IZ turganda (matematik belgi: α, β, π).
+    # Ketma-ket kelgan yunon harflari = yunon SO'ZI, unga tegilmaydi: espeak uni
+    # to'g'ri o'qiydi ("φυσικός" -> fisikos), harflab yoysak "fi ipsilon sigma
+    # iota kappa" degan tushunarsiz narsa chiqadi. Qo'shnilikni tekshirishda
+    # to'liq yunon bloki ishlatiladi (urg'uli ό/ά GREEK jadvalida yo'q, lekin
+    # ular ham so'z tarkibida — aks holda so'z oxiridagi harf ajralib qolardi).
+    _greek_keys = "".join(re.escape(g) for g in GREEK)
+    _greek_block = r"Ͱ-Ͽἀ-῿"
+    text = re.sub(
+        rf"(?<![{_greek_block}])([{_greek_keys}])(?![{_greek_block}])",
+        lambda m: f" {GREEK[m.group(1)]} ",
+        text,
+    )
 
     # 8) Ilmiy belgilar (xavfsiz unicode)
     for sym, w in SCI_SYMBOLS.items():

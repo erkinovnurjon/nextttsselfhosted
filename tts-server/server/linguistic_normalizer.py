@@ -221,10 +221,12 @@ def normalize_dates(text: str) -> str:
     def date_repl(m):
         y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
         if 1 <= mo <= 12 and 1 <= d <= 31:
-            year_word = number_to_uzbek(y)
+            # Yil ham TARTIB son + probel: ilgari "...olti-yil" chiqib, defis
+            # o'qilardi va yil tartib songa aylanmasdi.
+            year_word = cardinal_to_ordinal(number_to_uzbek(y))
             month_name = MONTHS[mo]
             day_ord = cardinal_to_ordinal(number_to_uzbek(d))
-            return f"{day_ord} {month_name} {year_word}-yil"
+            return f"{day_ord} {month_name} {year_word} yil"
         return m.group(0)
     text = re.sub(r"\b(\d{4})-(\d{2})-(\d{2})\b", date_repl, text)
 
@@ -239,31 +241,40 @@ def normalize_dates(text: str) -> str:
         return m.group(0)
     text = re.sub(r"\b(\d{4})-yil(da|i|ning|ga|dan)?\b", year_repl, text)
 
-    # N-may, N-yanvar va h.k.
-    months_alt = "|".join(MONTHS.values())
+    # N-may, N-yanvar va h.k. Kelishik qo'shimchasi bilan ham ("14-iyulda"):
+    # qo'shimchasiz \b oy nomidan keyin uzilib, namuna mos kelmay qolardi va
+    # "o'n to'rt-iyulda" (defis o'qiladi, tartib son yo'q) chiqardi.
+    # Imlo variantlari: "sentabr"/"oktabr" (y'siz) ham keng yoziladi. Faqat
+    # TANIB OLISH uchun — chiqishda foydalanuvchi yozgan shakl saqlanadi.
+    month_spellings = list(MONTHS.values()) + ["sentabr", "oktabr"]
+    months_alt = "|".join(sorted(month_spellings, key=len, reverse=True))
     def day_month_repl(m):
         d = int(m.group(1))
         month_name = m.group(2)
+        suffix = m.group(3) or ""
         if 1 <= d <= 31:
             day_ord = cardinal_to_ordinal(number_to_uzbek(d))
-            return f"{day_ord} {month_name}"
+            return f"{day_ord} {month_name}{suffix}"
         return m.group(0)
-    text = re.sub(rf"\b(\d{{1,2}})-({months_alt})\b", day_month_repl, text)
+    # Uzunroq qo'shimchalar avval: "dagi" < "dan" < "da", "gacha" < "ga".
+    text = re.sub(rf"\b(\d{{1,2}})-({months_alt})(dagi|dan|gacha|da|ga|ning|i)?\b",
+                  day_month_repl, text)
 
     return text
 
 
 def normalize_ordinals(text: str) -> str:
     """N-(bosqich|qator|...) → "Ninchi (bosqich|...)" """
-    common_nouns = ["bosqich", "qator", "marta", "soni", "kun", "oy", "yil", "asr", "guruh",
-                    "darsi", "sinf", "kurs", "qism", "bo'lim", "bob", "modda", "band"]
-    pattern = r"\b(\d+)-(" + "|".join(common_nouns) + r")\b"
+    # Ilgari bu qat'iy ro'yxat edi va ro'yxatda yo'q ot uchun ishlamasdi:
+    # "1-o'rin" -> "bir-o'rin" (tartib son yo'q, defis o'qiladi). Sana, diapazon va
+    # oy nomlari BU BOSQICHDAN OLDIN qayta ishlangani uchun bu yerda qolgan
+    # "<son>-<so'z>" deyarli har doim tartib son bo'ladi — umumlashtiramiz.
     def repl(m):
         n = int(m.group(1))
         noun = m.group(2)
         ord_word = cardinal_to_ordinal(number_to_uzbek(n))
         return f"{ord_word} {noun}"
-    return re.sub(pattern, repl, text)
+    return re.sub(r"\b(\d+)-([^\W\d_][\w'ʻʼ’]{1,})\b", repl, text, flags=re.UNICODE)
 
 
 _ROMAN_MAP = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
@@ -300,6 +311,102 @@ def normalize_roman(text: str) -> str:
         return f"{cardinal_to_ordinal(number_to_uzbek(n))} {m.group(2)}{m.group(3)}"
 
     return pat.sub(repl, text)
+
+
+def normalize_phone_numbers(text: str) -> str:
+    """Telefon raqamini RAQAMLAB o'qish: "+998 90 123 45 67".
+
+    Aks holda har bo'lak alohida katta son bo'lib ketadi ("to'qqiz yuz to'qson
+    sakkiz to'qson ming yuz yigirma uch...") va "+" o'qilmay qoladi; defisli
+    shakl ("71-200-00-00") esa diapazon/matematikaga tushib "ayirish" chiqaradi.
+
+    Diapazon va matematikadan OLDIN ishlashi shart — ular raqamni bo'lib yuboradi.
+    """
+    def spell(digits: str) -> str:
+        return " ".join(UZBEK_DIGITS[int(d)] for d in digits if d.isdigit())
+
+    def repl(m):
+        raw = m.group(0)
+        plus = "plyus " if raw.lstrip().startswith("+") else ""
+        groups = re.findall(r"\d+", raw)
+        # guruhlar orasida vergul = qisqa pauza (odam ham shunday o'qiydi)
+        return plus + ", ".join(spell(g) for g in groups)
+
+    # +998 90 123 45 67  /  90-123-45-67  /  71-200-00-00
+    pat = re.compile(
+        r"(?<![\d.,])"
+        r"(?:\+\s?\d{1,3}[\s-]?)?"          # ixtiyoriy mamlakat kodi
+        r"\d{2,3}[\s-]\d{2,3}[\s-]\d{2}[\s-]\d{2}"
+        r"(?![\d.,])"
+    )
+    return pat.sub(repl, text)
+
+
+def normalize_negative_numbers(text: str) -> str:
+    """Manfiy son: "-15°C" -> "minus o'n besh ...".
+
+    Ilgari minus belgisi xom holicha qolib, o'qilmasdan tushib qolardi
+    (harorat matnida ma'no teskarisiga o'zgaradi). Faqat son OLDIDAN va
+    gap boshi / bo'shliq / ochilgan qavsdan keyin kelganda — ayirish
+    amali ("10-3") va diapazon tegilmasin.
+    """
+    return re.sub(r"(?<![\w\d])[-−](?=\d)", "minus ", text)
+
+
+def normalize_scores(text: str) -> str:
+    """Sport hisobi "3:2" -> "uch, ikki" (vergul = pauza).
+
+    normalize_times'dan KEYIN ishlaydi: haqiqiy vaqt ("14:35") allaqachon
+    o'zgargan bo'ladi, bu yerda faqat vaqt bo'lmagan qoldiq qoladi. Ilgari
+    ikki nuqta xom holicha qolardi ("uch:ikki").
+    """
+    return re.sub(r"\b(\d{1,3}):(\d{1,3})\b", r"\1, \2", text)
+
+
+def normalize_ranges(text: str) -> str:
+    """Son DIAPAZONI — "1941-1945-yillar", "10-15 kishi".
+
+    normalize_math() `\\d+-\\d+` ni ayirish deb oladi va "ming to'qqiz yuz qirq bir
+    AYIRISH ming to'qqiz yuz qirq besh" chiqaradi. Tarixiy/statistik matnda bu
+    juda ko'p uchraydi, shuning uchun diapazon math'dan OLDIN ajratib olinadi.
+
+    Ayirishdan farqi: diapazonda defis atrofida probel yo'q va ifodada `=` yo'q
+    ("10-3=7" matematika bo'lib qoladi).
+    """
+    # 1) Yil diapazoni -> ikkala son TARTIB songa ("qirq birinchi ... beshinchi yillar")
+    def year_range(m):
+        a, b, suf = int(m.group(1)), int(m.group(2)), m.group(3) or ""
+        oa = cardinal_to_ordinal(number_to_uzbek(a))
+        ob = cardinal_to_ordinal(number_to_uzbek(b))
+        return f"{oa}, {ob} yil{suf}"   # vergul = pauza, aks holda bitta uzun son
+    text = re.sub(r"\b(\d{4})\s*[-–—]\s*(\d{4})-yil(lar|larda|larga|lardan|da|dagi|ga|dan|i)?\b",
+                  year_range, text)
+
+    # 2) Umumiy diapazon: defis o'rniga VERGUL — espeak uni qisqa pauza qiladi.
+    #    Probelgina qo'ysak "220-250 gr" -> "ikki yuz yigirma ikki yuz ellik"
+    #    bo'lib BITTA uzun son kabi eshitiladi. Odam ham bu yerda pauza qiladi.
+    #    `=` ergashsa — bu matematika, tegmaymiz.
+    text = re.sub(r"\b(\d{1,4})[-–—](\d{1,4})\b(?!\s*=)", r"\1, \2", text)
+    return text
+
+
+def collapse_numeral_duplicates(text: str) -> str:
+    """Rasmiy hujjat uslubi: "3 (uch) ish kuni" -> "3 ish kuni".
+
+    Hujjatlarda son ham raqam, ham so'z bilan yoziladi. Ikkalasini ham o'qisak
+    "uch (uch) ish kuni" bo'lib chiqadi — tester buni darrov sezadi.
+    Qavs ichidagi matn AYNAN o'sha sonning so'z shakli bo'lgandagina olib
+    tashlanadi (boshqa izohli qavslar tegilmaydi).
+    """
+    def repl(m):
+        num, inner = m.group(1), m.group(2).strip()
+        try:
+            if inner.lower() == number_to_uzbek(int(num)).lower():
+                return num
+        except (ValueError, KeyError):
+            pass
+        return m.group(0)
+    return re.sub(r"\b(\d{1,9})\s*\(([^()]{1,30})\)", repl, text)
 
 
 def normalize_math(text: str) -> str:
@@ -372,11 +479,18 @@ def normalize_grouped_numbers(text: str) -> str:
     telefon raqami (+998 90 ...) yoki yil kabi 4 raqamli sonlar tegilmaydi.
     """
     sep = r"[     ]"  # oddiy, NBSP, NNBSP, ingichka, raqam boshligi
-    return re.sub(
+    text = re.sub(
         rf"\b\d{{1,3}}(?:{sep}\d{{3}})+\b",
         lambda m: re.sub(sep, "", m.group(0)),
         text,
     )
+    # Vergul/nuqta bilan ajratilgan minglik ("1,433,230" / "1.433.230").
+    # KAMIDA IKKI guruh talab qilinadi: "3,14" o'zbekchada o'nlik kasr — uni
+    # minglik deb olsak xato bo'ladi. Ikki guruhdan boshlab ma'no bir xil
+    # ("1,433,230" hech qachon kasr emas). Oldin: "bir butun to'rt yuz o'ttiz uch,..."
+    text = re.sub(r"\b\d{1,3}(?:,\d{3}){2,}\b", lambda m: m.group(0).replace(",", ""), text)
+    text = re.sub(r"\b\d{1,3}(?:\.\d{3}){2,}\b", lambda m: m.group(0).replace(".", ""), text)
+    return text
 
 
 # Qisqartma yoyilmasi oxiridagi so'zlar — foydalanuvchi ularni takrorlashi mumkin
@@ -435,11 +549,25 @@ def normalize_uzbek_text(text: str) -> str:
     except ImportError:
         from sci_normalizer import normalize_scientific
     text = normalize_scientific(text)
+    # Telefon ENG AVVAL: normalize_grouped_numbers "90 123" ni "90123" deb
+    # birlashtirib yuboradi va raqam telefon bo'lmay qoladi.
+    text = normalize_phone_numbers(text)
     # Bo'sh joyli minglik guruhlari ("250 000") — raqamlarni o'qishdan OLDIN birlashtirish
     text = normalize_grouped_numbers(text)
     text = normalize_roman(text)
     text = normalize_dates(text)
     text = normalize_times(text)
+    text = normalize_scores(text)
+    # Manfiy son diapazon/matematikadan KEYIN: "10-3" ayirish bo'lib qolsin
+    text = normalize_negative_numbers(text)
+    # Diapazon MANA SHU YERDA bo'lishi shart:
+    #   - normalize_dates'dan KEYIN — aks holda "2026-05-26" sanasi "2026 05" bo'lib parchalanadi
+    #   - normalize_ordinals'dan OLDIN — u "1945-yillar"ni yolg'iz o'zi yeb qo'yadi va
+    #     "1941-" osilib qoladi ("...qirq bir-ming to'qqiz yuz qirq beshinchi yillar")
+    #   - normalize_math'dan OLDIN — aks holda "1941-1945" = "... ayirish ..."
+    text = normalize_ranges(text)
+    # "3 (uch)" — sonlar so'zga aylanishidan OLDIN, raqam shakli hali turganda
+    text = collapse_numeral_duplicates(text)
     text = normalize_ordinals(text)
     text = normalize_math(text)
     text = normalize_percent(text)
