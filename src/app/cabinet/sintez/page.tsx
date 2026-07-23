@@ -1,13 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, Download, Sparkles, Mic, User2, UserRound } from "lucide-react";
+import { Loader2, Play, Sparkles, Mic, User2, Wand2, Star, Fingerprint } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { WaveBars } from "@/components/wave-bars";
 import { blobToWav } from "@/lib/wav-encoder";
+import { synthesize } from "@/lib/tts-client";
+import { VoiceSelector } from "@/components/synthesis/voice-selector";
+import { SynthesisResultCard } from "@/components/synthesis/synthesis-result-card";
 
-type Voice = "ayol" | "erkak" | "base";
+// O'rnatilgan ovozlar + dinamik shaxsiy klonlar ("__me__:<id>") — shuning uchun string.
+type Voice = string;
+
+// piper — NATIV o'zbek ayol ovozi (FeruzaSpeech, espeak fonema x/gʻ/ch to'g'ri; checkpoint_id="piper").
+// feruza/jonli/ayol — F5-TTS tabiiy ayol ovozlari (alohida engine, checkpoint_id="f5").
+//   ayol = 1571110404 (01) speakerga ATALGAN mayin/yosh model (dedicated fine-tune, x→kh baked-in).
+// carleone — mediadan klonlangan erkak ovoz, o'rnatilgan ovozga ko'tarilgan (F5).
+// base/erkak — tez MMS (checkpoint_id="mms").
+const F5_VOICES: Voice[] = ["feruza", "jonli", "ayol", "carleone"];
 
 interface Result {
   id: string;
@@ -25,16 +36,22 @@ const PRESETS = [
   "Gʻalaba qoʻshigʻi yangrab, togʻu toshlar jaranglashdi.",
 ];
 
+// "Asosiy" (base, MMS neytral) = ASOSIY/DEFAULT ovoz (foydalanuvchi tanlovi) — to'g'ri talaffuz,
+//   tez (CPU/MMS, ishonchli). Yonida ayol = "Ayol (mayin)" (F5, tabiiy/mayin, ~3s, F5 server kerak;
+//   onset/leak tuzatilgan). erkak = to'la erkak (MMS). piper = nativ o'zbek ayol (CPU).
+// "jonli/feruza" (F5) UI'dan olingan — API/eski tarix uchun type/i18n'da qoladi.
 const VOICES: { id: Voice; icon: typeof Sparkles }[] = [
-  { id: "base", icon: Sparkles },
-  { id: "ayol", icon: UserRound },
+  { id: "base", icon: Star },
+  { id: "ayol", icon: Wand2 },
   { id: "erkak", icon: User2 },
+  { id: "piper", icon: Sparkles },
+  { id: "carleone", icon: Fingerprint },
 ];
 
 export default function SintezPage() {
   const { t } = useI18n();
   const [text, setText] = useState(PRESETS[0]);
-  const [voice, setVoice] = useState<Voice>("ayol");
+  const [voice, setVoice] = useState<Voice>("base");
   const [speed, setSpeed] = useState(0.9);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -42,6 +59,9 @@ export default function SintezPage() {
   const [results, setResults] = useState<Result[]>([]);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [myVoices, setMyVoices] = useState<
+    { id: string; name: string; hasImage: boolean }[]
+  >([]);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const recRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -60,24 +80,49 @@ export default function SintezPage() {
     }
   }, []);
 
+  // Foydalanuvchining shaxsiy ovozlari — "Mening ovozlarim" guruhida chiqadi.
+  useEffect(() => {
+    fetch("/api/voice")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const list = Array.isArray(d?.voices) ? d.voices : [];
+        // Faqat TASDIQLANGAN (ready) ovozlar — draft'lar my-voice'da sinovda turadi.
+        setMyVoices(
+          list
+            .filter((v: { status: string }) => v.status === "ready")
+            .map((v: { id: string; name: string; hasImage?: boolean }) => ({
+              id: v.id,
+              name: v.name,
+              hasImage: !!v.hasImage,
+            }))
+        );
+      })
+      .catch(() => undefined);
+  }, []);
+
   async function speak(override?: string) {
     const t0 = (override ?? text).trim();
     if (!t0) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: t0, checkpoint_id: "mms", voice, speaking_rate: speed }),
-      });
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.error || `Error (${res.status})`);
-      }
-      const time = parseFloat(res.headers.get("X-Synthesis-Time-Sec") || "0");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      // __me__:<id> → shaxsiy klon (F5 zero-shot). Tezlik 1.0 — klon manba
+      // (video) uslubida gapiradi: tez gapirsa tez, sekin gapirsa sekin.
+      // piper → nativ o'zbek (CPU); feruza/jonli/ayol → F5; qolganlar → tez MMS.
+      const payload = voice.startsWith("__me__")
+        ? {
+            text: t0,
+            checkpoint_id: "f5",
+            speed: 1.0,
+            voice: "__me__",
+            user_voice_id: voice.split(":")[1] ?? "",
+          }
+        : voice === "piper"
+          ? { text: t0, checkpoint_id: "piper", speed }
+          : F5_VOICES.includes(voice)
+            ? { text: t0, checkpoint_id: "f5", speed, voice }
+            : { text: t0, checkpoint_id: "mms", voice, speaking_rate: speed };
+      const { url, timeSec: time } = await synthesize(payload);
       const result: Result = { id: crypto.randomUUID(), text: t0, voice, url, time };
       setResults((prev) => [result, ...prev]);
       // Topbar balansini yangilash (kredit yechildi)
@@ -146,6 +191,25 @@ export default function SintezPage() {
     }
   }
 
+  // Asosiy 4 ovoz (o'rnatilgan) — foydalanuvchi ovozlari bilan ARALASHMAYDI.
+  const voiceList: { id: Voice; icon: typeof Sparkles }[] = VOICES;
+  // "Mening ovozlarim" — shaxsiy klonlar (nom + avatar bilan), alohida guruhda.
+  const myVoiceList: { id: Voice; icon: typeof Sparkles; image?: string }[] =
+    myVoices.map((v) => ({
+      id: `__me__:${v.id}`,
+      icon: Fingerprint,
+      image: v.hasImage ? `/api/voice/image/${v.id}` : undefined,
+    }));
+  const isPersonal = (id: Voice) => id.startsWith("__me__");
+  const personalName = (id: Voice) =>
+    myVoices.find((v) => v.id === id.split(":")[1])?.name || "Shaxsiy ovoz";
+  const voiceLabel = (id: Voice) =>
+    isPersonal(id) ? personalName(id) : t(`cabinet.sintez.voices.${id}.label`);
+  const voiceHint = (id: Voice) =>
+    isPersonal(id)
+      ? "Klon — manba (video) uslubida gapiradi"
+      : t(`cabinet.sintez.voices.${id}.hint`);
+
   const animating = loading || playing;
   const speedLabel =
     speed <= 0.5 ? t("cabinet.sintez.slow") : speed <= 0.75 ? t("cabinet.sintez.medium") : t("cabinet.sintez.fast");
@@ -164,47 +228,29 @@ export default function SintezPage() {
         </div>
       </div>
 
-      {/* Voice */}
-      <div>
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
-          {t("cabinet.sintez.voiceLabel")}
+      {/* Mening ovozlarim — asosiy ovozlardan ALOHIDA, ajratilgan guruh */}
+      {myVoiceList.length > 0 && (
+        <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4">
+          <VoiceSelector
+            voiceList={myVoiceList}
+            selected={voice}
+            onSelect={setVoice}
+            label={t("cabinet.sintez.myVoiceLabel")}
+            voiceLabel={voiceLabel}
+            voiceHint={voiceHint}
+          />
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {VOICES.map((v) => {
-            const Icon = v.icon;
-            const active = voice === v.id;
-            return (
-              <button
-                key={v.id}
-                onClick={() => setVoice(v.id)}
-                className={cn(
-                  "rounded-2xl border p-4 text-left transition-all",
-                  active
-                    ? "card-glow border-accent/40"
-                    : "border-border bg-bg-subtle/60 hover:bg-bg-muted"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-lg transition",
-                      active ? "brand-gradient text-white" : "bg-bg-muted text-fg-subtle"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="text-sm font-semibold">
-                    {t(`cabinet.sintez.voices.${v.id}.label`)}
-                  </span>
-                </div>
-                <div className="mt-1.5 text-[11px] text-fg-muted">
-                  {t(`cabinet.sintez.voices.${v.id}.hint`)}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      )}
+
+      {/* Asosiy ovozlar (o'rnatilgan 4 ta) */}
+      <VoiceSelector
+        voiceList={voiceList}
+        selected={voice}
+        onSelect={setVoice}
+        label={t("cabinet.sintez.voiceLabel")}
+        voiceLabel={voiceLabel}
+        voiceHint={voiceHint}
+      />
 
       {/* Presets */}
       <div>
@@ -288,12 +334,14 @@ export default function SintezPage() {
           )}
         </button>
 
-        {/* Speed */}
-        <div className="space-y-1.5">
+        {/* Speed — shaxsiy klonda o'chiq: klon manba (video) tezligida gapiradi */}
+        <div className={cn("space-y-1.5", isPersonal(voice) && "opacity-50")}>
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-medium text-fg-muted">{t("cabinet.sintez.speed")}</span>
             <span className="font-mono text-accent">
-              {speedLabel} · {speed.toFixed(2)}
+              {isPersonal(voice)
+                ? "avto — videodagidek"
+                : `${speedLabel} · ${speed.toFixed(2)}`}
             </span>
           </div>
           <input
@@ -301,7 +349,8 @@ export default function SintezPage() {
             min={0.4}
             max={1.1}
             step={0.05}
-            value={speed}
+            value={isPersonal(voice) ? 1.0 : speed}
+            disabled={isPersonal(voice)}
             onChange={(e) => setSpeed(parseFloat(e.target.value))}
             className="w-full accent-accent"
           />
@@ -332,7 +381,7 @@ export default function SintezPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+        <div className="whitespace-pre-line rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </div>
       )}
@@ -340,36 +389,22 @@ export default function SintezPage() {
       {/* Results */}
       <div className="space-y-3">
         {results.map((r) => (
-          <div key={r.id} className="card animate-fade-in space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                {t(`cabinet.sintez.voices.${r.voice}.label`)}
-              </span>
-              <span className="text-[10px] text-fg-subtle">{r.time.toFixed(1)}s</span>
-            </div>
-            <p className="text-sm leading-relaxed">{r.text}</p>
-            <div className="flex items-center gap-2">
-              <audio
-                ref={(el) => {
-                  audioRefs.current[r.id] = el;
-                }}
-                src={r.url}
-                controls
-                className="h-9 flex-1"
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={() => setPlaying(false)}
-              />
-              <a
-                href={r.url}
-                download={`${r.voice}_${r.id.slice(0, 6)}.wav`}
-                className="rounded-lg border border-border p-2 text-fg-muted transition hover:bg-bg-muted hover:text-fg"
-                title={t("cabinet.sintez.download")}
-              >
-                <Download className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
+          <SynthesisResultCard
+            key={r.id}
+            id={r.id}
+            voiceId={r.voice}
+            voiceLabel={voiceLabel(r.voice)}
+            text={r.text}
+            time={r.time}
+            url={r.url}
+            downloadTitle={t("cabinet.sintez.download")}
+            audioRef={(el) => {
+              audioRefs.current[r.id] = el;
+            }}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+          />
         ))}
       </div>
     </div>

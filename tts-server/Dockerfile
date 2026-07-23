@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Torch (CUDA 12.1 wheel — GPU'да tezlashadi, CPU'да ham ishlaydi)
-RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Torch — CPU wheel (CPU-pilot: yengil image, MMS CPU'да ishlaydi). GPU server uchun
+# cu121 wheel'ga almashtiring: --index-url https://download.pytorch.org/whl/cu121
+RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 # Qolgan inference bog'liqliklari
 RUN pip install --no-cache-dir \

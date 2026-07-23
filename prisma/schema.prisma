@@ -1,5 +1,6 @@
 // NextTTS — Prisma schema
-// SQLite database for users, sessions, synthesis history, daily usage tracking
+// PostgreSQL (Neon yoki Docker postgres) — users, sessions, synthesis history,
+// daily usage, kredit/to'lov. provider = postgresql (DATABASE_URL orqali).
 
 generator client {
   provider = "prisma-client-js"
@@ -20,7 +21,7 @@ model User {
   name          String?
   image         String?
   password      String?      // bcrypt hash; null bo'lsa OAuth
-  role          String       @default("user") // "user" | "admin"
+  role          String       @default("user") // "user" | "vip" | "admin" (vip/admin = cheksiz)
   balance       Int          @default(10000)  // kredit balansi (1 kredit = 1 belgi)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -31,6 +32,62 @@ model User {
   dailyUsage    DailyUsage[]
   creditTxns    CreditTransaction[]
   payments      Payment[]
+  voices        UserVoice[]
+  apiKeys       ApiKey[]
+}
+
+// ────────────────────────────────────────────────
+// Shaxsiy ovozlar kutubxonasi (zero-shot klon) — foydalanuvchi bir nechta ovoz
+// saqlaydi (o'zi yozadi yoki video/qo'shiqdan klonlaydi), har birining majburiy
+// nomi va ixtiyoriy rasmi bor. F5 sintezda reference klip ishlatiladi
+// (per-user trening YO'Q).
+// ────────────────────────────────────────────────
+model UserVoice {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   @default("Mening ovozim") // majburiy nom ("Ronaldo" ...)
+  imagePath   String?  // ixtiyoriy avatar rasm (backend filesystem yo'li)
+  refPath     String   // backend filesystem'dagi reference.wav absolyut yo'li
+  refText     String   // reference klip transkripti (o'qilgan jumlalar)
+  status      String   @default("ready") // "ready" | "processing"
+  durationSec Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ────────────────────────────────────────────────
+// API kalitlari — tashqi loyihalar TTS'ni chaqirishi uchun.
+//
+// IKKI TUR, chunki brauzer maxfiy kalit ushlay olmaydi (DevTools'da ko'rinadi):
+//   secret      (sk_live_…) — faqat server-server. To'liq huquq, origin tekshirilmaydi.
+//   publishable (pk_live_…) — vidjet/brauzer. Faqat sintez, `origins` ro'yxatidagi
+//                             domendan kelishi shart → o'g'irlangan kalit begona
+//                             saytda foydasiz.
+//
+// Kalitning O'ZI saqlanmaydi — faqat sha256 hash. Bazani o'qigan odam ham kalitni
+// tiklay olmaydi. Foydalanuvchiga bir marta, yaratilgan payt ko'rsatiladi.
+// Nega bcrypt emas: kalit 192-bit tasodifiy (parol emas) — brute-force imkonsiz,
+// bcrypt'ning sekinligi bu yerda faqat har so'rovga kechikish qo'shadi.
+// ────────────────────────────────────────────────
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String    // foydalanuvchi bergan nom: "LMS3 production"
+  kind       String    // "secret" | "publishable"
+  prefix     String    // "sk_live_AbCdEfGh" — UI'da tanish uchun (maxfiy emas)
+  hash       String    @unique // sha256(to'liq kalit) — qidiruv shu bo'yicha
+  origins    String[]  @default([]) // publishable uchun ruxsat etilgan domenlar
+  lastUsedAt DateTime?
+  revokedAt  DateTime? // null bo'lmasa — o'chirilgan, ishlamaydi
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 // ────────────────────────────────────────────────

@@ -28,12 +28,30 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (name.includes("@")) {
+    return NextResponse.json(
+      { error: "Username'da @ belgisi bo'lmasligi kerak" },
+      { status: 400 }
+    );
+  }
 
   // Mavjudligini tekshirish
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json(
       { error: "Bu email allaqachon ro'yxatdan o'tgan" },
+      { status: 409 }
+    );
+  }
+
+  // Username (name) bandligini tekshirish — login endi username bilan ham ishlaydi,
+  // shuning uchun nom yagona bo'lishi shart (registr farqisiz).
+  const nameTaken = await db.user.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+  if (nameTaken) {
+    return NextResponse.json(
+      { error: "Bu username band — boshqasini tanlang" },
       { status: 409 }
     );
   }

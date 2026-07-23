@@ -41,6 +41,9 @@ LETTER_NAMES: dict[str, str] = {
 # ───────────────── Tanilgan qisqartmalar (kichik harfda kalit → lotin yoyilma) ─────────────────
 ABBREVIATIONS: dict[str, str] = {
     # Davlat / xalqaro tashkilotlar
+    # "otm" → to'liq yoyilma. ASR-sinov (2026-07-06): "otem"/"o te em" modelda
+    # buziladi ("ot endi", "otelda"; 33-60% WER); to'liq nom = 0% WER, tabiiy.
+    # "OTMda" → "oliy ta'lim muassasasida".
     "otm": "oliy ta'lim muassasasi",
     "aqsh": "Amerika Qo'shma Shtatlari",
     "bmt": "Birlashgan Millatlar Tashkiloti",
@@ -92,7 +95,19 @@ SPELL_OUT: set[str] = {
     "tv", "pc", "cpu", "gpu", "ssd", "vpn", "qr", "gps", "sql", "nfc", "otp",
     "atm", "pin", "imei", "ip", "dns", "http", "https", "ssh", "csv", "xml",
     "ui", "ux", "led", "lcd", "gsm", "lte", "fm", "tts", "asr", "gpt",
+    # Ta'lim / idora (harflab o'qiladi). "otm" bu yerda EMAS — u ABBREVIATIONS'da
+    # "otem" ravon so'zi sifatida (tabiiylik uchun).
+    "lms", "iib", "yei",
 }
+
+# ───────────────── O'zbekcha qo'shimchalar (akronimga yopishganda ajratish uchun) ─────────────────
+# "OTMda" → "OTM" + "da", "AQSHga" → "AQSH" + "ga". Uzunroq variantlar avval keladi
+# (regex jamlashida greedy bo'lishi uchun) — aks holda "ning" o'rniga "ni" ushlanadi.
+_UZ_ACRONYM_SUFFIX = (
+    r"nikidek|nikida|nikini|niki|ning|niki|dagi|larida|lariga|laridan|larini|"
+    r"lardagi|larda|larga|lardan|lari|larni|lar|gacha|siga|sida|sidan|sini|"
+    r"siz|da|dan|ga|ka|qa|ni|si|ta|cha|day|dek|li|lik|i|miz|ngiz"
+)
 
 # ───────────────── Valyuta belgilari ─────────────────
 CURRENCY_SYMBOLS: dict[str, str] = {
@@ -105,15 +120,37 @@ CURRENCY_SYMBOLS: dict[str, str] = {
 UNITS: dict[str, str] = {
     "km": "kilometr", "sm": "santimetr", "mm": "millimetr", "nm": "nanometr",
     "kg": "kilogramm", "mg": "milligramm", "ml": "millilitr",
+    "gr": "gramm",
+    # "g"/"l" — AMBIGUOUS_UNITS ro'yxatida: probel SHART va katta-kichik harf
+    # farqlanadi. Aks holda "5G tarmogʻi" -> "besh GRAMM tarmogʻi" bo'ladi
+    # (4G/5G matnda "300 g" dan ko'ra ko'proq uchraydi).
+    "g": "gramm", "l": "litr",
     "gb": "gigabayt", "mb": "megabayt", "kb": "kilobayt", "tb": "terabayt",
     "ghz": "gigagerts", "mhz": "megagerts", "khz": "kilogerts",
     "kvt": "kilovatt", "vt": "vatt", "km/soat": "kilometr soatiga",
     "km/h": "kilometr soatiga", "m/s": "metr sekundiga",
     "°c": "selsiy gradus", "°f": "farengeyt gradus",
+    # Kattalik qisqartmalari — yoyilmasa espeak "mln"ni g'aliz o'qiydi
+    "mln": "million", "mlrd": "milliard", "trln": "trillion",
+    # Kvadrat/kub birliklar: "km2" -> "kilometr2" bo'lib raqam osilib qolardi
+    "km2": "kvadrat kilometr", "km²": "kvadrat kilometr",
+    "m2": "kvadrat metr", "m²": "kvadrat metr",
+    "sm2": "kvadrat santimetr", "sm²": "kvadrat santimetr",
+    "m3": "kub metr", "m³": "kub metr",
+    # ATAYLAB QO'SHILMAGAN: "ga"/"t"/"l". "ga" — o'zbekchada jo'nalish qo'shimchasi
+    # ("10 ga bo'ling" = 10 GA bo'lish, gektar emas), shuning uchun raqamdan keyin
+    # kelishi birlik ekanini bildirmaydi. Noto'g'ri yoyish o'qimaslikdan yomonroq.
 }
 
 # ───────────────── Chet / qarz so'zlar (qanday eshitilishi kerak) ─────────────────
 PRONUNCIATION: dict[str, str] = {
+    # Platformaning O'Z nomi — eng ko'p uchraydi, xom holda espeak uni buzadi
+    # ("Mixt Tetris" bo'lib eshitiladi). "nekst" + TTS o'zbek harf nomlari bilan.
+    # ASR-sinov (2026-07-16): defis "ti-ti-es" va "ti ti es" buziladi, o'zbek
+    # "te te es" toza chiqadi (STT "next tts" deb eshitadi). Bo'sh joyli va
+    # qo'shimchali ("NextTTS'da") variantlar ham ushlanadi.
+    "nexttts": "nekst te te es",
+    "next tts": "nekst te te es",
     # Web / ilovalar
     "google": "gugl", "youtube": "yutub", "facebook": "feysbuk",
     "whatsapp": "votsap", "twitter": "tvitter", "gmail": "gmeyl",
@@ -123,6 +160,14 @@ PRONUNCIATION: dict[str, str] = {
     "online": "onlayn", "offline": "oflayn", "website": "vebsayt",
     "browser": "brauzer", "download": "daunlod", "upload": "aplod",
     "chatgpt": "chat-ji-pi-ti", "smartphone": "smartfon",
+    # Umumiy IT atamalari. Transliteratsiya to'ri bularni g'o'ldirashdan saqlaydi
+    # ("software" -> "softvare"), lekin o'zbekchada qabul qilingan shakl boshqa —
+    # shuning uchun aniq yozib qo'yamiz (lug'at transliteratsiyadan ustun).
+    "software": "softver", "hardware": "hardver", "firmware": "firmver",
+    "web": "veb", "world wide web": "veb", "www": "ve ve ve",
+    "cloud": "klaud", "server": "server", "service": "servis",
+    "microsoft": "maykrosoft", "apple": "epl", "android": "android",
+    "wikipedia": "vikipediya", "word": "vord", "excel": "eksel",
     # Dasturlash
     "python": "payton", "javascript": "javaskript", "github": "gitxab",
     "json": "jeyson", "linux": "linuks", "nginx": "endjiniks",
@@ -183,34 +228,80 @@ def expand_currency(text: str) -> str:
     return text
 
 
+# Bir harfli, ma'nosi ikki xil bo'lishi mumkin bo'lgan birliklar. Bularga
+# QAT'IYROQ shart: probel majburiy va kichik harf bo'lishi kerak.
+#   "300 g" -> gramm  |  "5G" -> tegilmaydi (tarmoq avlodi)
+#   "5 l"   -> litr   |  "5L"/"5l" (model nomi) -> tegilmaydi
+AMBIGUOUS_UNITS = {"g", "l"}
+
+
 def expand_units(text: str) -> str:
     """'5 km' / '10kg' → '5 kilometr' / '10 kilogramm' (raqamdan keyin kelganda)."""
     # Uzunroq kalitlar avval (km/soat, °c ...)
     for unit in sorted(UNITS, key=len, reverse=True):
         word = UNITS[unit]
         eu = re.escape(unit)
-        # raqam + (ixtiyoriy bo'shliq) + birlik + so'z chegarasi
-        text = re.sub(rf"(?<=\d)\s*{eu}(?![a-zA-Zʻ'])", f" {word}", text, flags=re.IGNORECASE)
+        # Lookahead'da RAQAM ham istisno: "m/s2"/"km3" da birlikni oxirigacha
+        # o'qimasin — aks holda "m/s" yeb qo'yilib "2" osilib qolardi
+        # ("metr sekundiga2"). Qolgani sci_normalizer'ga o'tadi ("m/s2" -> kvadratiga).
+        if unit in AMBIGUOUS_UNITS:
+            # probel SHART + katta-kichik harf farqlanadi
+            text = re.sub(rf"(?<=\d)\s+{eu}(?![a-zA-Z0-9ʻ'²³])", f" {word}", text)
+        else:
+            # raqam + (ixtiyoriy bo'shliq) + birlik + so'z chegarasi
+            text = re.sub(rf"(?<=\d)\s*{eu}(?![a-zA-Z0-9ʻ'²³])", f" {word}", text,
+                          flags=re.IGNORECASE)
     return text
+
+
+_ACRONYM_SUFFIXED = re.compile(
+    r"\b([A-Z]{2,})(" + _UZ_ACRONYM_SUFFIX + r")?\b"
+)
 
 
 def expand_abbreviations(text: str) -> str:
     """Tanilgan qisqartmalarni yoyadi va SPELL_OUT'dagilarni harflab o'qiydi.
 
-    Xavfsizlik: nuqtali qisqartmalar (prof., h.k.) registrдан qat'i nazar;
-    qolganlari FAQAT bosh harfli yozilganda (OTM, USB) — kichik harfli oddiy
-    so'zlar (masalan "it", "id") buzilmasligi uchun.
+    Ikki bosqich:
+      1. Bosh harfli akronim + ixtiyoriy o'zbekcha qo'shimcha ("OTMda" → "o te em da",
+         "AQSHga" → "Amerika Qo'shma Shtatlariga"). Qo'shimcha yoyilmaga qo'shib qo'yiladi.
+      2. Nuqtali/aralash registrli qisqartmalar (prof., h.k., MChJ) — butun token bo'yicha.
+
+    Xavfsizlik: faqat BOSH HARFLI yozilganda qo'llanadi — kichik harfli oddiy
+    so'zlar ("it", "id", "da") buzilmasligi uchun.
     """
 
-    def repl(m: re.Match) -> str:
+    # 1-bosqich: AKRONIM + qo'shimcha
+    def repl_acr(m: re.Match) -> str:
+        core = m.group(1)
+        suffix = m.group(2) or ""
+        low = core.lower()
+        if low in ABBREVIATIONS:
+            # Yoyilma + qo'shimcha (oxirgi so'zga yopishadi: "...Shtatlari" + "ga")
+            return ABBREVIATIONS[low] + suffix
+        if low in SPELL_OUT:
+            spelled = _spell_token(low)
+            return spelled + (" " + suffix if suffix else "")
+        # Ro'yxatda yo'q, lekin UNLI YO'Q bosh-harfli akronim (CNN, BBC, TTS, SMS)
+        # — bu deyarli har doim harflab o'qiladigan initsializm. espeak xomini
+        # "ts-en-en" qiladi (C->ts), transliteratsiya esa "KNN" (C->K) — ikkalasi
+        # xato; harflab "se en en" to'g'ri. Unli borlar (NATO, FIFA) so'z sifatida
+        # o'qiladi, tegilmaydi. \b sharti tufayli MChJ kabi aralash tokendan
+        # bo'lak ushlanmaydi (butun token bo'lishi shart).
+        if 2 <= len(core) <= 6 and not set(core) & set("AEIOU"):
+            spelled = _spell_token(low)
+            return spelled + (" " + suffix if suffix else "")
+        return m.group(0)
+
+    text = _ACRONYM_SUFFIXED.sub(repl_acr, text)
+
+    # 2-bosqich: nuqtali / aralash registrli qisqartmalar (qo'shimchasiz)
+    def repl_dot(m: re.Match) -> str:
         token = m.group(0)
         has_dot = "." in token
         low = token.lower().rstrip(".")
         if has_dot and low in ABBREVIATIONS:
             return ABBREVIATIONS[low]
-        # Akronim deb hisoblanadi: butunlay bosh harf (OTM) YOKI 2+ bosh harf
-        # (MChJ, AJ — "ch" digrafi tufayli aralash registr). Oddiy so'zlar (0–1
-        # bosh harf) buzilmaydi.
         uppers = sum(1 for c in token if c.isupper())
         if token.isupper() or uppers >= 2:
             if low in ABBREVIATIONS:
@@ -219,8 +310,7 @@ def expand_abbreviations(text: str) -> str:
                 return _spell_token(low)
         return token
 
-    # So'z chegaralarida tokenlar (nuqtali qisqartmalar uchun ham)
-    return re.sub(r"\b[A-Za-z][A-Za-z.]{0,6}\b", repl, text)
+    return re.sub(r"\b[A-Za-z][A-Za-z.]{0,6}\b", repl_dot, text)
 
 
 def apply_pronunciation(text: str) -> str:
@@ -233,16 +323,177 @@ def apply_pronunciation(text: str) -> str:
     return pat.sub(repl, text)
 
 
+def transliterate_foreign_letters(text: str) -> str:
+    """O'zbek alifbosida yo'q lotin harflarini eng yaqin o'zbek harfiga.
+
+    Nega kerak: espeak-uz `w`/`c` bor so'zni tarjima qila olmay HARFLAB o'qishga
+    tushadi va `w`ni inglizcha harf nomi bilan aytadi:
+        "software" -> "es o ef te DABLYU a er e"   (butunlay g'o'ldirash)
+        "web"      -> "dablyu e be"
+    Bu apostrof nuqsoni bilan bir xil mexanizm. PRONUNCIATION lug'ati AVVAL
+    ishlaydi, ya'ni qo'lda yozilgan yozuvlar ustun; bu faqat ro'yxatda yo'q
+    so'zlarni g'o'ldirashdan saqlaydigan himoya to'ri.
+
+    O'zbekcha so'zlarga tegmaydi: ularda yakka `c`/`w` uchramaydi, `ch`
+    digrafi esa saqlanadi (chiroq, uchun).
+    """
+    def fix_word(m: re.Match) -> str:
+        word = m.group(0)
+        if not re.search(r"[cwCW]", word):
+            return word
+        out = []
+        for i, ch in enumerate(word):
+            low = ch.lower()
+            if low == "w":
+                rep = "v"
+            elif low == "c":
+                nxt = word[i + 1].lower() if i + 1 < len(word) else ""
+                if nxt == "h":
+                    rep = "c"                    # `ch` digrafi — tegmaymiz
+                elif nxt in "eiy":
+                    rep = "s"                    # lotin qoidasi: ce/ci/cy -> s
+                else:
+                    rep = "k"
+            else:
+                out.append(ch)
+                continue
+            out.append(rep.upper() if ch.isupper() else rep)
+        return "".join(out)
+
+    return re.sub(r"[A-Za-z][A-Za-z'ʻʼ’-]*", fix_word, text)
+
+
+# ───────────────── Kirish tozalash (nusxa-ko'chirilgan matn) ─────────────────
+# Foydalanuvchi veb/chatdan matn tashlaydi. espeak bu belgilarning INGLIZCHA
+# NOMINI o'qiydi (o'lchangan):
+#   😊 -> "smiling",  👍 -> "thumbs",  ** -> "asterisk asterisk",
+#   <p> -> "pe ... slash pe",  https:// -> "ha te te pe es colon slash slash"
+# Takroriy tinish belgisi (!!! / ???) espeak'da MUAMMO EMAS — u o'zi yig'ishtiradi
+# ("Voy!!!" va "Voy!" bir xil fonema beradi). Bu yerda ular faqat kirishni
+# bir xillashtirish uchun qisqartiriladi; boshqa dvigatellar uchun ham foydali.
+_EMOJI = re.compile(
+    "["
+    "─-⯿"          # belgilar, o'qlar, dingbatlar
+    "𐀀-\U0001ffff"        # emoji bloklari
+    "️︀-️️️️️️"          # variatsiya selektorlari
+    "]+"
+)
+_HTML_TAG = re.compile(r"<[^>\n]{1,80}>")
+_URL_PROTO = re.compile(r"\b(?:https?|ftp)://", re.IGNORECASE)
+# `*` faqat MARKDOWN bo'lganda olib tashlanadi. Ikki raqam orasida u
+# KO'PAYTIRISH belgisi: "3*108" -> "3108" bo'lib ketmasin.
+_MD_MARKS = re.compile(r"((?<!\d)\*{1,3}(?!\d)|_{2,}|`{1,3}|~{2})")
+_MD_HEADING = re.compile(r"(?m)^\s{0,3}#{1,6}\s+")
+_MD_BULLET = re.compile(r"(?m)^\s{0,3}[-*+]\s+")
+
+
+def sanitize_input(text: str) -> str:
+    """Nusxa-ko'chirilgan matndan espeak buzadigan belgilarni tozalash."""
+    text = _HTML_TAG.sub(" ", text)
+    text = _EMOJI.sub(" ", text)
+    text = _URL_PROTO.sub("", text)          # "colon slash slash" o'qilmasin
+    # URL yo'li (domendan keyingi /path) — espeak "/" ni INGLIZ ovozida "slash"
+    # deb o'qib, o'zbek gapi o'rtasida tilni almashtiradi ((en)slash(uz)). Yo'l
+    # ovozda foydasiz — TLD'dan keyingi qismini olib tashlaymiz. "m/s", "1/2"
+    # tegilmaydi (ularda oldin ".tld" yo'q).
+    text = re.sub(r"(\.[a-z]{2,6})/[\w/#?=&.\-]*", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"#(?=\w)", "", text)      # hashtag belgisi — espeak "hash" o'qiydi
+    text = re.sub(r"(?<=\w)@(?=\w)", " ", text)  # email @ — espeak "et" deb o'qirdi
+    text = _MD_HEADING.sub("", text)
+    text = _MD_BULLET.sub("", text)
+    text = _MD_MARKS.sub("", text)
+    # Takroriy tinish belgisi -> bittasi
+    text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"!{2,}", "!", text)
+    text = re.sub(r"\?{2,}", "?", text)
+    text = re.sub(r"[-–—]{2,}", " ", text)
+
+    # Qator uzilishi = PAUZA. espeak "\n"ni oddiy bo'shliq deb biladi, shuning
+    # uchun uch qatorli matn bitta klauza bo'lib bir nafasda o'qilardi
+    # (ro'yxat, she'r, xatboshi — foydalanuvchi ko'p tashlaydigan shakl).
+    # Bo'sh qator = xatboshi -> gap oxiri; oddiy qator -> vergul (qisqa pauza).
+    # Qator allaqachon tinish belgisi bilan tugagan bo'lsa qo'shimcha qo'yilmaydi.
+    text = re.sub(r"[ \t]*\n\s*\n[\s]*", lambda m: ". ", text)
+    text = re.sub(r"([^\s.!?,:;])[ \t]*\n[ \t]*", r"\1, ", text)
+    text = re.sub(r"\s*\n\s*", " ", text)          # qolgan uzilishlar
+    text = re.sub(r"([.!?])\s*\.\s*", r"\1 ", text)  # ". ." kabi takror
+    return re.sub(r"[ \t]{2,}", " ", text).strip()
+
+
+_CYRILLIC = re.compile(r"[Ѐ-ӿ]")
+
+
+def normalize_cyrillic(text: str) -> str:
+    """Kirill o'zbek matnini lotinga — espeak-uz kirillda ishonchsiz.
+
+    O'zbek kontentining katta qismi hamon kirillda yoziladi, lekin espeak-uz uni
+    yomon o'qiydi (o'lchandi):
+        ё -> "sɪɹˈɪlɪkjˈoː"  = tom ma'noda "CYRILLIC-yo" deb aytadi
+        ъ -> "ɪdʒˈɛktɪv"     = "jective" (tutuq belgisi nuqsoni bilan bir xil)
+        ш -> s   ("Тошкент" -> "Toskent")
+        я/ю -> dʒ ("яхши" -> "jaxshi")
+    Lotin yozuvida ularning hammasi TO'G'RI talaffuz qilinadi, shuning uchun
+    espeak'ga berishdan oldin o'giramiz. whisper_engine'dagi tayyor jadval
+    ishlatiladi (u yerda ASR chiqishi uchun sinalgan) — nusxa ko'chirilmaydi.
+    """
+    if not _CYRILLIC.search(text):
+        return text
+    try:
+        from server.whisper_engine import cyrillic_to_latin
+    except ImportError:
+        from whisper_engine import cyrillic_to_latin
+    return cyrillic_to_latin(text)
+
+
+# espeak-uz qo'llab-quvvatlamaydigan yozuvlar. Bunday belgini ko'rsa u belgining
+# INGLIZCHA TAVSIFINI o'qiydi: 西郷 -> "chineseletter chineseletter",
+# ياري -> "arabicyeh arabicalif...". O'zbek Vikipediyasida etimologiya va joy
+# nomlarida uchraydi. Jim tashlab ketish — bunday g'o'ldirashdan afzal.
+# Yunon (α, φ) TEGILMAYDI: espeak uni to'g'ri o'qiydi ("alfa", "fisikos").
+_UNSUPPORTED_SCRIPTS = re.compile(
+    "["
+    "֐-׿"      # ibroniy
+    "؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿"  # arab
+    "ऀ-ॿ"      # devanagari
+    "฀-๿"      # tay
+    "Ⴀ-ჿ"      # gruzin
+    "԰-֏"      # arman
+    "ᄀ-ᇿ가-힯"        # koreys
+    "぀-ゟ゠-ヿ"        # hiragana / katakana
+    "㐀-䶿一-鿿"        # CJK
+    "]+"
+)
+
+
+def strip_unsupported_scripts(text: str) -> str:
+    if not _UNSUPPORTED_SCRIPTS.search(text):
+        return text
+    text = _UNSUPPORTED_SCRIPTS.sub("", text)
+    # Bo'shab qolgan qavslarni yig'ishtirish. "(forscha: ياري)" -> "(forscha: )"
+    # bo'lib qolmasin — yorliq bilan birga olib tashlanadi.
+    text = re.sub(r"\(\s*[^()]{0,20}?[:：]\s*\)", "", text)
+    text = re.sub(r"\(\s*[,;:]?\s*\)|\[\s*\]|«\s*»", "", text)
+    return re.sub(r"\s{2,}", " ", text).strip()
+
+
 def apply_lexicon(text: str) -> str:
     """Lug'at qatlamining yagona kirish nuqtasi.
 
-    Tartib: chet so'zlar → valyuta → birlik → qisqartmalar.
+    Tartib: kirill→lotin → chet so'zlar → valyuta → birlik → qisqartmalar → chet harflar.
     (Raqamlar bu yerda DAXLSIZ qoladi — ularni linguistic_normalizer so'zga aylantiradi.)
     """
+    # ENG AVVAL: quyidagi barcha qidiruvlar (lug'at, birlik, qisqartma) lotin
+    # kalitlar bilan ishlaydi, shuning uchun kirill matn avval o'girilishi kerak.
+    text = sanitize_input(text)
+    text = normalize_cyrillic(text)
+    text = strip_unsupported_scripts(text)
     text = apply_pronunciation(text)
     text = expand_currency(text)
     text = expand_units(text)
     text = expand_abbreviations(text)
+    # Eng oxirida: qisqartma harflanishi allaqachon toza o'zbekcha bergan
+    # ("USB" -> "u es be"), qolgan xom chet so'zlarni shu yerda ushlaymiz.
+    text = transliterate_foreign_letters(text)
     return text
 
 

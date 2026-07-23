@@ -2,23 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Mic,
-  Square,
-  Save,
-  RotateCcw,
-  SkipForward,
-  SkipBack,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Keyboard,
-} from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { useRecorder } from "@/hooks/use-recorder";
 import { blobToWav } from "@/lib/wav-encoder";
-import { cn } from "@/lib/utils";
 import type { Sentence } from "@/lib/types";
+import { RecordHeader } from "@/components/record/record-header";
+import { SentencePanel } from "@/components/record/sentence-panel";
+import { RecorderControls } from "@/components/record/recorder-controls";
+import { KeyboardHints } from "@/components/record/keyboard-hints";
 
 type Mode = "pending" | "all";
 
@@ -204,249 +195,41 @@ export default function RecordPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <header className="border-b border-border bg-bg-subtle">
-        <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg-muted transition"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Dashboard
-          </Link>
-          <div className="flex-1 flex items-center gap-3">
-            <div className="flex-1 h-2 rounded-full bg-bg-muted overflow-hidden">
-              <div
-                className="h-full bg-accent transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <span className="text-xs font-mono text-fg-muted whitespace-nowrap">
-              {currentIdx + 1} / {list.length}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 rounded-md border border-border bg-bg p-0.5">
-            <ModeBtn active={mode === "pending"} onClick={() => setMode("pending")}>
-              Kutilmoqda
-            </ModeBtn>
-            <ModeBtn active={mode === "all"} onClick={() => setMode("all")}>
-              Hammasi
-            </ModeBtn>
-          </div>
-        </div>
-      </header>
+      <RecordHeader
+        progress={progress}
+        currentIdx={currentIdx}
+        total={list.length}
+        mode={mode}
+        onModeChange={setMode}
+      />
 
       {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-3xl space-y-8">
-          {/* Saved feedback */}
-          {savedCount > 0 && (
-            <div className="text-center text-xs text-success">
-              ✓ Bu sessiyada {savedCount} ta yozuv saqlandi
-            </div>
-          )}
-
-          {/* Sentence ID + status */}
-          <div className="flex items-center justify-center gap-3 text-xs text-fg-muted">
-            <span className="font-mono">#{current.id}</span>
-            {current.audioPath && (
-              <span className="flex items-center gap-1 text-success">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Yozilgan ({current.duration?.toFixed(1)}s) — qayta yozsangiz almashtiriladi
-              </span>
-            )}
-          </div>
-
-          {/* Big sentence */}
-          <div className="rounded-xl border border-border bg-bg-subtle p-8 md:p-12">
-            <p className="text-2xl md:text-3xl leading-relaxed text-center font-medium">
-              {current.text}
-            </p>
-          </div>
+          <SentencePanel current={current} savedCount={savedCount} />
 
           {/* Recording UI */}
-          <div className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-2 rounded-md bg-danger/10 p-3 text-sm text-danger">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-            {saveError && (
-              <div className="flex items-start gap-2 rounded-md bg-danger/10 p-3 text-sm text-danger">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>{saveError}</span>
-              </div>
-            )}
-
-            {/* State: recording */}
-            {state === "recording" && (
-              <div className="space-y-4">
-                <LevelBars level={level} />
-                <div className="text-center font-mono text-3xl text-fg-muted">
-                  {duration.toFixed(1)}s
-                </div>
-              </div>
-            )}
-
-            {/* State: stopped (preview) */}
-            {state === "stopped" && previewUrl && (
-              <div className="space-y-3">
-                <audio src={previewUrl} controls autoPlay className="w-full" />
-                <div className="text-center text-xs text-fg-muted">
-                  {duration.toFixed(2)} soniya — eshitib koʻring
-                </div>
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button
-                onClick={goPrev}
-                disabled={currentIdx === 0}
-                title="Oldingi (←)"
-                className={cn(
-                  "flex items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm hover:bg-bg-muted transition",
-                  currentIdx === 0 && "opacity-30 cursor-not-allowed"
-                )}
-              >
-                <SkipBack className="h-4 w-4" />
-              </button>
-
-              {state === "idle" || state === "error" ? (
-                <button
-                  onClick={handleStartStop}
-                  className="flex items-center gap-3 rounded-lg bg-danger px-8 py-3 text-base font-medium text-white hover:opacity-90 transition shadow-lg"
-                >
-                  <Mic className="h-5 w-5" />
-                  Yozish (Space)
-                </button>
-              ) : state === "recording" ? (
-                <button
-                  onClick={handleStartStop}
-                  className="flex items-center gap-3 rounded-lg bg-fg px-8 py-3 text-base font-medium text-bg hover:opacity-90 transition shadow-lg"
-                >
-                  <Square className="h-5 w-5" />
-                  Toʻxtatish (Space)
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={resetAll}
-                    disabled={saving}
-                    title="Qayta yozish (Esc)"
-                    className="flex items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm hover:bg-bg-muted transition disabled:opacity-50"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Qayta (Esc)
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg bg-success px-8 py-3 text-base font-medium text-white hover:opacity-90 transition shadow-lg",
-                      saving && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {saving ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Save className="h-5 w-5" />
-                    )}
-                    {saving ? "Saqlanmoqda…" : "Saqlash + Keyingi (Enter)"}
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={goNext}
-                disabled={currentIdx >= list.length - 1}
-                title="Keyingi (→)"
-                className={cn(
-                  "flex items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm hover:bg-bg-muted transition",
-                  currentIdx >= list.length - 1 && "opacity-30 cursor-not-allowed"
-                )}
-              >
-                <SkipForward className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <RecorderControls
+            state={state}
+            level={level}
+            duration={duration}
+            error={error}
+            saveError={saveError}
+            previewUrl={previewUrl}
+            saving={saving}
+            currentIdx={currentIdx}
+            listLength={list.length}
+            onPrev={goPrev}
+            onNext={goNext}
+            onStartStop={handleStartStop}
+            onReset={resetAll}
+            onSave={handleSave}
+          />
         </div>
       </main>
 
       {/* Bottom keyboard hint */}
-      <footer className="border-t border-border bg-bg-subtle">
-        <div className="mx-auto max-w-4xl px-4 py-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-fg-muted">
-          <span className="flex items-center gap-1.5">
-            <Keyboard className="h-3.5 w-3.5" />
-          </span>
-          <Kbd k="Space" desc="Yozish / Toʻxtatish" />
-          <Kbd k="Enter" desc="Saqlash" />
-          <Kbd k="Esc" desc="Qayta yozish" />
-          <Kbd k="→" desc="Keyingi" />
-          <Kbd k="←" desc="Oldingi" />
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function ModeBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded px-2.5 py-1 text-xs font-medium transition whitespace-nowrap",
-        active ? "bg-fg text-bg" : "text-fg-muted hover:bg-bg-muted"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Kbd({ k, desc }: { k: string; desc: string }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px]">
-        {k}
-      </kbd>
-      <span>{desc}</span>
-    </span>
-  );
-}
-
-function LevelBars({ level }: { level: number }) {
-  const bars = 48;
-  const active = Math.round(level * bars);
-  return (
-    <div className="flex items-end justify-center gap-1 h-16">
-      {Array.from({ length: bars }).map((_, i) => {
-        const isActive = i < active;
-        const hue =
-          i < bars * 0.7
-            ? "bg-success"
-            : i < bars * 0.9
-            ? "bg-warning"
-            : "bg-danger";
-        return (
-          <div
-            key={i}
-            className={cn(
-              "w-1.5 rounded-sm transition-all",
-              isActive ? hue : "bg-bg-muted"
-            )}
-            style={{ height: `${30 + (i / bars) * 70}%` }}
-          />
-        );
-      })}
+      <KeyboardHints />
     </div>
   );
 }

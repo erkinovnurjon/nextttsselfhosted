@@ -9,9 +9,12 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StatusCard } from "@/components/status/status-card";
+import { LossCard } from "@/components/status/loss-card";
+import { LogPanel } from "@/components/status/log-panel";
+import { TrainingProgress } from "@/components/status/training-progress";
 
 interface TrainingStatus {
   extract: {
@@ -108,7 +111,7 @@ export default function StatusPage() {
 
       {/* GPU/Backend status */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Card
+        <StatusCard
           icon={Cpu}
           label="GPU"
           value={health?.gpu_name || "—"}
@@ -118,7 +121,7 @@ export default function StatusPage() {
               : health?.device ?? "—"
           }
         />
-        <Card
+        <StatusCard
           icon={CheckCircle2}
           label="Server"
           value={
@@ -137,7 +140,7 @@ export default function StatusPage() {
               : "danger"
           }
         />
-        <Card
+        <StatusCard
           icon={Activity}
           label="Training"
           value={t?.running ? "Ishlamoqda" : "To'xtagan"}
@@ -148,7 +151,7 @@ export default function StatusPage() {
           }
           tone={t?.running ? "success" : undefined}
         />
-        <Card
+        <StatusCard
           icon={TrendingDown}
           label="Loss (mel_ce avg)"
           value={t?.last_mel_ce_avg?.toFixed(3) ?? "—"}
@@ -164,32 +167,7 @@ export default function StatusPage() {
 
       {/* Progress bar */}
       {t?.progress_pct !== null && t?.progress_pct !== undefined && (
-        <div className="rounded-lg border border-border bg-bg-subtle p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-medium">
-              Epoch {(t.epoch ?? 0) + 1}/{(t.epoch_max ?? 0) + 1} · jarayon
-            </span>
-            <span className="font-mono text-accent">
-              {t.progress_pct.toFixed(1)}%
-            </span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-bg-muted">
-            <div
-              className="h-full bg-accent transition-all duration-500"
-              style={{ width: `${t.progress_pct}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-[11px] text-fg-muted">
-            <span>step {t.step?.toLocaleString()}</span>
-            {t.last_step_time && (
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {t.last_step_time}
-              </span>
-            )}
-            <span>{t.step_max?.toLocaleString()} jami</span>
-          </div>
-        </div>
+        <TrainingProgress t={t} />
       )}
 
       {/* Loss qatorlari */}
@@ -233,98 +211,5 @@ export default function StatusPage() {
         Server vaqti: {status?.now} · Frontend har 10 sekundda yangilanadi
       </div>
     </main>
-  );
-}
-
-function Card({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-  sub?: string;
-  tone?: "success" | "warning" | "danger";
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-bg-subtle p-3 space-y-1">
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-fg-subtle">
-        <span>{label}</span>
-        <Icon
-          className={cn(
-            "h-3 w-3",
-            tone === "success" && "text-success",
-            tone === "warning" && "text-warning",
-            tone === "danger" && "text-danger"
-          )}
-        />
-      </div>
-      <div className="text-sm font-semibold truncate">{value}</div>
-      <div className="text-[10px] text-fg-muted truncate">{sub}</div>
-    </div>
-  );
-}
-
-function LossCard({
-  label,
-  value,
-  hint,
-  highlight,
-}: {
-  label: string;
-  value: number | null | undefined;
-  hint?: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border p-3 space-y-1",
-        highlight
-          ? "border-accent/40 bg-accent/5"
-          : "border-border bg-bg-subtle"
-      )}
-    >
-      <div className="text-[10px] uppercase tracking-wider text-fg-subtle">
-        {label}
-      </div>
-      <div className="text-xl font-mono font-semibold">
-        {value !== null && value !== undefined ? value.toFixed(3) : "—"}
-      </div>
-      {hint && <div className="text-[10px] text-fg-muted">{hint}</div>}
-    </div>
-  );
-}
-
-function LogPanel({
-  title,
-  lines,
-  empty,
-}: {
-  title: string;
-  lines: string[];
-  empty?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-bg-subtle">
-      <div className="border-b border-border px-3 py-2 text-xs font-semibold flex items-center gap-1.5">
-        <span className="h-1 w-1 rounded-full bg-accent" />
-        {title}
-      </div>
-      <div className="max-h-72 overflow-y-auto p-2">
-        {lines.length === 0 ? (
-          <div className="text-xs text-fg-muted p-2">
-            {empty || "Hech qanday qator yo'q"}
-          </div>
-        ) : (
-          <pre className="text-[10px] leading-relaxed font-mono whitespace-pre-wrap break-all text-fg-muted">
-            {lines.join("\n")}
-          </pre>
-        )}
-      </div>
-    </div>
   );
 }

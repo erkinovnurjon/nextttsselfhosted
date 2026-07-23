@@ -26,5 +26,6 @@ COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/node_modules/prisma ./node_modules/prisma
 EXPOSE 3000
-# DB jadvallarini yaratib (db push — migration fayllar shart emas), keyin serverni yoqish
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss || true; node server.js"]
+# Production: migratsiyalarni xavfsiz qo'llash (migrate deploy — hech qachon data o'chirmaydi).
+# DB tayyor bo'lmasa 30 marta (60s) qayta urinadi, keyin serverni yoqadi.
+CMD ["sh", "-c", "for i in $(seq 1 30); do node node_modules/prisma/build/index.js migrate deploy --skip-generate && break; echo \"DB hali tayyor emas, qayta urinish $i/30...\"; sleep 2; done; node server.js"]

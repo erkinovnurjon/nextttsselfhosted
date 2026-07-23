@@ -1,20 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Wallet,
-  Plus,
-  TrendingUp,
-  TrendingDown,
-  Gift,
-  AudioLines,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { localeOf, formatDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { localeOf } from "@/lib/format";
 import { TopUpModal } from "@/components/cabinet/topup-modal";
+import { BalanceHero } from "@/components/cabinet/balans/balance-hero";
+import { BalanceStats } from "@/components/cabinet/balans/balance-stats";
+import { LedgerTable } from "@/components/cabinet/balans/ledger-table";
 
 interface Ledger {
   id: string;
@@ -30,14 +23,8 @@ interface CreditsData {
   granted: number;
   spent: number;
   ledger: Ledger[];
+  unlimited?: boolean;
 }
-
-const REASON_ICON: Record<string, typeof Gift> = {
-  signup: Gift,
-  synthesis: AudioLines,
-  topup: Plus,
-  admin: Sparkles,
-};
 
 export default function BalansPage() {
   const { t, lang } = useI18n();
@@ -65,10 +52,7 @@ export default function BalansPage() {
     );
   }
 
-  const reasonLabel = (r: string) =>
-    t(`cabinet.balans.reasons.${r}`) === `cabinet.balans.reasons.${r}`
-      ? r
-      : t(`cabinet.balans.reasons.${r}`);
+  const unlimited = data?.unlimited ?? false;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in">
@@ -78,127 +62,25 @@ export default function BalansPage() {
       </div>
 
       {/* Balance hero */}
-      <div className="card-glow relative overflow-hidden p-7">
-        <div className="pointer-events-none absolute inset-0 bg-app-gradient opacity-70" />
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-fg-subtle">
-              <Wallet className="h-4 w-4 text-accent" />
-              {t("cabinet.balans.current")}
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="brand-text text-5xl font-bold tracking-tight tabular-nums">
-                {(data?.balance ?? 0).toLocaleString(loc)}
-              </span>
-              <span className="text-sm font-medium text-fg-muted">
-                {t("cabinet.balans.unit")}
-              </span>
-            </div>
-            <p className="mt-2 max-w-sm text-xs text-fg-subtle">{t("cabinet.balans.hint")}</p>
-          </div>
-
-          <button
-            onClick={() => setModalOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" />
-            {t("cabinet.balans.topupOpen")}
-          </button>
-        </div>
-      </div>
+      <BalanceHero
+        unlimited={unlimited}
+        balance={data?.balance ?? 0}
+        loc={loc}
+        onTopup={() => setModalOpen(true)}
+      />
 
       {/* Granted / spent */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="card p-5">
-          <div className="flex items-center gap-2 text-xs text-fg-muted">
-            <TrendingUp className="h-4 w-4 text-success" />
-            {t("cabinet.balans.granted")}
-          </div>
-          <div className="mt-1.5 text-2xl font-semibold tabular-nums">
-            {(data?.granted ?? 0).toLocaleString(loc)}
-          </div>
-        </div>
-        <div className="card p-5">
-          <div className="flex items-center gap-2 text-xs text-fg-muted">
-            <TrendingDown className="h-4 w-4 text-danger" />
-            {t("cabinet.balans.spent")}
-          </div>
-          <div className="mt-1.5 text-2xl font-semibold tabular-nums">
-            {(data?.spent ?? 0).toLocaleString(loc)}
-          </div>
-        </div>
-      </div>
+      <BalanceStats granted={data?.granted ?? 0} spent={data?.spent ?? 0} loc={loc} />
 
       {/* Top-up note */}
-      <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 text-sm text-fg-muted">
-        {t("cabinet.balans.topupDesc")}
-      </div>
+      {!unlimited && (
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 text-sm text-fg-muted">
+          {t("cabinet.balans.topupDesc")}
+        </div>
+      )}
 
       {/* Ledger */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold">{t("cabinet.balans.ledgerTitle")}</h3>
-        {!data || data.ledger.length === 0 ? (
-          <div className="card p-10 text-center text-sm text-fg-muted">
-            {t("cabinet.balans.ledgerEmpty")}
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60 bg-bg-subtle/60 text-left text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
-                  <th className="px-4 py-3">{t("cabinet.balans.colReason")}</th>
-                  <th className="px-4 py-3 text-right">{t("cabinet.balans.colAmount")}</th>
-                  <th className="hidden px-4 py-3 text-right sm:table-cell">
-                    {t("cabinet.balans.colBalance")}
-                  </th>
-                  <th className="px-4 py-3 text-right">{t("cabinet.balans.colDate")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.ledger.map((e) => {
-                  const Icon = REASON_ICON[e.reason] ?? Sparkles;
-                  const positive = e.amount > 0;
-                  return (
-                    <tr
-                      key={e.id}
-                      className="border-b border-border/40 transition last:border-0 hover:bg-bg-muted/40"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={cn(
-                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-                              positive ? "bg-success/12 text-success" : "bg-bg-muted text-fg-subtle"
-                            )}
-                          >
-                            <Icon className="h-3.5 w-3.5" />
-                          </span>
-                          <span className="font-medium">{reasonLabel(e.reason)}</span>
-                        </div>
-                      </td>
-                      <td
-                        className={cn(
-                          "px-4 py-3 text-right font-semibold tabular-nums",
-                          positive ? "text-success" : "text-fg"
-                        )}
-                      >
-                        {positive ? "+" : ""}
-                        {e.amount.toLocaleString(loc)}
-                      </td>
-                      <td className="hidden px-4 py-3 text-right tabular-nums text-fg-muted sm:table-cell">
-                        {e.balanceAfter.toLocaleString(loc)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-[12px] text-fg-subtle">
-                        {formatDate(e.createdAt, loc)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <LedgerTable ledger={data?.ledger} loc={loc} />
 
       {modalOpen && (
         <TopUpModal

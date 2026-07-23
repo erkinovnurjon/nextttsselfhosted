@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { ChatWidget } from "@/components/chat-widget";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -44,7 +45,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: BOOT }} />
       </head>
       <body className="min-h-screen font-sans">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <ChatWidget />
+        </Providers>
       </body>
     </html>
   );

@@ -9,7 +9,16 @@ import {
   hashIp,
   LIMITS,
 } from "@/lib/usage";
-import { getBalance, spendCredits } from "@/lib/credits";
+import { getBalance, spendCredits, isUnlimited } from "@/lib/credits";
+import {
+  BACKEND_DOWN_HINT,
+  isEngine,
+  metaHeaders,
+  resolveUserVoiceRef,
+  synthesizeOnBackend,
+  type Engine,
+  type F5Ref,
+} from "@/lib/tts-backend";
 
 const TTS_BACKEND_URL = process.env.TTS_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -46,19 +55,30 @@ export async function POST(request: Request) {
 
   let balance = 0;
   let usage; // faqat anonim uchun
+  // Rolni sessiya (eskirgan JWT) emas, DB'dan o'qiymiz — set-role.mjs bilan
+  // o'zgartirilgan rol qayta login qilmasdan darrov kuchga kiradi.
+  let unlimited = false;
 
   if (session?.user?.id) {
-    balance = await getBalance(session.user.id);
-    if (charCount > balance) {
-      return NextResponse.json(
-        {
-          error: `Balans yetarli emas: ${balance} kredit qoldi, bu matn ${charCount} kredit talab qiladi. Balansni to'ldiring.`,
-          balance,
-          required: charCount,
-          insufficientCredits: true,
-        },
-        { status: 402 }
-      );
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    unlimited = isUnlimited(dbUser?.role);
+    // Admin / VIP — cheksiz: balans tekshirilmaydi
+    if (!unlimited) {
+      balance = await getBalance(session.user.id);
+      if (charCount > balance) {
+        return NextResponse.json(
+          {
+            error: `Balans yetarli emas: ${balance} kredit qoldi, bu matn ${charCount} kredit talab qiladi. Balansni to'ldiring.`,
+            balance,
+            required: charCount,
+            insufficientCredits: true,
+          },
+          { status: 402 }
+        );
+      }
     }
   } else {
     usage = await getAnonymousUsage(ipHash);
@@ -74,82 +94,104 @@ export async function POST(request: Request) {
     }
   }
 
-  // ───── Sintez ─────
-  let backendRes: Response;
-  try {
-    if (checkpoint_id === "mms") {
-      const speaking_rate =
-        typeof body?.speaking_rate === "number" ? body.speaking_rate : undefined;
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize/mms`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, normalize: true, speaking_rate, voice }),
-        signal: AbortSignal.timeout(120_000),
-      });
-    } else {
-      backendRes = await fetch(`${TTS_BACKEND_URL}/synthesize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          language,
-          voice,
-          speed,
-          temperature,
-          repetition_penalty,
-          top_k,
-          top_p,
-          checkpoint_id,
-        }),
-        signal: AbortSignal.timeout(180_000),
-      });
+  // ───── Shaxsiy ovoz (zero-shot klon) ─────
+  // voice === "__me__" → foydalanuvchining reference klipini DB'dan olib F5'ga uzatamiz.
+  // user_voice_id = kutubxonadagi konkret ovoz (Ronaldo, Messi ...); berilmasa eng yangisi.
+  let f5Ref: F5Ref | null = null;
+  // Shaxsiy ovoz faqat F5 orqali ishlaydi — checkpoint f5 bo'lmasa DB'ni bezovta qilmaymiz.
+  if (voice === "__me__" && checkpoint_id === "f5") {
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Shaxsiy ovoz uchun tizimga kiring", requiresAuth: true },
+        { status: 401 }
+      );
     }
-  } catch (err) {
+    f5Ref = await resolveUserVoiceRef(
+      session.user.id,
+      typeof body?.user_voice_id === "string" && body.user_voice_id
+        ? body.user_voice_id
+        : undefined
+    );
+    if (!f5Ref) {
+      return NextResponse.json(
+        {
+          error:
+            "Shaxsiy ovoz topilmadi. Avval \"Mening ovozim\" boʻlimida ovoz yarating.",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  // ───── Sintez ─────
+  // Dvigatel tanlash va backend chaqiruvi @/lib/tts-backend'da — ommaviy
+  // /api/v1/tts bilan bir xil yo'l (ikki nusxa bo'lsa biri eskirardi).
+  const engine: Engine = isEngine(checkpoint_id) ? checkpoint_id : "xtts";
+  const out = await synthesizeOnBackend({
+    text,
+    engine,
+    voice,
+    speed,
+    f5Ref,
+    speaking_rate:
+      typeof body?.speaking_rate === "number" ? body.speaking_rate : undefined,
+    language,
+    temperature,
+    repetition_penalty,
+    top_k,
+    top_p,
+    checkpointId: checkpoint_id,
+  });
+
+  if (!out.ok) {
+    if (out.kind === "down") {
+      return NextResponse.json(
+        {
+          error: "TTS backend bilan bog'lana olmadi",
+          details: out.details,
+          hint: BACKEND_DOWN_HINT,
+        },
+        { status: 502 }
+      );
+    }
     return NextResponse.json(
-      {
-        error: "TTS backend bilan bog'lana olmadi",
-        details: err instanceof Error ? err.message : "Unknown error",
-        hint:
-          "Python TTS server ishlamayapti. " +
-          "Ishga tushirish: cd tts-server && .\\.venv\\Scripts\\python.exe -m uvicorn server.main:app --port 8000",
-      },
+      { error: `TTS server xatosi (${out.status})`, details: out.details },
       { status: 502 }
     );
   }
 
-  if (!backendRes.ok) {
-    const errText = await backendRes.text().catch(() => "");
-    return NextResponse.json(
-      {
-        error: `TTS server xatosi (${backendRes.status})`,
-        details: errText,
-      },
-      { status: 502 }
-    );
-  }
-
-  const audioBuffer = await backendRes.arrayBuffer();
-  const synthTime = parseFloat(
-    backendRes.headers.get("X-Synthesis-Time-Sec") || "0"
-  );
+  const audioBuffer = out.audio;
+  const synthTime = out.meta.synthTimeSec;
 
   // ───── Balans/limitni hisoblash + tarix saqlash ─────
   const usageHeaders: Record<string, string> = {};
   if (session?.user?.id) {
-    // Kreditni yechish (atomik) + sintez tarixiga yozish
-    const spend = await spendCredits(
-      session.user.id,
-      charCount,
-      "synthesis",
-      text.slice(0, 80)
-    );
-    usageHeaders["X-Credit-Balance"] = String(spend.balance);
+    // Admin / VIP — kredit yechilmaydi (cheksiz)
+    if (unlimited) {
+      usageHeaders["X-Credit-Balance"] = "unlimited";
+    } else {
+      // Kreditni yechish (atomik)
+      const spend = await spendCredits(
+        session.user.id,
+        charCount,
+        "synthesis",
+        text.slice(0, 80)
+      );
+      usageHeaders["X-Credit-Balance"] = String(spend.balance);
+    }
+    // Sintez tarixiga yozish (har doim)
     await db.synthesis
       .create({
         data: {
           userId: session.user.id,
           text,
-          voice: checkpoint_id === "mms" ? "mms" : voice,
+          // f5 -> "feruza"/"jonli"; "__me__" -> "myvoice"; mms -> "mms"; xtts -> voice.
+          voice:
+            checkpoint_id === "mms"
+              ? "mms"
+              : voice === "__me__"
+                ? "myvoice"
+                : voice,
           speed,
           charCount,
           durationSec: synthTime,
@@ -166,12 +208,7 @@ export async function POST(request: Request) {
   return new NextResponse(audioBuffer, {
     headers: {
       "Content-Type": "audio/wav",
-      "X-Synthesis-Time-Sec": backendRes.headers.get("X-Synthesis-Time-Sec") || "",
-      "X-Normalized-Text": backendRes.headers.get("X-Normalized-Text") || "",
-      "X-Original-Text": backendRes.headers.get("X-Original-Text") || "",
-      "X-Checkpoint-Id":
-        backendRes.headers.get("X-Checkpoint-Id") || checkpoint_id || "",
-      "X-Model-Kind": backendRes.headers.get("X-Model-Kind") || "",
+      ...metaHeaders(out.meta),
       ...usageHeaders,
       "Cache-Control": "no-cache",
     },

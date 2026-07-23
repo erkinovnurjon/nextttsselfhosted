@@ -14,6 +14,13 @@ export const openapiSpec = {
     { url: "https://tts.example.uz", description: "Production (APP_URL)" },
   ],
   tags: [
+    {
+      name: "Public API (v1)",
+      description:
+        "Tashqi loyihalar uchun. API kalit bilan ishlaydi (sessiya kerak emas), " +
+        "shuning uchun istalgan domen va istalgan tildan chaqirsa bo'ladi. " +
+        "Kalitni Kabinet → API kalitlar bo'limida yarating.",
+    },
     { name: "Auth", description: "Ro'yxatdan o'tish / kirish" },
     { name: "TTS", description: "Matndan nutq" },
     { name: "STT", description: "Nutqdan matn (transkripsiya)" },
@@ -22,6 +29,157 @@ export const openapiSpec = {
     { name: "Payments", description: "Balans to'ldirish (Payme / Click)" },
   ],
   paths: {
+    "/api/v1/tts": {
+      post: {
+        tags: ["Public API (v1)"],
+        summary: "Matndan nutq (API kalit bilan)",
+        description:
+          "Barqaror ommaviy endpoint — tashqi loyihalar shunga bog'lanadi.\n\n" +
+          "**Ikki xil kalit:**\n" +
+          "- `sk_live_…` (maxfiy) — faqat serverdan. To'liq huquq.\n" +
+          "- `pk_live_…` (ommaviy) — brauzer/vidjet uchun. Faqat ro'yxatdan o'tgan " +
+          "domendan ishlaydi (`Origin` tekshiriladi), shaxsiy ovoz (`__me__`) taqiqlangan, " +
+          "rate-limit qattiqroq. Brauzerga HECH QACHON `sk_live_` qo'ymang — u ochiq ko'rinadi.\n\n" +
+          "Javob — WAV audio (binary). Kredit matn uzunligi bo'yicha yechiladi (1 belgi = 1 kredit); " +
+          "vip/admin rolida cheksiz.",
+        security: [{ apiKey: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["text"],
+                properties: {
+                  text: {
+                    type: "string",
+                    maxLength: 5000,
+                    description: "O'qiladigan matn. Uzunroq matnni bo'laklab yuboring.",
+                    example: "Assalomu alaykum, darsimizni boshlaymiz.",
+                  },
+                  engine: {
+                    type: "string",
+                    enum: ["piper", "mms", "f5", "xtts"],
+                    default: "piper",
+                    description:
+                      "piper — nativ o'zbek, tez (CPU, tavsiya etiladi); " +
+                      "mms — erkak/ayol; f5 — tabiiy ayol, sekinroq (GPU); xtts — eski ko'p tilli.",
+                  },
+                  voice: {
+                    type: "string",
+                    default: "main",
+                    description:
+                      "Dvigatelga bog'liq ovoz tanlovi. `__me__` — shaxsiy klonlangan ovoz " +
+                      "(faqat `engine=f5` va maxfiy kalit bilan).",
+                  },
+                  speed: { type: "number", default: 1, example: 1 },
+                  user_voice_id: {
+                    type: "string",
+                    description: "`voice=__me__` bo'lganda kutubxonadagi aniq ovoz; berilmasa eng yangisi.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "WAV audio",
+            headers: {
+              "X-Credit-Balance": {
+                schema: { type: "string" },
+                description: "Qolgan kredit yoki `unlimited`.",
+              },
+              "X-RateLimit-Remaining": {
+                schema: { type: "integer" },
+                description: "Shu daqiqada qolgan so'rovlar.",
+              },
+              "X-Synthesis-Time-Sec": { schema: { type: "number" } },
+            },
+            content: { "audio/wav": { schema: { type: "string", format: "binary" } } },
+          },
+          400: { description: "Matn bo'sh yoki 5000 belgidan uzun" },
+          401: { description: "Kalit yo'q, yaroqsiz yoki o'chirilgan" },
+          403: {
+            description:
+              "Ommaviy kalit ruxsatsiz domendan, yoki `__me__` ommaviy kalit bilan so'ralgan",
+          },
+          402: { description: "Kredit yetarli emas" },
+          429: { description: "Rate-limit oshdi — `Retry-After` sarlavhasiga qarang" },
+          502: { description: "Sintez dvigateli xato qaytardi" },
+          503: { description: "Sintez xizmati ishlamayapti" },
+        },
+      },
+      options: {
+        tags: ["Public API (v1)"],
+        summary: "CORS preflight",
+        description:
+          "Brauzer avtomatik yuboradi. Kalit tekshirilmaydi (preflight'da " +
+          "`Authorization` bo'lmaydi) — domen tekshiruvi POST'da bo'ladi.",
+        responses: { 204: { description: "Ruxsat" } },
+      },
+    },
+    "/api/keys": {
+      get: {
+        tags: ["Public API (v1)"],
+        summary: "Kalitlar ro'yxati",
+        description: "Faqat sessiya bilan (kabinet). Kalitning o'zi qaytarilmaydi — faqat prefiks.",
+        security: [{ sessionCookie: [] }],
+        responses: { 200: { description: "Kalitlar" }, 401: { description: "Tizimga kirilmagan" } },
+      },
+      post: {
+        tags: ["Public API (v1)"],
+        summary: "Yangi kalit yaratish",
+        description:
+          "Faqat sessiya bilan — kalit bilan yangi kalit yasashga ATAYLAB ruxsat yo'q " +
+          "(o'g'irlangan kalit o'ziga yangi kalit yasab, bekor qilishning oldini olardi).\n\n" +
+          "Javobdagi `token` — YAGONA marta. Bazada faqat sha256 hash saqlanadi.",
+        security: [{ sessionCookie: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string", example: "LMS — asosiy sayt" },
+                  kind: {
+                    type: "string",
+                    enum: ["secret", "publishable"],
+                    default: "secret",
+                  },
+                  origins: {
+                    type: "array",
+                    items: { type: "string" },
+                    description:
+                      "`publishable` uchun MAJBURIY — domensiz kalit hech qayerda ishlamaydi.",
+                    example: ["https://lms.uz"],
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Yaratildi — `token` shu yerda, bir marta" },
+          400: { description: "Nom yo'q, yoki publishable kalitga domen berilmagan" },
+          401: { description: "Tizimga kirilmagan" },
+        },
+      },
+    },
+    "/api/keys/{id}": {
+      delete: {
+        tags: ["Public API (v1)"],
+        summary: "Kalitni o'chirish",
+        description: "Yozuv o'chmaydi, `revokedAt` qo'yiladi (audit izi qoladi). Darhol ishlamay qoladi.",
+        security: [{ sessionCookie: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: { 200: { description: "O'chirildi" }, 404: { description: "Topilmadi" } },
+      },
+    },
     "/api/auth/register": {
       post: {
         tags: ["Auth"],
@@ -497,6 +655,15 @@ export const openapiSpec = {
 
   components: {
     securitySchemes: {
+      apiKey: {
+        type: "http",
+        scheme: "bearer",
+        description:
+          "API kalit: `Authorization: Bearer sk_live_...`\n\n" +
+          "Kabinet → API kalitlar bo'limida yaratiladi va faqat o'sha payt bir marta " +
+          "ko'rsatiladi. `pk_live_` kaliti brauzer uchun — u ro'yxatdan o'tgan " +
+          "domenlardan tashqarida ishlamaydi.",
+      },
       sessionCookie: {
         type: "apiKey",
         in: "cookie",

@@ -37,7 +37,14 @@ services:
       CLICK_MERCHANT_ID: ${CLICK_MERCHANT_ID:-}
       CLICK_SECRET_KEY: ${CLICK_SECRET_KEY:-}
       CLICK_CHECKOUT_URL: ${CLICK_CHECKOUT_URL:-https://my.click.uz/services/pay}
-    depends_on: [db, api]
+      # Chatbot (loyiha-yordamchi) — bo'sh bo'lsa FAQ rejimi
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CHATBOT_MODEL: ${CHATBOT_MODEL:-claude-opus-4-8}
+    depends_on:
+      db:
+        condition: service_healthy   # Postgres tayyor bo'lgach migratsiya ishlaydi
+      api:
+        condition: service_started
 
   api:
     build: { context: ./tts-server, dockerfile: Dockerfile }
@@ -46,8 +53,13 @@ services:
       MMS_DEFAULT_VOICE: ${MMS_DEFAULT_VOICE:-base}
       WHISPER_DEVICE: ${WHISPER_DEVICE:-}
       HF_TOKEN: ${HF_TOKEN:-}
+      # Piper (nativ o'zbek, PILOT default ovozi) — alohida CPU servis; main.py shu yerga proxy qiladi
+      PIPER_SERVER_URL: http://piper:8002
     volumes:
       - hf_cache:/app/.hf_cache   # model'lar bir marta yuklanib keshlanadi
+    depends_on:
+      piper:
+        condition: service_started
     # ─── GPU uchun (server'да NVIDIA + nvidia-container-toolkit bo'lsa) ───
     # quyidagi qatorlarni oching:
     # deploy:
@@ -55,6 +67,11 @@ services:
     #     reservations:
     #       devices:
     #         - { driver: nvidia, count: 1, capabilities: [gpu] }
+
+  # Piper — nativ o'zbek ovoz (CPU, GPU shart emas). PILOT default ovozi.
+  piper:
+    build: { context: ./tts-server, dockerfile: Dockerfile.piper }
+    restart: unless-stopped
 
   db:
     image: postgres:16
@@ -65,6 +82,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   caddy_data:

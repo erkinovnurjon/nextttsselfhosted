@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getUserUsage } from "@/lib/usage";
 import { getSummary } from "@/lib/credits";
+import { isUnlimited } from "@/lib/role";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     user,
+    unlimited: isUnlimited(user.role),
     usage,
     credits,
     stats: {

@@ -1,0 +1,28 @@
+# Web (Next.js) build konteksti — faqat ilova kerak.
+node_modules
+.next
+.git
+.gitignore
+out
+build
+dist
+*.log
+npm-debug.log*
+.claude
+memory
+
+# Python TTS backend web image'ga kerak emas (alohida konteyner)
+tts-server
+dataset
+
+# Sirlarni image'ga qo'shmaymiz
+.env
+.env.local
+.env.prod
+.env*.local
+
+# Lokal review audio/sahifalar — jonli ilova faqat public/audition ishlatadi
+public/*.html
+public/**/*.wav
+!public/audition/
+!public/audition/**

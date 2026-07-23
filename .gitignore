@@ -70,6 +70,9 @@ tts-server/training/data/*.txt
 # Fine-tuned model checkpoints (5.6 GB each)
 tts-server/training/checkpoints/
 
+# Lokal yuklangan model og'irliklari (NLLB tarjima ~2.4 GB va h.k.) — HF'dan olinadi
+tts-server/models/
+
 # ============================================================
 # GENERATED OUTPUTS — synthesized audio not for git
 # ============================================================
@@ -82,5 +85,40 @@ tts-server/output/
 tts-server/voices/
 tts-server/voices/*/reference.wav
 
+# Dublyaj natijalari (foydalanuvchi videolari + tayyor mp4) — maxfiy va katta
+tts-server/dubs/
+
 # HF fine-tune repo (alohida git-repo, deploy'ga shart emas)
 tts-server/training/finetune-hf-vits/
+
+# ============================================================
+# Qo'shimcha Python muhitlari (F5 / Piper alohida torch versiyalari)
+# ============================================================
+tts-server/.venv-f5/
+tts-server/venv-piper/
+tts-server/training/piper1-gpl/
+
+# ============================================================
+# Training/diag yugurish artefaktlari va scratch skriptlar
+# ============================================================
+runs/
+tts-server/runs/
+tts-server/training/scripts/runs/
+scripts/_*.mjs
+tts-server/scripts/_*.py
+
+# ============================================================
+# Admin compare/test sahifalari va review audio (lokal sinov)
+# Jonli ilova FAQAT public/audition/ ni ishlatadi (kabinet ovoz tanlash).
+# Qolgan public/*.html va public/**/*.wav = qo'lda review sahifalari —
+# localhost:3000/<name>.html da ko'riladi, Docker image'ga shart emas.
+# ============================================================
+public/_*.wav
+public/*.html
+public/**/*.wav
+public/**/results.json
+!public/audition/
+!public/audition/**
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

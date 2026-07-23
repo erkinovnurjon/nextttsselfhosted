@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DocTopBar } from "@/components/doc-topbar";
 import {
   BookOpen,
   Volume2,
@@ -9,6 +10,7 @@ import {
   Cpu,
   Languages,
   Workflow,
+  Plug,
   ArrowRight,
 } from "lucide-react";
 
@@ -51,6 +53,8 @@ const TOC = [
 
 export default function DocsPage() {
   return (
+    <>
+    <DocTopBar />
     <main className="mx-auto max-w-4xl px-4 py-10 animate-fade-in md:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
@@ -104,6 +108,10 @@ export default function DocsPage() {
 
           <Section id="sahifalar" icon={Workflow} title="Sahifalar">
             <ul className="space-y-3">
+              <DocItem icon={Plug} href="/integratsiya" title="Integratsiya qo'llanmasi">
+                TTS'ni o'z loyihangizga ulash: bir qatorli vidjet yoki REST API. API kalit,
+                kod misollari (JS, PHP, Python, curl), ovoz dvigatellari va limitlar.
+              </DocItem>
               <DocItem icon={Volume2} href="/sinov" title="Sinov">
                 Eng oddiy sahifa: matn yozing, ovozni (MMS yoki XTTS) tanlang, "Eshitish"
                 bosing. Natija avtomatik o'ynaydi, yuklab olsa bo'ladi.
@@ -199,6 +207,7 @@ export default function DocsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 

@@ -1,10 +1,12 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
+import { isUnlimited } from "@/lib/role";
 
 export const LIMITS = {
   anonymous: 100000, // SINOV: prod'ga chiqishda 100 ga qaytaring
   user: 1000,
   admin: 50000,
+  vip: 50000, // cheksiz rejimda ishlatilmaydi (faqat ko'rsatkich)
 } as const;
 
 export type UsageRole = keyof typeof LIMITS;
@@ -27,6 +29,14 @@ export interface UsageStatus {
   charsUsed: number;
   remaining: number;
   resetAt: string; // ertangi sana
+  unlimited: boolean; // vip/admin → cheksiz
+}
+
+// "role" string'ni LIMITS kalitiga moslash
+function usageRole(role: string): UsageRole {
+  if (role === "admin") return "admin";
+  if (role === "vip") return "vip";
+  return "user";
 }
 
 export async function getUserUsage(userId: string, role: string): Promise<UsageStatus> {
@@ -35,7 +45,7 @@ export async function getUserUsage(userId: string, role: string): Promise<UsageS
     where: { userId_date: { userId, date } },
   });
   const charsUsed = row?.charsUsed ?? 0;
-  const r: UsageRole = role === "admin" ? "admin" : "user";
+  const r = usageRole(role);
   const limit = LIMITS[r];
   return {
     role: r,
@@ -43,6 +53,7 @@ export async function getUserUsage(userId: string, role: string): Promise<UsageS
     charsUsed,
     remaining: Math.max(0, limit - charsUsed),
     resetAt: nextMidnight(),
+    unlimited: isUnlimited(role),
   };
 }
 
@@ -59,6 +70,7 @@ export async function getAnonymousUsage(ipHash: string): Promise<UsageStatus> {
     charsUsed,
     remaining: Math.max(0, limit - charsUsed),
     resetAt: nextMidnight(),
+    unlimited: false,
   };
 }
 
@@ -76,7 +88,7 @@ export async function consumeUserUsage(
       requests: { increment: 1 },
     },
   });
-  const r: UsageRole = role === "admin" ? "admin" : "user";
+  const r = usageRole(role);
   const limit = LIMITS[r];
   return {
     role: r,
@@ -84,6 +96,7 @@ export async function consumeUserUsage(
     charsUsed: row.charsUsed,
     remaining: Math.max(0, limit - row.charsUsed),
     resetAt: nextMidnight(),
+    unlimited: isUnlimited(role),
   };
 }
 
@@ -107,6 +120,7 @@ export async function consumeAnonymousUsage(
     charsUsed: row.charsUsed,
     remaining: Math.max(0, limit - row.charsUsed),
     resetAt: nextMidnight(),
+    unlimited: false,
   };
 }
 
