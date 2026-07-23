@@ -190,6 +190,57 @@ def test_qollab_quvvatlanmaydigan_yozuv():
     assert norm("Yaponcha 西郷 nomi") == "Yaponcha nomi"
 
 
+# ──────────── testerlar topadigan qoldiq nuqsonlar (2026-07-23) ───────────────
+
+def test_sana_kundalik_shakl():
+    """DD.MM.YYYY / DD/MM/YYYY — ENG ko'p yoziladigan shakl. Ilgari nuqta o'nlik
+    kasr va gap oxiri deb o'qilib sana parchalanardi."""
+    assert norm("Dushanba, 22.07.2026") == "Dushanba, yigirma ikkinchi iyul ikki ming yigirma oltinchi yil"
+    assert norm("Sana 5/12/2025 edi") == "Sana beshinchi dekabr ikki ming yigirma beshinchi yil edi"
+    # 4 xonali yil bo'lmasa — bu haqiqiy o'nlik kasr, sanaga aylantirilmasin
+    assert norm("3.14 soni") == "uch butun o'n to'rt soni"
+
+
+def test_uzun_id_raqamlab():
+    """12+ xonali ID (JSHSHIR, karta) — raqamlab, 3 tadan guruhlab (pauza bilan)."""
+    out = norm("JSHSHIR 12345678901234")
+    assert "million" not in out and "ming" not in out, out
+    assert out.endswith("bir ikki uch, to'rt besh olti, yetti sakkiz to'qqiz, nol bir ikki, uch to'rt")
+    # minglik guruh (ajratgichli) katta son bo'lib qolishi kerak — buzilmasin
+    assert norm("1 000 000 000 so'm") == "bir milliard so'm"
+    assert norm("250 000 so'm") == "ikki yuz ellik ming so'm"
+
+
+def test_unlisiz_akronim_harflanadi():
+    """CNN/BBC/TTS = unlisiz initsializm -> harflab. espeak xomini "ts-en-en",
+    transliteratsiya "KNN" qilardi; ikkalasi ham xato."""
+    assert norm("CNN va BBC telekanali") == "se en en va be be se telekanali"
+    assert norm("TTS xizmati SMS yubordi") == "te te es xizmati es em es yubordi"
+    # unli bor akronim = so'z sifatida o'qiladi, harflanmaydi
+    assert norm("NATO va FIFA") == "NATO va FIFA"
+    # aralash registrli token (MChJ) butun tokendan bo'lak sifatida ushlanmasin
+    assert norm("MChJ ochildi") == "mas'uliyati cheklangan jamiyat ochildi"
+
+
+def test_url_hashtag_email():
+    """espeak "/" va "#" ni INGLIZ ovozida "slash"/"hash" deb o'qib til almashtiradi."""
+    assert norm("nexttts.uz/kabinet sahifasi") == "nekst te te es.uz sahifasi"
+    assert norm("#TTS va #sunay") == "te te es va sunay"
+    assert norm("admin@nexttts.uz ga") == "admin nekst te te es.uz ga"
+
+
+def test_daraja_belgisi():
+    """Klaviaturadan "2^10" — ^ jimgina tushib ma'no yo'qolardi."""
+    assert norm("2^10 = 1024") == "ikki daraja o'n teng ming yigirma to'rt"
+    assert norm("x^2 + y^3") == "iks kvadrat qo'shuv igrek kub"
+
+
+def test_fizik_birlik_ustma_ust():
+    """"m/s2" — lexicon "m/s" ni yeb "2" ni osiltirib qo'yardi; endi sci "m/s2"ni oladi."""
+    assert norm("9,8 m/s2 tezlanish") == "to'qqiz butun sakkiz metr soniya kvadratiga tezlanish"
+    assert norm("25 m/s tezlik") == "yigirma besh metr sekundiga tezlik"
+
+
 # ─────────────────────────────── umumiy smoke ────────────────────────────────
 
 def test_aralash_matnda_raqam_qolmaydi():

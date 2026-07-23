@@ -241,12 +241,15 @@ def expand_units(text: str) -> str:
     for unit in sorted(UNITS, key=len, reverse=True):
         word = UNITS[unit]
         eu = re.escape(unit)
+        # Lookahead'da RAQAM ham istisno: "m/s2"/"km3" da birlikni oxirigacha
+        # o'qimasin — aks holda "m/s" yeb qo'yilib "2" osilib qolardi
+        # ("metr sekundiga2"). Qolgani sci_normalizer'ga o'tadi ("m/s2" -> kvadratiga).
         if unit in AMBIGUOUS_UNITS:
             # probel SHART + katta-kichik harf farqlanadi
-            text = re.sub(rf"(?<=\d)\s+{eu}(?![a-zA-Zʻ'])", f" {word}", text)
+            text = re.sub(rf"(?<=\d)\s+{eu}(?![a-zA-Z0-9ʻ'²³])", f" {word}", text)
         else:
             # raqam + (ixtiyoriy bo'shliq) + birlik + so'z chegarasi
-            text = re.sub(rf"(?<=\d)\s*{eu}(?![a-zA-Zʻ'])", f" {word}", text,
+            text = re.sub(rf"(?<=\d)\s*{eu}(?![a-zA-Z0-9ʻ'²³])", f" {word}", text,
                           flags=re.IGNORECASE)
     return text
 
@@ -277,6 +280,15 @@ def expand_abbreviations(text: str) -> str:
             # Yoyilma + qo'shimcha (oxirgi so'zga yopishadi: "...Shtatlari" + "ga")
             return ABBREVIATIONS[low] + suffix
         if low in SPELL_OUT:
+            spelled = _spell_token(low)
+            return spelled + (" " + suffix if suffix else "")
+        # Ro'yxatda yo'q, lekin UNLI YO'Q bosh-harfli akronim (CNN, BBC, TTS, SMS)
+        # — bu deyarli har doim harflab o'qiladigan initsializm. espeak xomini
+        # "ts-en-en" qiladi (C->ts), transliteratsiya esa "KNN" (C->K) — ikkalasi
+        # xato; harflab "se en en" to'g'ri. Unli borlar (NATO, FIFA) so'z sifatida
+        # o'qiladi, tegilmaydi. \b sharti tufayli MChJ kabi aralash tokendan
+        # bo'lak ushlanmaydi (butun token bo'lishi shart).
+        if 2 <= len(core) <= 6 and not set(core) & set("AEIOU"):
             spelled = _spell_token(low)
             return spelled + (" " + suffix if suffix else "")
         return m.group(0)
@@ -380,6 +392,13 @@ def sanitize_input(text: str) -> str:
     text = _HTML_TAG.sub(" ", text)
     text = _EMOJI.sub(" ", text)
     text = _URL_PROTO.sub("", text)          # "colon slash slash" o'qilmasin
+    # URL yo'li (domendan keyingi /path) — espeak "/" ni INGLIZ ovozida "slash"
+    # deb o'qib, o'zbek gapi o'rtasida tilni almashtiradi ((en)slash(uz)). Yo'l
+    # ovozda foydasiz — TLD'dan keyingi qismini olib tashlaymiz. "m/s", "1/2"
+    # tegilmaydi (ularda oldin ".tld" yo'q).
+    text = re.sub(r"(\.[a-z]{2,6})/[\w/#?=&.\-]*", r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"#(?=\w)", "", text)      # hashtag belgisi — espeak "hash" o'qiydi
+    text = re.sub(r"(?<=\w)@(?=\w)", " ", text)  # email @ — espeak "et" deb o'qirdi
     text = _MD_HEADING.sub("", text)
     text = _MD_BULLET.sub("", text)
     text = _MD_MARKS.sub("", text)

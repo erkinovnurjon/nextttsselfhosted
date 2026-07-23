@@ -230,6 +230,19 @@ def normalize_dates(text: str) -> str:
         return m.group(0)
     text = re.sub(r"\b(\d{4})-(\d{2})-(\d{2})\b", date_repl, text)
 
+    # DD.MM.YYYY va DD/MM/YYYY — foydalanuvchi ENG KO'P shu shaklda yozadi.
+    # Ilgari nuqta o'nlik kasr ("22.07" -> "yigirma ikki butun nol yetti") va
+    # gap oxiri deb o'qilib, sana butunlay parchalanardi. Ajratgich bir xil
+    # bo'lishi shart (orqaga-havola \2) — "22.07/2026" kabi aralashmasin.
+    def dmy_repl(m):
+        d, mo, y = int(m.group(1)), int(m.group(3)), int(m.group(4))
+        if 1 <= mo <= 12 and 1 <= d <= 31 and 1000 <= y <= 9999:
+            day_ord = cardinal_to_ordinal(number_to_uzbek(d))
+            year_ord = cardinal_to_ordinal(number_to_uzbek(y))
+            return f"{day_ord} {MONTHS[mo]} {year_ord} yil"
+        return m.group(0)
+    text = re.sub(r"\b(\d{1,2})([./])(\d{1,2})\2(\d{4})\b", dmy_repl, text)
+
     # N-yil ("2026-yil" yoki "1995-yilda")
     def year_repl(m):
         y = int(m.group(1))
@@ -340,6 +353,25 @@ def normalize_phone_numbers(text: str) -> str:
         r"(?![\d.,])"
     )
     return pat.sub(repl, text)
+
+
+def normalize_long_digit_runs(text: str) -> str:
+    """Uzun raqam ketma-ketligi (JSHSHIR, karta, IMEI) — RAQAMLAB, 3 talab.
+
+    12+ xonali xom raqam deyarli har doim identifikator: uni katta son deb
+    o'qib bo'lmaydi ("bir million..."), espeak esa yopishtirib g'o'ldiraydi.
+    Uch xonadan guruhlab, vergul bilan pauza qo'yamiz — odam ham shunday o'qiydi.
+
+    Chegara 12: hech kim 12+ xonali sonni ATAYLAB xom kardinal qilib yozmaydi
+    (ajratgichsiz), demak minglik guruhlash (250 000) buzilmaydi. Telefondan
+    KEYIN, lekin minglik guruh birlashtirishdan OLDIN — u ajratgichlarni yo'qotib
+    12 xonali qoldiq yaratishi mumkin (masalan "1 000 000 000" -> "1000000000").
+    """
+    def repl(m):
+        d = m.group(0)
+        chunks = [d[i:i + 3] for i in range(0, len(d), 3)]
+        return ", ".join(" ".join(UZBEK_DIGITS[int(c)] for c in ch) for ch in chunks)
+    return re.sub(r"(?<![\d.,+\-])\d{12,}(?![\d.,])", repl, text)
 
 
 def normalize_negative_numbers(text: str) -> str:
@@ -552,6 +584,8 @@ def normalize_uzbek_text(text: str) -> str:
     # Telefon ENG AVVAL: normalize_grouped_numbers "90 123" ni "90123" deb
     # birlashtirib yuboradi va raqam telefon bo'lmay qoladi.
     text = normalize_phone_numbers(text)
+    # Uzun ID (12+ xona) — telefondan KEYIN, guruh birlashtirishdan OLDIN
+    text = normalize_long_digit_runs(text)
     # Bo'sh joyli minglik guruhlari ("250 000") — raqamlarni o'qishdan OLDIN birlashtirish
     text = normalize_grouped_numbers(text)
     text = normalize_roman(text)

@@ -138,6 +138,20 @@ def normalize_scientific(text: str) -> str:
     # 4) Qolgan superskriptlar (son yoki qavsdan keyin): 10⁸ → "10 daraja 8"
     text = re.sub("(" + _SUP_RUN + ")", lambda m: _power_phrase(m.group(1)), text)
 
+    # 4b) Klaviaturadan yozilgan daraja: "2^10" -> "ikki daraja o'n" (^ jimgina
+    # tushib qolib ma'no yo'qolardi). Asos raqam yoki yakka o'zgaruvchi; ko'rsatkich
+    # raqam. Sonlar keyingi bosqichda so'zga aylanadi, shuning uchun raqam qoldiramiz.
+    def _caret(m):
+        base, exp = m.group(1), m.group(2)
+        if base.isalpha():
+            base = LETTER_NAME.get(base.lower(), base)
+        if exp == "2":
+            return f"{base} kvadrat"
+        if exp == "3":
+            return f"{base} kub"
+        return f"{base} daraja {exp}"
+    text = re.sub(r"(?<![\w^])([A-Za-z]|\d+)\^(-?\d+)", _caret, text)
+
     # 5) Kvadrat ildiz:  √9 → "to'qqizdan ildiz", √ (yakka) → "kvadrat ildiz"
     text = re.sub(r"√\s*(\d+)(?![.,]?\d)",
                   lambda m: f"{number_to_uzbek(int(m.group(1)))}dan ildiz", text)
